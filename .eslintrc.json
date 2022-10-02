@@ -1,0 +1,30 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true,
+        "vue/setup-compiler-macros": true
+    },
+    "extends": [
+        "airbnb-base",
+        "plugin:vue/vue3-essential",
+        "standard-with-typescript",
+        "@vue/typescript/recommended",
+        "eslint:recommended",
+        "eslint-config-prettier",
+        "prettier"
+    ],
+    "overrides": [
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "parser": "@typescript-eslint/parser",
+        "sourceType": "module"
+    },
+    "plugins": [
+        "vue",
+        "@typescript-eslint"
+    ],
+    "rules": {
+        "no-console": "off"
+    }
+}
