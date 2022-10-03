@@ -22,6 +22,6 @@
     "./vite.config.ts",
     "./postcss.config.cjs",
     "./tailwind.config.cjs"
-  ],
+, "src/stories/Button.stories.js"  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
