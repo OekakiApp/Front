@@ -8,5 +8,6 @@ export default defineConfig({
   base: './Front/',
   build: {
     outDir: resolve(__dirname, 'docs'),
+    assetsDir: './',
   },
 })
