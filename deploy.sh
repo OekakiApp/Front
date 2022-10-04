@@ -38,7 +38,7 @@ set -e
 npm run build
 
 # ビルド出力ディレクトリに移動
-cd dist
+cd docs
 
 # カスタムドメインにデプロイする場合
 # echo 'www.example.com' > CNAME
