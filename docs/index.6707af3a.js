@@ -3399,8 +3399,8 @@ const Yo = (...e) => {
 function Xo(e) {
   return X(e) ? document.querySelector(e) : e
 }
-const Zo = '/vite.svg',
-  Qo = '/assets/vue.5532db34.svg',
+const Zo = '/Front/vite.svg',
+  Qo = '/Front/vue.5532db34.svg',
   Sn = (e) => (Js('data-v-6d1beee0'), (e = e()), Ys(), e),
   Go = { class: 'card' },
   el = Sn(() =>
