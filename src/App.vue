@@ -13,15 +13,16 @@ router.afterEach((to) => {
 </script>
 
 <template lang="pug">
+//- コンポーネント化
 <nav class="px-2 sm:px-4 py-2.5 rounded ">
   <div class="container flex flex-wrap justify-between items-center mx-auto">
     <a href="/">
-      <h1 class="text-xl font-bold" style="color: #272556">App Name</h1>
+      <h1 class="text-xl font-bold">App Name</h1>
     </a>
     <div>
       <ul class="flex flex-col p-4 mt-4 rounded-lg border border-gray-100 md:flex-row md:space-x-8 md:mt-0 md:text-sm md:font-medium md:border-0">
         <li>
-          <a href="#" style="color: #272556">新規登録</a>
+          <a href="#">新規登録</a>
         </li>
         <li>
           <a href="#" style="color: #F5843E">ログイン</a>
@@ -31,8 +32,8 @@ router.afterEach((to) => {
   </div>
 </nav>
 
-<main class="inner">
-  <RouterView />
+<main class="container mx-auto px-2 sm:px-4">
+  <RouterView/>
 </main>
 
 </template>

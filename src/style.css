@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {
-  .inner {
-    @apply container relative mx-auto flex flex-col px-5 py-4;
-  }
+div, li, a, p{
+  color: #272556;
 }
