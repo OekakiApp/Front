@@ -10,7 +10,8 @@
     "format": "prettier -w src/*.{ts,vue} && prettier -w src/**/*.{ts,vue}",
     "fix": "npm run format && npm run lint",
     "prepare": "husky install",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "test": "jest src"
   },
   "lint-staged": {
     "*.{js,ts,vue}": [
