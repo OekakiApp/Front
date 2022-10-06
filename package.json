@@ -21,9 +21,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^3.1.0",
-    "flowbite": "^1.5.3",
     "pinia": "^2.0.22",
-    "pug": "^3.0.2",
     "vite": "^3.1.0",
     "vue": "^3.2.37",
     "vue-router": "^4.1.5"
@@ -48,6 +46,7 @@
     "eslint-plugin-promise": "^6.0.1",
     "eslint-plugin-vue": "^9.5.1",
     "eslint-plugin-vue-pug": "^0.5.4",
+    "flowbite": "^1.5.3",
     "husky": "^8.0.0",
     "jest": "^26.6.3",
     "lint-staged": "^13.0.3",

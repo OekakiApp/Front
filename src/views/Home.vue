@@ -6,7 +6,7 @@
     </a>
     <div class="flex mt-2">
       <div class="mini-avatar bg-gray-200"></div>
-      <a href="" class="pl-2">Name</a>
+      <a href="" class="text-midnightBlue pl-2">Name</a>
     </div>
   </div>
 </div>
