@@ -8,8 +8,8 @@ module.exports = {
         midnightBlue: '#272556',
         dustyOrange: '#F5843E',
         seaPink: '#F99292',
-        chardonnay: '#FFC679'
-      }
+        chardonnay: '#FFC679',
+      },
     },
   },
   plugins: [],
