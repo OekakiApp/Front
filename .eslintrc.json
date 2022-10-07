@@ -12,18 +12,42 @@
     "@vue/typescript/recommended",
     "eslint:recommended",
     "eslint-config-prettier",
+    "plugin:jest/recommended",
     "prettier"
   ],
-  "overrides": [],
+  "overrides": [
+    {
+      // enable eslint-plugin-testing-library rules or preset only for matching files!
+      "files": [
+        "**/__tests__/**/*.[jt]s?(x)",
+        "**/?(*.)+(spec|test).[jt]s?(x)"
+      ],
+      "extends": ["plugin:jest/recommended"]
+    },
+    {
+      "files": ["**/*.ts?(x)"],
+      "parser": "@typescript-eslint/parser",
+      "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "plugin:import/typescript"
+      ]
+    }
+  ],
   "parser": "vue-eslint-parser",
   "parserOptions": {
     "ecmaVersion": "latest",
     "parser": "@typescript-eslint/parser",
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": ["./tsconfig.json", "./jest.config.cjs"]
   },
-  "plugins": ["vue", "@typescript-eslint"],
+  "plugins": ["vue", "@typescript-eslint", "jest"],
   "rules": {
-    "no-console": "off"
+    "no-console": "off",
+    "jest/no-disabled-tests": "warn",
+    "jest/no-focused-tests": "error",
+    "jest/no-identical-title": "error",
+    "jest/prefer-to-have-length": "warn",
+    "jest/valid-expect": "error",
+    "import/extensions": [1, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }]
   }
 }

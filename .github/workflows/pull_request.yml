@@ -6,9 +6,9 @@ name: Auto Testing
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: ['main','develop']
+    branches: ['main', 'develop']
   pull_request:
-    branches: ['main','develop', feat/**','fix/**']
+    branches: ['main', 'develop', feat/**', 'fix/**']
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
