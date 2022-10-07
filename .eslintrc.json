@@ -49,5 +49,12 @@
     "jest/prefer-to-have-length": "warn",
     "jest/valid-expect": "error",
     "import/extensions": [1, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }]
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".json", ".ts", ".tsx"]
+      }
+    }
   }
 }
