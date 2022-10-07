@@ -3,6 +3,8 @@
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { RouterView } from 'vue-router'
+import router from './router'
 import useStoreStage from './stores/konva/stage'
 import useStoreLine from './stores/konva/line'
 import useStoreText from './stores/konva/text'
@@ -49,15 +51,36 @@ onUnmounted(() => {
     fitStageIntoParentContainer(stageParentDiv.value),
   )
 })
+
+const path = ref('')
+
+router.afterEach((to) => {
+  path.value = to.path
+})
 </script>
 
 <template lang="pug">
+nav(class="bg-bleachWhite px-2.sm:px-4 py-2.5 rounded")
+  div(class="container flex flex-wrap justify-between items-center mx-auto")
+    a(href="/")
+      h1(class="text-midnightBlue text-xl font-bold") App Name
+    div
+      ul(class="flex flex-col p-4 mt-4 rounded-lg border border-gray-100 md:flex-row md:space-x-8 md:mt-0 md:text-sm md:font-medium md:border-0")
+        li
+          a(href="#" class="text-midnightBlue") 新規登録
+        li
+          a(href="#" class="text-dustyOrange") ログイン
+
+main(class="container mx-auto px-2 sm:px-4")
+  RouterView
+
+
 div(ref="stageParentDiv" class="p-5")
   div
     label Mode
     select(ref="selectedMode" width=200 @change="setColor(selectedMode.value)")
       option(value="node" selected) None
-      option(value="draw") Draw 
+      option(value="draw") Draw
   div
     label Color
     select(ref="selectedColor" width=200 @change="setColor(selectedColor.value)")
@@ -83,14 +106,14 @@ div(ref="stageParentDiv" class="p-5")
     label FontFamily
     select(ref="selectedFontFamily" width=200 @change="setTextOptionValue('FontFamily', selectedFontFamily.value)")
       option(value="Arial") Arial
-      option(value="cursive") Cursive 
-      option(value="serif") Serif 
+      option(value="cursive") Cursive
+      option(value="serif") Serif
   div
     label TextAlign
     select(ref="selectedTextAlign" width=200 @change="setTextOptionValue('textAlign', selectedTextAlign.value)")
-      option(value="left") Left 
-      option(value="center") Center 
-      option(value="right") Right 
+      option(value="left") Left
+      option(value="center") Center
+      option(value="right") Right
 
 
   v-stage(
@@ -116,4 +139,6 @@ div(ref="stageParentDiv" class="p-5")
         @dblclick="() => toggleEdit(transformer, stageParentDiv)"
         )
       v-transformer(ref="transformer" :config="configTransformer")
+
+
 </template>
