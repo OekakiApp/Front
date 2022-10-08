@@ -11,7 +11,9 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": "src",
+    "typeRoots": ["types", "node_modules/@types"]
   },
   "include": [
     "src/**/*.ts",
