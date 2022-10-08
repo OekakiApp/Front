@@ -22,7 +22,8 @@ div(class="grid grid-cols-12 mt-8")
           p(class="text-xl font-bold") Name
           p(class="text-sm") 自己紹介: 好きな食べ物は...
       div(class="mr-8")
-        button(type="button" 
+        button(
+type="button" 
           class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-3 py-1" @click="login") 編集
     //- bottom
     div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
