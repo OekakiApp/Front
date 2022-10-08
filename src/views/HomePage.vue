@@ -6,7 +6,7 @@ div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
     div(class="flex mt-2")
       div(class="mini-avatar bg-gray-200")
       a(href="" class="text-midnightBlue pl-2") Name
-  </template>
+</template>
 
 <style scoped>
 .mini-avatar {
