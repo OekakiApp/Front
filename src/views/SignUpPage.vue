@@ -49,7 +49,8 @@ const inputTexts: InputTextInterface[] = reactive([
 const signUp = () => {
   inputTexts.map((_inputText) => {
     const inputText: InputTextInterface = _inputText
-    const isBlankPasswordAndNowRePassword: boolean = inputTexts[2].text === '' && inputText.icon === 'key'
+    const isBlankPasswordAndNowRePassword: boolean =
+      inputTexts[2].text === '' && inputText.icon === 'key'
     if (inputText.text === '' && !isBlankPasswordAndNowRePassword) {
       inputText.isAlert = true
     } else {
@@ -76,7 +77,7 @@ div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
   class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-full p-2.5" required)
 
     div(class="flex justify-center items-center mb-4")
-      button(@click="signUp" type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5") 新規登録
+      button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5" @click="signUp") 新規登録
 
     div
       p(class="text-right") ログインは
