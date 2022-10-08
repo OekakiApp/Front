@@ -9,6 +9,7 @@ interface Points {
 const useStoreLine = defineStore({
   id: 'line',
   state: () => ({
+    drawMode: false,
     isDrawing: false,
     drawColor: 'black', // default Color
     strokeWidth: 1, // default stroke width
@@ -28,9 +29,8 @@ const useStoreLine = defineStore({
       this.lines = [...this.lines, line]
     },
 
-    handleMouseDown(e: any, selectedMode: string) {
-      if (selectedMode !== 'draw') return
-      if (e.target !== e.target.getStage()) return
+    handleMouseDown(e: any) {
+      if (!this.drawMode) return
       this.isDrawing = true
       const pos = e.target.getStage().getPointerPosition()
       const points = {
