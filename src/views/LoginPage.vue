@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-// import { InputTextType } from '../@types/index.d'
 
 type InputTextType = {
-  icon: string;
-  inputType: string;
-  placeholder: string;
-  text: string;
-  isAlert: boolean;
-  alertText: string;
+  icon: string
+  inputType: string
+  placeholder: string
+  text: string
+  isAlert: boolean
+  alertText: string
 }
 
 const inputTexts: InputTextType[] = reactive([
@@ -45,7 +44,6 @@ const validate = () => {
     return inputText
   })
 }
-
 </script>
 
 <template lang="pug">
