@@ -26,19 +26,19 @@ const inputTexts: InputTextInterface[] = reactive([
     text: '',
     isAlert: false,
     alertText: 'パスワードを入力してください',
-  }
+  },
 ])
 
 const login = () => {
   inputTexts.map((_inputText) => {
-    let inputText: InputTextInterface = _inputText;
-    if (inputText.text === "") {
-      inputText.isAlert = true;
+    const inputText: InputTextInterface = _inputText
+    if (inputText.text === '') {
+      inputText.isAlert = true
     } else {
-      inputText.isAlert = false;
+      inputText.isAlert = false
     }
-    return inputText;
-  });
+    return inputText
+  })
 }
 </script>
 
@@ -53,11 +53,12 @@ div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
       div(class="flex items-center justify-center w-full")
         span(class="material-symbols-outlined mr-2") {{inputText.icon}}
         div(class="w-full flex-fill mb-0")
-          input(v-model="inputText.text" :type="inputText.inputType" :id="inputText.icon" :placeholder="inputText.placeholder" :value="inputText.text" 
+          input(
+:id="inputText.icon" v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder" :value="inputText.text" 
             class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-full p-2.5" required)
         
     div(class="flex justify-center items-center mb-4")
-      button(@click="login" type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5") ログイン
+      button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5" @click="login") ログイン
 
     div
       p(class="text-right") 新規登録は
