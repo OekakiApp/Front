@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-
-interface InputTextInterface {
-  icon: string
-  inputType: string
-  placeholder: string
-  text: string
-  isAlert: boolean
-  alertText: string
-}
+import InputTextInterface from '../types/index.d'
 
 const inputTexts: InputTextInterface[] = reactive([
   {
