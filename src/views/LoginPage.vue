@@ -62,5 +62,5 @@ div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
 
     div
       p(class="text-right") 新規登録は
-        a(href="" class="text-blue-500 underline") こちら
+        router-link(to="/sign_up" class="text-blue-500 underline") こちら
 </template>
