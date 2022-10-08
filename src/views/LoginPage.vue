@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import InputTextInterface from '../types/index.d'
+// import { InputTextType } from '../@types/index.d'
 
-const inputTexts: InputTextInterface[] = reactive([
+type InputTextType = {
+  icon: string;
+  inputType: string;
+  placeholder: string;
+  text: string;
+  isAlert: boolean;
+  alertText: string;
+}
+
+const inputTexts: InputTextType[] = reactive([
   {
     icon: 'mail',
     inputType: 'email',
@@ -22,8 +31,12 @@ const inputTexts: InputTextInterface[] = reactive([
 ])
 
 const login = () => {
+  validate()
+}
+
+const validate = () => {
   inputTexts.map((_inputText) => {
-    const inputText: InputTextInterface = _inputText
+    const inputText: InputTextType = _inputText
     if (inputText.text === '') {
       inputText.isAlert = true
     } else {
@@ -32,6 +45,7 @@ const login = () => {
     return inputText
   })
 }
+
 </script>
 
 <template lang="pug">
@@ -39,7 +53,8 @@ div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
   h2(class="sm:text-4xl text-2xl font-bold text-midnightBlue text-center md:mb-20 mb-12") ログイン
   form(class="mx-auto")
     div(v-for="(inputText, index) in inputTexts" :key="index" class="mb-8")
-      div(v-show="inputText.isAlert" class="w-full p-2 my-4 text-sm text-blue-700 bg-blue-100 rounded-lg" role="alert")
+      //- alert
+      div(v-show="inputText.isAlert" class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
         span(class="font-medium") {{inputText.alertText}}
 
       div(class="flex items-center justify-center w-full")
