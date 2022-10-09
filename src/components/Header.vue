@@ -9,4 +9,6 @@ nav(class="bg-bleachWhite px-2.sm:px-4 py-2.5 rounded")
           router-link(to="sign_up" class="text-midnightBlue") 新規登録
         li
           router-link(to="login" class="text-dustyOrange") ログイン
+        li
+          router-link(to="users" class="text-midnightBlue") ユーザー
 </template>
