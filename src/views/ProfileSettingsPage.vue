@@ -1,31 +1,27 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import router from '../router';
+import router from '../router'
 
-const inputText = reactive(
-  {
-    icon: 'person',
-    inputType: 'text',
-    placeholder: 'Type Your Email',
-    text: 'Name',
-    isAlert: false,
-    alertText: '名前を入力してください',
-    label: '名前'
-  },
-)
+const inputText = reactive({
+  icon: 'person',
+  inputType: 'text',
+  placeholder: 'Type Your Email',
+  text: 'Name',
+  isAlert: false,
+  alertText: '名前を入力してください',
+  label: '名前',
+})
 
-const textArea = reactive(
-  {
-    icon: 'introduction',
-    placeholder: 'Type Your Message',
-    text: '好きなことは・・・',
-    isAlert: false,
-    alertText: '100字以内で入力してください',
-    label: '自己紹介'
-  }
-)
+const textArea = reactive({
+  icon: 'introduction',
+  placeholder: 'Type Your Message',
+  text: '好きなことは・・・',
+  isAlert: false,
+  alertText: '100字以内で入力してください',
+  label: '自己紹介',
+})
 
-const saveProfile = ():void => {
+const saveProfile = (): void => {
   const alertFlag = validate()
 
   if (alertFlag) {
@@ -33,18 +29,16 @@ const saveProfile = ():void => {
   }
 }
 
-const validate = ():boolean => {
+const validate = (): boolean => {
   // inputText
-  inputText.isAlert = inputText.text === '' ? true : false
-  textArea.isAlert = textArea.text.length > 100 ? true : false
+  inputText.isAlert = inputText.text === ''
+  textArea.isAlert = textArea.text.length > 100
 
   if (inputText.isAlert === false && textArea.isAlert === false) {
     return true
-  } else {
-    return false
   }
+  return false
 }
-
 </script>
 <template lang="pug">
 div(class="flex max-w-3xl mx-auto mt-8") 
@@ -73,7 +67,7 @@ div(class="flex max-w-3xl mx-auto mt-8")
           textarea(:id="textArea.icon" v-model="textArea.text" :placeholder="textArea.placeholder" rows="4" class="block p-2.5 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300")
 
       div(class="flex justify-center items-center mt-8")
-        button(@click="saveProfile" class="focus:outline-none text-white bg-chardonnay hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-500 font-medium rounded-lg px-5 py-2.5") 保存する
+        button(class="focus:outline-none text-white bg-chardonnay hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-500 font-medium rounded-lg px-5 py-2.5" @click="saveProfile") 保存する
 </template>
 
 <style>
