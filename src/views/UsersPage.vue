@@ -17,14 +17,14 @@ div(class="grid grid-cols-12 mt-8")
     //- top
     div(class="flex justify-between pb-4 border-b")
       div(class="flex")
-        div(class="big-avatar bg-gray-200")
+        div(class="avatar bg-gray-200")
         div(class="flex flex-col justify-center text-midnightBlue ml-4")
           p(class="text-xl font-bold") Name
           p(class="text-sm") 自己紹介: 好きな食べ物は...
       div(class="mr-8")
-        button(
-type="button" 
-          class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-3 py-1" @click="login") 編集
+        router-link(to="/profile/settings") 
+          button(class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-3 py-1") 編集
+          
     //- bottom
     div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
       div(class="picture mx-auto")
@@ -37,12 +37,10 @@ type="button"
           div(class="bg-gray-200 rounded-lg" style="width: 240px; height: 135px")
         div(class="flex mt-2")
           a(href="" class="text-midnightBlue pl-2") Title
-      
-      
 </template>
 
 <style scoped>
-.big-avatar {
+.avatar {
   vertical-align: middle;
   width: 100px;
   height: 100px;
