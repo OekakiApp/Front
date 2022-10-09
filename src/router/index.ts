@@ -23,7 +23,7 @@ const router = createRouter({
       path: '/sign_up',
       name: 'SignUp',
       component: SignUpView,
-    }, 
+    },
     {
       path: '/create',
       name: 'Create',

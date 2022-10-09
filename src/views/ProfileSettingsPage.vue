@@ -44,7 +44,7 @@ const validate = (): boolean => {
 div(class="flex max-w-3xl mx-auto mt-8") 
   //- left
   div(class="flex flex-col items-center")
-    div(class="mini-avatar bg-gray-200")
+    div(class="big-avatar bg-gray-200")
     a(href="" class="text-midnightBlue text-center pt-2") 変更する
 
   //- right
@@ -70,8 +70,8 @@ div(class="flex max-w-3xl mx-auto mt-8")
         button(class="focus:outline-none text-white bg-chardonnay hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-500 font-medium rounded-lg px-5 py-2.5" @click="saveProfile") 保存する
 </template>
 
-<style>
-.mini-avatar {
+<style scoped>
+.big-avatar {
   vertical-align: middle;
   width: 150px;
   height: 150px;
