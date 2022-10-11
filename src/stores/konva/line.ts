@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+type Tool = 'pen' | 'eraser' | 'none'
+
 interface Points {
   points: number[]
   color: string
@@ -9,14 +11,19 @@ interface Points {
 const useStoreLine = defineStore({
   id: 'line',
   state: () => ({
-    drawMode: false,
+    tool: 'none',
     isDrawing: false,
     drawColor: 'black', // default Color
     strokeWidth: 1, // default stroke width
+    globalCompositeOperation: 'source-over',
     lines: [] as Points[],
   }),
 
   actions: {
+    setTool(tool: Tool) {
+      this.tool = tool
+    },
+
     setColor(selectedColor: string) {
       this.drawColor = selectedColor
     },
@@ -25,18 +32,24 @@ const useStoreLine = defineStore({
       this.strokeWidth = parseInt(selectedStrokeWidth, 10)
     },
 
+    setGlobalCompositeOperation() {
+      this.globalCompositeOperation =
+        this.tool === 'eraser' ? 'destination-out' : 'source-over'
+    },
+
     setLines(line: Points) {
       this.lines = [...this.lines, line]
     },
 
     handleMouseDown(e: any) {
-      if (!this.drawMode) return
+      if (this.tool === 'none') return
       this.isDrawing = true
       const pos = e.target.getStage().getPointerPosition()
       const points = {
         points: [pos.x, pos.y],
         color: this.drawColor,
         strokeWidth: this.strokeWidth,
+        globalCompositeOperation: this.globalCompositeOperation,
       }
       this.setLines(points)
     },

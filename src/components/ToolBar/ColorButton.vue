@@ -6,21 +6,11 @@ type Props = {
   color: Color
 }
 const props = defineProps<Props>()
-
+// eslint-disable-next-line vue/no-setup-props-destructure
 const { setColor } = useStoreLine()
 </script>
 
 <template lang="pug">
-div
-  button(class="bg-teal-200" @click="setColor(props.color)" )
-    span(class="material-symbols-outlined") circle
-    p {{props.color}}
+button(class="items-center" @click="setColor(color)")
+  div(class="rounded-full w-8 h-8 m-1 hover:scale-125" :style="{'background-color': props.color}")
 </template>
-
-<style scoped>
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
-  color: red;
-  font-size: 50px;
-}
-</style>
