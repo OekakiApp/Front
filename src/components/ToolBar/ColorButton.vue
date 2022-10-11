@@ -5,8 +5,8 @@ import useStoreLine from '../../stores/konva/line'
 type Props = {
   color: Color
 }
+
 const props = defineProps<Props>()
-// eslint-disable-next-line vue/no-setup-props-destructure
 const { setColor } = useStoreLine()
 </script>
 
