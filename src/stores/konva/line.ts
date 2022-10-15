@@ -1,3 +1,5 @@
+import Konva from 'konva'
+import { Vector2d } from 'konva/lib/types'
 import { defineStore } from 'pinia'
 
 type Tool = 'pen' | 'eraser' | 'none'
@@ -41,20 +43,23 @@ const useStoreLine = defineStore({
       this.lines = [...this.lines, line]
     },
 
-    handleMouseDown(e: any) {
+    handleMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
       if (this.tool === 'none') return
+      const stage = e.target.getStage()
       this.isDrawing = true
-      const pos = e.target.getStage().getPointerPosition()
-      const points = {
-        points: [pos.x, pos.y],
-        color: this.drawColor,
-        strokeWidth: this.strokeWidth,
-        globalCompositeOperation: this.globalCompositeOperation,
+      if (stage != null) {
+        const pos = stage.getPointerPosition() as Vector2d
+        const points = {
+          points: [pos.x, pos.y],
+          color: this.drawColor,
+          strokeWidth: this.strokeWidth,
+          globalCompositeOperation: this.globalCompositeOperation,
+        }
+        this.setLines(points)
       }
-      this.setLines(points)
     },
 
-    handleMouseMove(e: any) {
+    handleMouseMove(e: Konva.KonvaEventObject<MouseEvent>) {
       // no drawing - skipping
       if (!this.isDrawing) {
         return
@@ -62,12 +67,14 @@ const useStoreLine = defineStore({
       // ステージを取得
       const stage = e.target.getStage()
       // ステージのx,yを取得
-      const point = stage.getPointerPosition()
-      const lastLine = this.lines[this.lines.length - 1]
-      // add point
-      lastLine.points = lastLine.points.concat([point.x, point.y])
-      // // replace last
-      this.lines.splice(this.lines.length - 1, 1, lastLine)
+      if (stage != null) {
+        const point = stage.getPointerPosition() as Vector2d
+        const lastLine = this.lines[this.lines.length - 1]
+        // add point
+        lastLine.points = lastLine.points.concat([point.x, point.y])
+        // // replace last
+        this.lines.splice(this.lines.length - 1, 1, lastLine)
+      }
     },
 
     handleMouseUp() {

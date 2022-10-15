@@ -14,7 +14,7 @@ const useStoreStage = defineStore({
   }),
 
   actions: {
-    fitStageIntoParentContainer(container: any) {
+    fitStageIntoParentContainer(container: HTMLDivElement) {
       const containerWidth = container.offsetWidth
       const scale = containerWidth / this.configKonva.width
       this.configKonva.width *= scale
