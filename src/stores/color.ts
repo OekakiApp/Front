@@ -35,6 +35,10 @@ const useStoreColor = defineStore({
       const { r, g, b, a } = color.rgba
       this.color = `rgba(${r}, ${g}, ${b}, ${a})`
     },
+
+    changeToPreparedColor(color: string) {
+      this.color = color
+    },
   },
 })
 

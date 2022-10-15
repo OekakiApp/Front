@@ -2,6 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import useStoreLine from '../stores/konva/line'
+import useStoreColor from '../stores/color'
 import ColorButton from './ToolBar/ColorButton.vue'
 import StrokeWidthRange from './ToolBar/StrokeWidthRange.vue'
 import ColorPickerPalette from './ToolBar/ColorPickerPalette.vue'
@@ -15,8 +16,9 @@ export type Color = {
   onClick: () => void
 }
 
-const { tool } = storeToRefs(useStoreLine())
+const { tool, drawColor } = storeToRefs(useStoreLine())
 const { setTool, setColor, setGlobalCompositeOperation } = useStoreLine()
+const { changeToPreparedColor } = useStoreColor()
 
 const paletteIsOpen = ref(false)
 const activeIndex = ref<number | null>(null)
@@ -67,7 +69,11 @@ const colors: Color[] = [
     style: {
       background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
     },
-    onClick: () => (paletteIsOpen.value = !paletteIsOpen.value),
+    onClick: () => {
+      paletteIsOpen.value = !paletteIsOpen.value
+      // 色をカラーピッカーにも同期させる
+      changeToPreparedColor(drawColor.value)
+    },
   },
 ]
 </script>
@@ -79,7 +85,7 @@ const colors: Color[] = [
     ul.flex
       //- Pen
       li.flex.mr-2
-        button(v-show="tool !== 'pen'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="() => {setTool('pen');setGlobalCompositeOperation()}")
+        button(v-show="tool !== 'pen'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="() => {setTool('pen');setGlobalCompositeOperation();}")
           span(class="material-symbols-outlined") edit 
         button(v-show="tool === 'pen'" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setTool('none')")
           span(class="material-symbols-outlined") edit 
@@ -102,6 +108,6 @@ const colors: Color[] = [
     
     StrokeWidthRange
 
-ColorPickerPalette(v-if="paletteIsOpen")
+ColorPickerPalette(v-if="paletteIsOpen" class="absolute")
 
 </template>
