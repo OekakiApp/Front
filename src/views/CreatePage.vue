@@ -63,8 +63,8 @@ div
     option(value="left") Left
     option(value="center") Center
     option(value="right") Right
-div(class="flex justify-center items-center p-5 bg-slate-200")
-  div(ref="stageParentDiv" class="bg-white max-w-screen-xl w-full")
+div(class="m-auto border-4 max-w-screen-xl")
+  div(ref="stageParentDiv" class="bg-white w-full")
 
     v-stage(
       :config="configKonva"
