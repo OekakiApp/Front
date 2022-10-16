@@ -9,6 +9,13 @@ const useAccountStore = defineStore({
   }),
   actions: {
     async login(email: string, password: string) {
+      console.log(
+        api.post('/auth/jwt/create/?=', {
+          email,
+          password,
+        }),
+      )
+
       const response = await api.post('/auth/jwt/create/?=', {
         email,
         password,
