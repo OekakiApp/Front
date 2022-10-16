@@ -68,7 +68,7 @@ const useStoreText = defineStore({
       // クリックしているのが、Stageでないならスキップ
       if (e.target !== stage) return
       // get x, y of Stage
-      const point = stage.getPointerPosition()
+      const point = stage.getRelativePointerPosition()
       // add text
       const id = nanoid()
       this.texts = [

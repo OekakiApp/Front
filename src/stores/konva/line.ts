@@ -32,7 +32,7 @@ const useStoreLine = defineStore({
     handleMouseDown(e: any) {
       if (!this.drawMode) return
       this.isDrawing = true
-      const pos = e.target.getStage().getPointerPosition()
+      const pos = e.target.getStage().getRelativePointerPosition()
       const points = {
         points: [pos.x, pos.y],
         color: this.drawColor,
@@ -49,7 +49,7 @@ const useStoreLine = defineStore({
       // ステージを取得
       const stage = e.target.getStage()
       // ステージのx,yを取得
-      const point = stage.getPointerPosition()
+      const point = stage.getRelativePointerPosition()
       const lastLine = this.lines[this.lines.length - 1]
       // add point
       lastLine.points = lastLine.points.concat([point.x, point.y])
