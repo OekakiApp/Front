@@ -18,12 +18,12 @@ const useStoreStage = defineStore({
   actions: {
     fitStageIntoParentContainer(container: HTMLDivElement) {
       // Fixed stage size
-      const SCENE_BASE_WIDTH = 800
-      const SCENE_BASE_HEIGHT = 600
+      const SCENE_BASE_WIDTH = 896
+      const SCENE_BASE_HEIGHT = 504
 
       // Max upscale
-      const SCENE_MAX_WIDTH = 1024
-      const SCENE_MAX_HEIGHT = 768
+      const SCENE_MAX_WIDTH = 1280
+      const SCENE_MAX_HEIGHT = 720
 
       const stageWidth =
         container.offsetWidth % 2 !== 0
