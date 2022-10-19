@@ -9,20 +9,16 @@ const useAccountStore = defineStore({
   }),
   actions: {
     async login(email: string, password: string) {
-      console.log(
-        api.post('/auth/jwt/create/?=', {
-          email,
-          password,
-        }),
-      )
-
-      const response = await api.post('/auth/jwt/create/?=', {
-        email,
-        password,
+      const LoginResponse = await api.post('/auth/jwt/create/?=', {
+        email: email,
+        password: password,
       })
-      localStorage.setItem('access', response.data.access_token)
-      console.log(response.data)
-      this.name = response.data.user.name
+      // 認証用トークンをlocalStorageに保存
+      localStorage.setItem('access', LoginResponse.data.access)
+
+      const getUserInfo = await api.get('/auth/users/me/')
+      // ストアのユーザー情報を更新
+      this.name = getUserInfo.data.name
       this.isLoggedIn = true
     },
   },

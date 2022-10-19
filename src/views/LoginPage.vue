@@ -39,20 +39,18 @@ const inputTexts: InputTextType[] = reactive([
 const submitLogin = () => {
   const email = inputTexts[0].text
   const password = inputTexts[1].text
-  console.log({ email, password })
   validate()
   accountStore
     .login(email, password)
     .then(() => {
       console.log('ログインしました。')
-      const next = route.query || '/'
+      const next = !isHashEmpty(route.query) ? route.query : '/'
       router.replace(next)
     })
     .catch((error) => {
-      // エラー発生時はエラーメッセージを表示
+      // TODO: エラー発生時はエラーメッセージを表示
+      console.log({ error })
       console.log('失敗しました')
-      console.log(error)
-      // messageStore.setError(error);
     })
 }
 
@@ -66,6 +64,10 @@ const validate = () => {
     }
     return inputText
   })
+}
+
+const isHashEmpty = (hash: any) => {
+  return !Object.keys(hash).length
 }
 </script>
 
