@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
-import { Vector2d } from 'konva/lib/types'
 
 type TextAlign = 'left' | 'center' | 'right'
 
@@ -69,7 +68,7 @@ const useStoreText = defineStore({
       // クリックしているのが、Stageでないならスキップ
       if (e.target !== stage) return
       // get x, y of Stage
-      const point = stage.getPointerPosition() as Vector2d
+      const point = stage.getRelativePointerPosition()
       // add text
       const id = nanoid()
       this.texts = [

@@ -70,10 +70,9 @@ div
     option(value="top") Top
     option(value="middle") Middle
     option(value="bottom") Bottom
-div(class="p-5 bg-orange-100")
-  div(ref="stageParentDiv" class="bg-white")
 
-
+div(class="m-auto border-4 max-w-screen-xl")
+  div(ref="stageParentDiv" class="bg-white w-full")
     v-stage(
       :config="configKonva"
       @mousedown="(e) => {handleMouseDown(e);handleStageMouseDown(e, transformer.getNode())}"

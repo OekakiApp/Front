@@ -1,5 +1,4 @@
 import Konva from 'konva'
-import { Vector2d } from 'konva/lib/types'
 import { defineStore } from 'pinia'
 
 type Tool = 'pen' | 'eraser' | 'none'
@@ -46,9 +45,10 @@ const useStoreLine = defineStore({
     handleMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
       if (this.tool === 'none') return
       const stage = e.target.getStage()
+      if (e.target !== stage) return
       this.isDrawing = true
       if (stage != null) {
-        const pos = stage.getPointerPosition() as Vector2d
+        const pos = stage.getRelativePointerPosition()
         const points = {
           points: [pos.x, pos.y],
           color: this.drawColor,
@@ -68,7 +68,7 @@ const useStoreLine = defineStore({
       const stage = e.target.getStage()
       // ステージのx,yを取得
       if (stage != null) {
-        const point = stage.getPointerPosition() as Vector2d
+        const point = stage.getRelativePointerPosition()
         const lastLine = this.lines[this.lines.length - 1]
         // add point
         lastLine.points = lastLine.points.concat([point.x, point.y])
