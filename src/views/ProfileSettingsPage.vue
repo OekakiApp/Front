@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import router from '../router'
+import router from '@/router'
 
 const inputText = reactive({
   icon: 'person',

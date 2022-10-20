@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref } from 'vue'
-import ToolBar from '../components/ToolBar.vue'
-import useStoreStage from '../stores/konva/stage'
-import useStoreLine from '../stores/konva/line'
-import useStoreText from '../stores/konva/text'
+import ToolBar from '@/components/ToolBar.vue'
+import useStoreStage from '@/stores/konva/stage'
+import useStoreLine from '@/stores/konva/line'
+import useStoreText from '@/stores/konva/text'
 
 const { configKonva } = storeToRefs(useStoreStage())
 const { fitStageIntoParentContainer } = useStoreStage()
@@ -24,6 +24,7 @@ const {
 const selectedFontSize = ref()
 const selectedFontFamily = ref()
 const selectedTextAlign = ref()
+const selectedTextVerticalAlign = ref()
 
 const stageParentDiv = ref()
 const transformer = ref()
@@ -63,15 +64,21 @@ div
     option(value="left") Left
     option(value="center") Center
     option(value="right") Right
+div
+  label TextVerticalAlign
+  select(ref="selectedTextVerticalAlign" width=200 @change="setTextOptionValue('textVerticalAlign', selectedTextVerticalAlign.value)")
+    option(value="top") Top
+    option(value="middle") Middle
+    option(value="bottom") Bottom
+
 div(class="m-auto border-4 max-w-screen-xl")
   div(ref="stageParentDiv" class="bg-white w-full")
-
     v-stage(
       :config="configKonva"
-      @mousedown="(e: any) => {handleMouseDown(e);handleStageMouseDown(e, transformer)}"
-      @mousemove="(e: any) => handleMouseMove(e)"
+      @mousedown="(e) => {handleMouseDown(e);handleStageMouseDown(e, transformer.getNode())}"
+      @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
-      @dblclick="(e: any) => createNewTextNode(e)")
+      @dblclick="createNewTextNode")
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
 
       v-layer
@@ -84,9 +91,9 @@ div(class="m-auto border-4 max-w-screen-xl")
           v-for="text, index in texts"
           :key="index"
           :config="text"
-          @transformend="(e:any) => handleTransformEnd(e)"
-          @transform="() => handleTransform(transformer)"
-          @dblclick="() => toggleEdit(transformer, stageParentDiv)"
+          @transformend="handleTransformEnd"
+          @transform="() => handleTransform(transformer.getNode())"
+          @dblclick="() => toggleEdit(transformer.getNode(), stageParentDiv)"
           )
         v-transformer(ref="transformer" :config="configTransformer")
 

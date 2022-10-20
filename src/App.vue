@@ -3,8 +3,8 @@
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 import { ref } from 'vue'
 import { RouterView } from 'vue-router'
-import Header from './components/Header.vue'
-import router from './router'
+import Header from '@/components/Header.vue'
+import router from '@/router'
 
 const path = ref('')
 
