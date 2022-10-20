@@ -67,7 +67,7 @@ const useStoreLine = defineStore({
       // ステージを取得
       const stage = e.target.getStage()
       // ステージのx,yを取得
-      if (stage != null) {
+      if (stage !== null) {
         const point = stage.getRelativePointerPosition()
         const lastLine = this.lines[this.lines.length - 1]
         // add point
