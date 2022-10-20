@@ -78,7 +78,7 @@ div(class="m-auto border-4 max-w-screen-xl")
         v-line(
           v-for="line ,index in lines"
           :key="index"
-          :config="{stroke:line.color,points:line.points,strokeWidth:line.strokeWidth,tension:0.1,lineCap:'round',lineJoin:'round'}"
+          :config="{stroke:line.color,points:line.points,strokeWidth:line.strokeWidth,tension:0.1,lineCap:'round',lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
           )
         v-text(
           v-for="text, index in texts"
