@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
-import useStoreLine from '../stores/konva/line'
-import useStoreColor from '../stores/color'
-import ColorButton from './ToolBar/ColorButton.vue'
-import StrokeWidthRange from './ToolBar/StrokeWidthRange.vue'
-import ColorPickerPalette from './ToolBar/ColorPickerPalette.vue'
+import useStoreLine from '@/stores/konva/line'
+import useStoreColor from '@/stores/color'
+import ColorButton from '@/components/ToolBar/ColorButton.vue'
+import StrokeWidthRange from '@/components/ToolBar/StrokeWidthRange.vue'
+import ColorPickerPalette from '@/components/ToolBar/ColorPickerPalette.vue'
 
 export type Color = {
   color: string

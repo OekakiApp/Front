@@ -2,8 +2,8 @@
 import { storeToRefs } from 'pinia'
 import { ColorPicker } from 'vue-color-kit'
 import 'vue-color-kit/dist/vue-color-kit.css'
-import useStoreColor, { type Color } from '../../stores/color'
-import useStoreLine from '../../stores/konva/line'
+import useStoreColor, { type Color } from '@/stores/color'
+import useStoreLine from '@/stores/konva/line'
 
 const { color, colorsDefault } = storeToRefs(useStoreColor())
 const { changeColor } = useStoreColor()

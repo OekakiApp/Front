@@ -47,7 +47,7 @@ const useStoreLine = defineStore({
       const stage = e.target.getStage()
       if (e.target !== stage) return
       this.isDrawing = true
-      if (stage != null) {
+      if (stage !== null) {
         const pos = stage.getRelativePointerPosition()
         const points = {
           points: [pos.x, pos.y],

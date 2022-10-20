@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Color } from '../ToolBar.vue'
+import { type Color } from '@/components/ToolBar.vue'
 
 interface Props {
   color: Color

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import useStoreLine from '../../stores/konva/line'
+import useStoreLine from '@/stores/konva/line'
 
 const { strokeWidth } = storeToRefs(useStoreLine())
 const { setStrokeWidth } = useStoreLine()

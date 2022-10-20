@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref } from 'vue'
-import ToolBar from '../components/ToolBar.vue'
-import useStoreStage from '../stores/konva/stage'
-import useStoreLine from '../stores/konva/line'
-import useStoreText from '../stores/konva/text'
+import ToolBar from '@/components/ToolBar.vue'
+import useStoreStage from '@/stores/konva/stage'
+import useStoreLine from '@/stores/konva/line'
+import useStoreText from '@/stores/konva/text'
 
 const { configKonva } = storeToRefs(useStoreStage())
 const { fitStageIntoParentContainer } = useStoreStage()
