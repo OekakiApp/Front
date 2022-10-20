@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import useAccountStore from '../stores/account'
+
 const accountStore = useAccountStore()
 </script>
 <template lang="pug">

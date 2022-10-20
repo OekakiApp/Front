@@ -10,8 +10,8 @@ const useAccountStore = defineStore({
   actions: {
     async login(email: string, password: string) {
       const LoginResponse = await api.post('/auth/jwt/create/?=', {
-        email: email,
-        password: password,
+        email,
+        password,
       })
       // 認証用トークンをlocalStorageに保存
       localStorage.setItem('access', LoginResponse.data.access)

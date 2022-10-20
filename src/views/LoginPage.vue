@@ -66,9 +66,7 @@ const validate = () => {
   })
 }
 
-const isHashEmpty = (hash: any) => {
-  return !Object.keys(hash).length
-}
+const isHashEmpty = (hash: any) => !Object.keys(hash).length
 </script>
 
 <template lang="pug">
