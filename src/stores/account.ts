@@ -8,7 +8,7 @@ const useAccountStore = defineStore({
     isLoggedIn: false,
   }),
   actions: {
-    async login(email: string, password: string) {
+    async login(email: string, password: string): Promise<void> {
       const LoginResponse = await api.post('/auth/jwt/create/?=', {
         email,
         password,
@@ -16,9 +16,13 @@ const useAccountStore = defineStore({
       // 認証用トークンをlocalStorageに保存
       localStorage.setItem('access', LoginResponse.data.access)
 
-      const getUserInfo = await api.get('/auth/users/me/')
-      // ストアのユーザー情報を更新
-      this.name = getUserInfo.data.name
+      await this.renew()
+    },
+
+    // ユーザー情報更新
+    async renew(): Promise<void> {
+      const response = await api.get('/auth/users/me/')
+      this.name = response.data.name
       this.isLoggedIn = true
     },
   },
