@@ -2,16 +2,20 @@
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref } from 'vue'
 import ToolBar from '@/components/ToolBar.vue'
+import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
-const { fitStageIntoParentContainer } = useStoreStage()
 const { lines } = storeToRefs(useStoreLine())
+const { texts, configTransformer } = storeToRefs(useStoreText())
+
+const { fitStageIntoParentContainer } = useStoreStage()
 const { handleMouseDown, handleMouseMove, handleMouseUp } = useStoreLine()
 
-const { texts, configTransformer } = storeToRefs(useStoreText())
 const {
   createNewTextNode,
   setTextOptionValue,
@@ -27,6 +31,7 @@ const selectedTextAlign = ref()
 const selectedTextVerticalAlign = ref()
 
 const stageParentDiv = ref()
+const stage = ref()
 const transformer = ref()
 
 onMounted(() => {
@@ -74,8 +79,10 @@ div
 div(class="m-auto border-4 max-w-screen-xl")
   div(ref="stageParentDiv" class="bg-white w-full")
     v-stage(
+      ref="stage"
+      :draggable="mode === 'hand'"
       :config="configKonva"
-      @mousedown="(e) => {handleMouseDown(e);handleStageMouseDown(e, transformer.getNode())}"
+      @mousedown="(e) => {handleMouseDown(e, mode);handleStageMouseDown(e, transformer.getNode())}"
       @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
       @dblclick="createNewTextNode")
