@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
+import type { Mode } from '@/stores/mode'
 
 type TextAlign = 'left' | 'center' | 'right'
 
@@ -62,7 +63,8 @@ const useStoreText = defineStore({
   }),
 
   actions: {
-    createNewTextNode(e: Konva.KonvaEventObject<MouseEvent>) {
+    createNewTextNode(e: Konva.KonvaEventObject<MouseEvent>, mode: Mode) {
+      if (mode !== 'text') return
       // get Stage
       const stage = e.target.getStage()
       // クリックしているのが、Stageでないならスキップ

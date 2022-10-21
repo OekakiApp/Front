@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Color } from '@/components/ToolBar.vue'
+import { type Color } from '@/components/SubToolMenu.vue'
 
 interface Props {
   color: Color
@@ -20,9 +20,9 @@ const handleClick = () => {
 </script>
 
 <template lang="pug">
-div(class="rounded-full w-10 h-10 flex justify-center items-center mx-1" :class="{'active-circle': props.index === props.activeindex }")
+div(class="rounded-full w-9 h-9 flex justify-center items-center mx-1" :class="{'active-circle': props.index === props.activeindex }")
   button(class="items-center" @click="() => {props.color.onClick();handleClick()}")
-    div(class="rounded-full w-8 h-8 m-0 cursor-pointer" :style="props.color.style")
+    div(class="rounded-full w-7 h-7 m-0 cursor-pointer" :style="props.color.style")
 </template>
 
 <style scoped>

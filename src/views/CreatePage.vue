@@ -7,12 +7,12 @@ import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 
-// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, configTransformer } = storeToRefs(useStoreText())
 
+const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
 const { handleMouseDown, handleMouseMove, handleMouseUp } = useStoreLine()
 
@@ -34,22 +34,36 @@ const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
 
+// ショートカット
+const changeModeByShortCut = (e: KeyboardEvent) => {
+  if (e.key === 'h') setMode('hand')
+  else if (e.key === 'v') setMode('select')
+  else if (e.key === 'p' || e.key === 'm') setMode('pen')
+  else if (e.shiftKey && e.key === 'Delete') setMode('eraser')
+  else if (e.key === 't') setMode('text')
+  else if (e.key === 's') setMode('sticky')
+  // open image file
+  // undo
+  // redo
+}
+
 onMounted(() => {
   fitStageIntoParentContainer(stageParentDiv.value)
   window.addEventListener('resize', () =>
     fitStageIntoParentContainer(stageParentDiv.value),
   )
+  window.addEventListener('keydown', changeModeByShortCut)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', () =>
     fitStageIntoParentContainer(stageParentDiv.value),
   )
+  window.removeEventListener('keydown', changeModeByShortCut)
 })
 </script>
 
 <template lang="pug">
-ToolBar 
 div
   label FontSize
   select(ref="selectedFontSize" width=200 @change="setTextOptionValue('fontSize', selectedFontSize.value)")
@@ -76,7 +90,7 @@ div
     option(value="middle") Middle
     option(value="bottom") Bottom
 
-div(class="m-auto border-4 max-w-screen-xl")
+div(class="m-auto border-4 max-w-screen-xl relative")
   div(ref="stageParentDiv" class="bg-white w-full")
     v-stage(
       ref="stage"
@@ -85,14 +99,14 @@ div(class="m-auto border-4 max-w-screen-xl")
       @mousedown="(e) => {handleMouseDown(e, mode);handleStageMouseDown(e, transformer.getNode())}"
       @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
-      @dblclick="createNewTextNode")
+      @dblclick="(e) => createNewTextNode(e, mode)")
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
 
       v-layer
         v-line(
           v-for="line ,index in lines"
           :key="index"
-          :config="{stroke:line.color,points:line.points,strokeWidth:line.strokeWidth,tension:0.1,lineCap:'round',lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
+          :config="{stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
           )
         v-text(
           v-for="text, index in texts"
@@ -104,4 +118,5 @@ div(class="m-auto border-4 max-w-screen-xl")
           )
         v-transformer(ref="transformer" :config="configTransformer")
 
+  ToolBar 
 </template>

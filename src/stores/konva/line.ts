@@ -1,12 +1,16 @@
 import Konva from 'konva'
 import { defineStore } from 'pinia'
-import type { Mode } from 'stores/mode'
+import type { Mode } from '@/stores/mode'
 
 interface Points {
   points: number[]
   color: string
+  dash: number[]
+  dashEnabled: boolean
   strokeWidth: number
 }
+
+type LineStyle = 'normal' | 'dash'
 
 const useStoreLine = defineStore({
   id: 'line',
@@ -14,6 +18,9 @@ const useStoreLine = defineStore({
     isDrawing: false,
     drawColor: 'black', // default Color
     strokeWidth: 1, // default stroke width
+    lineStyle: 'normal', // default line style
+    dash: [10, 10],
+    dashEnabled: false,
     globalCompositeOperation: 'source-over',
     lines: [] as Points[],
   }),
@@ -25,6 +32,10 @@ const useStoreLine = defineStore({
 
     setStrokeWidth(selectedStrokeWidth: string) {
       this.strokeWidth = parseInt(selectedStrokeWidth, 10)
+    },
+
+    setLineStyle(selectedLineStyle: LineStyle) {
+      this.dashEnabled = selectedLineStyle !== 'normal'
     },
 
     setGlobalCompositeOperation(mode: Mode) {
@@ -40,7 +51,6 @@ const useStoreLine = defineStore({
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return
       const stage = e.target.getStage()
-      console.log(e.target.getClassName())
       // clickしたのがTextならskip（Textをdragするため）
       if (e.target.getClassName() === 'Text') return
       this.isDrawing = true
@@ -50,6 +60,8 @@ const useStoreLine = defineStore({
           points: [pos.x, pos.y],
           color: this.drawColor,
           strokeWidth: this.strokeWidth,
+          dash: this.dash,
+          dashEnabled: this.dashEnabled,
           globalCompositeOperation: this.globalCompositeOperation,
         }
         this.setLines(points)

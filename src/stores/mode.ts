@@ -1,6 +1,14 @@
 import { defineStore } from 'pinia'
 
-export type Mode = 'hand' | 'pen' | 'eraser' | 'text' | 'image' | 'none'
+export type Mode =
+  | 'select'
+  | 'hand'
+  | 'pen'
+  | 'eraser'
+  | 'text'
+  | 'sticky'
+  | 'image'
+  | 'none'
 
 const useStoreMode = defineStore({
   id: 'mode',
