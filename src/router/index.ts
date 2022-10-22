@@ -40,6 +40,7 @@ const router = createRouter({
       path: '/users',
       name: 'Users',
       component: UserView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/profile/settings',
@@ -54,26 +55,24 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(
-  async (to: RouteLocationNormalized, from: RouteLocationNormalized) => {
-    const accountStore = useAccountStore()
-    const isLoggedIn = accountStore.isLoggedIn
-    // ログイン状態、且つ未ログイン画面に遷移しようとした場合
-    if (isLoggedIn && to.meta.requiresAuth === false) {
-      await forceToHomePage()
-    }
-    // 未ログイン状態、且つログインが必要な画面に遷移しようとした場合
-    else if (!isLoggedIn && to.meta.requiresAuth === true) {
-      // ユーザー情報を再取得
-      accountStore.renew().catch(async () => {
-        // 再取得できなければログイン画面に強制送還
-        await forceToLoginPage(to)
-      })
-    } else if (!isLoggedIn) {
-      await accountStore.renew()
-    }
-  },
-)
+router.beforeEach(async (to: RouteLocationNormalized) => {
+  const accountStore = useAccountStore()
+  const { isLoggedIn } = accountStore
+  // ログイン状態、且つ未ログイン画面に遷移しようとした場合
+  if (isLoggedIn && to.meta.requiresAuth === false) {
+    await forceToHomePage()
+  }
+  // 未ログイン状態、且つログインが必要な画面に遷移しようとした場合
+  else if (!isLoggedIn && to.meta.requiresAuth === true) {
+    // ユーザー情報を再取得
+    accountStore.renew().catch(async () => {
+      // 再取得できなければログイン画面に強制送還
+      await forceToLoginPage(to)
+    })
+  } else if (!isLoggedIn) {
+    await accountStore.renew()
+  }
+})
 
 async function forceToHomePage() {
   await router.replace({

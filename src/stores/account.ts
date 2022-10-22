@@ -15,6 +15,7 @@ const useAccountStore = defineStore({
       })
       // 認証用トークンをlocalStorageに保存
       localStorage.setItem('access', LoginResponse.data.access)
+      localStorage.setItem('refresh', LoginResponse.data.refresh)
 
       await this.renew()
     },

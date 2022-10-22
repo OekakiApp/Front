@@ -9,11 +9,20 @@ const api = axios.create({
   },
 })
 
+const getAccessToken = async () => {
+  const refreshToken = localStorage.getItem('refresh')
+  const accessToken = await api.post('/auth/jwt/refresh/', {
+    refresh: refreshToken,
+  })
+  return accessToken
+}
+
 // 共通前処理
 api.interceptors.request.use((_config: AxiosRequestConfig<any>) => {
   // 認証用トークンがあればリクエストヘッダに加える
   const config = _config
-  const token: string = localStorage.getItem('access')!
+  const token: string | null = localStorage.getItem('access')
+
   if (token != null && config.headers != null) {
     config.headers.Authorization = `JWT ${token}`
   }
@@ -36,14 +45,29 @@ api.interceptors.response.use(
       }
       // 認証エラー
       case 401:
-        await Promise.reject(new Error('認証エラーです。'))
-        break
+        getAccessToken()
+          .then(async (token) => {
+            localStorage.setItem('access', token.data.access)
+            await api.request({
+              ...error.config,
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+              },
+            })
+          })
+          .catch(async () => {
+            console.log(error)
+            await Promise.reject(new Error('認証エラーです。'))
+          })
+        return
       // 権限エラー
       case 403:
         await Promise.reject(new Error('権限エラーです。'))
         break
       // その他のエラー
       default:
+        console.log(error)
         await Promise.reject(new Error('想定外のエラーが発生しました。'))
     }
   },
