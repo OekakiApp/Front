@@ -26,7 +26,7 @@ const useStoreLine = defineStore({
   }),
 
   actions: {
-    setColor(selectedColor: string) {
+    setLineColor(selectedColor: string) {
       this.drawColor = selectedColor
     },
 

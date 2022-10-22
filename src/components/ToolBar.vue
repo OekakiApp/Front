@@ -6,7 +6,7 @@ import SubToolMenu from '@/components/SubToolMenu.vue'
 
 const { mode } = storeToRefs(useStoreMode())
 const { setMode } = useStoreMode()
-const { setGlobalCompositeOperation } = useStoreLine()
+const { setLineStyle, setGlobalCompositeOperation } = useStoreLine()
 </script>
 
 <template lang="pug">
@@ -34,7 +34,7 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
           span(class="material-symbols-outlined") edit 
       //- Eraser
       li.flex.mx-2
-        button(v-show="mode !== 'eraser'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="() => {setMode('eraser');setGlobalCompositeOperation(mode);}")
+        button(v-show="mode !== 'eraser'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="() => {setMode('eraser');setLineStyle('normal');setGlobalCompositeOperation(mode);}")
           span(class="material-symbols-outlined") auto_fix_normal 
         button(v-show="mode === 'eraser'" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
           span(class="material-symbols-outlined") auto_fix_normal 

@@ -18,17 +18,11 @@ const { handleMouseDown, handleMouseMove, handleMouseUp } = useStoreLine()
 
 const {
   createNewTextNode,
-  setTextOptionValue,
   handleStageMouseDown,
   handleTransform,
   handleTransformEnd,
   toggleEdit,
 } = useStoreText()
-
-const selectedFontSize = ref()
-const selectedFontFamily = ref()
-const selectedTextAlign = ref()
-const selectedTextVerticalAlign = ref()
 
 const stageParentDiv = ref()
 const stage = ref()
@@ -64,33 +58,8 @@ onUnmounted(() => {
 </script>
 
 <template lang="pug">
-div
-  label FontSize
-  select(ref="selectedFontSize" width=200 @change="setTextOptionValue('fontSize', selectedFontSize.value)")
-    option(value="10") 10
-    option(value="20") 20
-    option(value="30" selected) 30
-    option(value="40") 40
-div
-  label FontFamily
-  select(ref="selectedFontFamily" width=200 @change="setTextOptionValue('FontFamily', selectedFontFamily.value)")
-    option(value="Arial") Arial
-    option(value="cursive") Cursive
-    option(value="serif") Serif
-div
-  label TextAlign
-  select(ref="selectedTextAlign" width=200 @change="setTextOptionValue('textAlign', selectedTextAlign.value)")
-    option(value="left") Left
-    option(value="center") Center
-    option(value="right") Right
-div
-  label TextVerticalAlign
-  select(ref="selectedTextVerticalAlign" width=200 @change="setTextOptionValue('textVerticalAlign', selectedTextVerticalAlign.value)")
-    option(value="top") Top
-    option(value="middle") Middle
-    option(value="bottom") Bottom
 
-div(class="m-auto border-4 max-w-screen-xl relative")
+div(class="m-auto border-4 max-w-screen-xl relative my-8")
   div(ref="stageParentDiv" class="bg-white w-full")
     v-stage(
       ref="stage"
@@ -118,5 +87,5 @@ div(class="m-auto border-4 max-w-screen-xl relative")
           )
         v-transformer(ref="transformer" :config="configTransformer")
 
-  ToolBar 
+ToolBar 
 </template>

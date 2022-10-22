@@ -2,18 +2,26 @@
 import { storeToRefs } from 'pinia'
 import { ColorPicker } from 'vue-color-kit'
 import 'vue-color-kit/dist/vue-color-kit.css'
-import useStoreColor, { type Color } from '@/stores/color'
+import useStoreMode, { type Mode } from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
+import useStoreText from '@/stores/konva/text'
+import useStoreColor, { type Color } from '@/stores/color'
 
-const { color, colorsDefault } = storeToRefs(useStoreColor())
+const { mode } = storeToRefs(useStoreMode())
+const { setLineColor } = useStoreLine()
+const { setTextColor, setTextOptionValue } = useStoreText()
 const { changeColor } = useStoreColor()
-const { setColor } = useStoreLine()
+const { color, colorsDefault } = storeToRefs(useStoreColor())
 
-const onchange = (colorObj: Color) => {
+const onchange = (colorObj: Color, currMode: Mode) => {
   changeColor(colorObj)
   // 線の色を変更
   const { r, g, b, a } = colorObj.rgba
-  setColor(`rgba(${r}, ${g}, ${b}, ${a})`)
+  if (currMode === 'pen') setLineColor(`rgba(${r}, ${g}, ${b}, ${a})`)
+  else if (currMode === 'text') {
+    setTextColor(`rgba(${r}, ${g}, ${b}, ${a})`)
+    setTextOptionValue('textFillColor', `rgba(${r}, ${g}, ${b}, ${a})`)
+  }
 }
 </script>
 
@@ -24,8 +32,8 @@ ColorPicker(
   :color="color"
   :colors-default="colorsDefault"
   :sucker-hide="true"
-  @change-color="onchange")
-
+  @change-color="(colorObj) => onchange(colorObj, mode)")
+  
 </template>
 
 <style scoped>

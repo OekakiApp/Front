@@ -3,8 +3,9 @@ import { nanoid } from 'nanoid'
 import Konva from 'konva'
 import type { Mode } from '@/stores/mode'
 
+type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
+type TextDecoration = 'empty string' | 'line-through' | 'underline'
 type TextAlign = 'left' | 'center' | 'right'
-
 type TextVerticalAlign = 'top' | 'middle' | 'bottom'
 
 interface AreaPosition {
@@ -21,6 +22,8 @@ interface TextNode {
   scaleX: number
   scaleY: number
   fontSize: number
+  fontStyle: FontStyle
+  textDecoration: TextDecoration
   fontFamily: string
   align: TextAlign
   verticalAlign: TextVerticalAlign
@@ -36,6 +39,13 @@ interface TextNode {
 const useStoreText = defineStore({
   id: 'text',
   state: () => ({
+    fontSize: 30, // default font size
+    fontFamily: 'Arial',
+    fontStyle: 'normal',
+    textDecoration: 'empty string',
+    fill: 'black',
+    align: 'left',
+    verticalAlign: 'top',
     texts: [] as TextNode[],
 
     configTransformer: {
@@ -83,16 +93,18 @@ const useStoreText = defineStore({
           y: point.y,
           scaleX: 1,
           scaleY: 1,
-          fontSize: 30,
+          fontSize: this.fontSize,
+          fontStyle: this.fontStyle as FontStyle,
+          textDecoration: this.textDecoration as TextDecoration,
           fontFamily: 'Arial',
-          align: 'left',
-          verticalAlign: 'top',
+          align: this.align as TextAlign,
+          verticalAlign: this.verticalAlign as TextVerticalAlign,
           draggable: true,
           width: 200,
           height: 100,
-          fill: 'black',
+          fill: this.fill,
           wrap: 'word',
-          ellipsis: true,
+          ellipsis: false,
           name: `${id}`,
         },
       ]
@@ -106,16 +118,19 @@ const useStoreText = defineStore({
       if (text != null) {
         switch (option) {
           case 'fontSize':
-            this.setFontSize(text, value)
+            text.fontSize = parseInt(value, 10)
             break
           case 'fontFamily':
-            this.setFontFamily(text, value)
+            text.fontFamily = value
             break
           case 'textAlign':
-            this.setTextAlign(text, value as TextAlign)
+            text.align = value as TextAlign
             break
           case 'textVerticalAlign':
-            this.setTextVerticalAlign(text, value as TextVerticalAlign)
+            text.verticalAlign = value as TextVerticalAlign
+            break
+          case 'textFillColor':
+            text.fill = value
             break
           default:
             break
@@ -123,27 +138,24 @@ const useStoreText = defineStore({
       }
     },
 
-    setFontSize(textNode: TextNode, selectedFontSize: string) {
-      const text = textNode
-      text.fontSize = parseInt(selectedFontSize, 10)
+    setFontSize(selectedFontSize: string) {
+      this.fontSize = parseInt(selectedFontSize, 10)
     },
 
-    setFontFamily(textNode: TextNode, selectedFontFamily: string) {
-      const text = textNode
-      text.fontFamily = selectedFontFamily
+    setFontFamily(selectedFontFamily: string) {
+      this.fontFamily = selectedFontFamily
     },
 
-    setTextAlign(textNode: TextNode, selectedTextAlign: TextAlign) {
-      const text = textNode
-      text.align = selectedTextAlign
+    setTextAlign(selectedTextAlign: TextAlign) {
+      this.align = selectedTextAlign
     },
 
-    setTextVerticalAlign(
-      textNode: TextNode,
-      selectedTextVerticalAlign: TextVerticalAlign,
-    ) {
-      const text = textNode
-      text.verticalAlign = selectedTextVerticalAlign
+    setTextVerticalAlign(selectedTextVerticalAlign: TextVerticalAlign) {
+      this.verticalAlign = selectedTextVerticalAlign
+    },
+
+    setTextColor(selectedTextColor: string) {
+      this.fill = selectedTextColor
     },
 
     handleTransform(transformer: Konva.Transformer) {
@@ -280,9 +292,7 @@ const useStoreText = defineStore({
       textarea.style.top = `${areaPosition.y}px`
       textarea.style.left = `${areaPosition.x}px`
       textarea.style.width = `${textNode.width() - textNode.padding() * 2}px`
-      textarea.style.height = `${
-        textNode.height() - textNode.padding() * 2 + 5
-      }px`
+      textarea.style.height = `${textNode.height() - textNode.padding() * 2}px`
       textarea.style.fontSize = `${textNode.fontSize()}px`
       textarea.style.border = 'none'
       textarea.style.padding = '0px'
@@ -296,6 +306,7 @@ const useStoreText = defineStore({
       textarea.style.transformOrigin = 'left top'
       textarea.style.textAlign = textNode.align()
       textarea.style.color = textNode.fill()
+      textarea.style.scale = textNode.getStage()?.scaleX().toString() as string
       let rotation = textNode.rotation()
       let transform = ''
       if (rotation === null) {
