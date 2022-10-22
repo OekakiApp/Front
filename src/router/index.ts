@@ -56,6 +56,8 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to: RouteLocationNormalized) => {
+  localStorage.setItem('access', '')
+  localStorage.setItem('refresh', '')
   const accountStore = useAccountStore()
   const { isLoggedIn } = accountStore
   // ログイン状態、且つ未ログイン画面に遷移しようとした場合
@@ -69,8 +71,10 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
       // 再取得できなければログイン画面に強制送還
       await forceToLoginPage(to)
     })
-  } else if (!isLoggedIn) {
-    await accountStore.renew()
+  } else if (!isLoggedIn && !accountStore.isAutoLoginOnce) {
+    accountStore.renew().catch(() => {
+      accountStore.isAutoLoginOnce = true
+    })
   }
 })
 

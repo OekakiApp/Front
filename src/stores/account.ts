@@ -6,6 +6,7 @@ const useAccountStore = defineStore({
   state: () => ({
     name: '',
     isLoggedIn: false,
+    isAutoLoginOnce: false,
   }),
   actions: {
     async login(email: string, password: string): Promise<void> {
@@ -21,8 +22,10 @@ const useAccountStore = defineStore({
     },
 
     // ユーザー情報更新
-    async renew(): Promise<void> {
+    async renew() {
       const response = await api.get('/auth/users/me/')
+      if (response === undefined) return
+
       this.name = response.data.name
       this.isLoggedIn = true
     },
