@@ -16,7 +16,7 @@ const useStoreLine = defineStore({
   id: 'line',
   state: () => ({
     isDrawing: false,
-    drawColor: 'black', // default Color
+    drawColor: '#1E1E1E', // default Color
     strokeWidth: 1, // default stroke width
     lineStyle: 'normal', // default line style
     dash: [10, 10],

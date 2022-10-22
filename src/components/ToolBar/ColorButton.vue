@@ -4,7 +4,7 @@ import { type Color } from '@/components/SubToolMenu.vue'
 interface Props {
   color: Color
   index: number
-  activeindex: number | null
+  activeIndex: number | null
 }
 
 interface Emits {
@@ -20,7 +20,7 @@ const handleClick = () => {
 </script>
 
 <template lang="pug">
-div(class="rounded-full w-9 h-9 flex justify-center items-center mx-1" :class="{'active-circle': props.index === props.activeindex }")
+div(class="rounded-full w-9 h-9 flex justify-center items-center mx-1" :class="{'active-circle': props.index === props.activeIndex }")
   button(class="items-center" @click="() => {props.color.onClick();handleClick()}")
     div(class="rounded-full w-7 h-7 m-0 cursor-pointer" :style="props.color.style")
 </template>

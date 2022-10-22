@@ -43,7 +43,7 @@ const useStoreText = defineStore({
     fontFamily: 'Arial',
     fontStyle: 'normal',
     textDecoration: 'empty string',
-    fill: 'black',
+    fill: '#1E1E1E',
     align: 'left',
     verticalAlign: 'top',
     texts: [] as TextNode[],

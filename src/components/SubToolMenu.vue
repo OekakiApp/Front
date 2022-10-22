@@ -31,8 +31,8 @@ const { changeToPreparedColor } = useStoreColor()
 
 const linePaletteIsOpen = ref(false)
 const textPaletteIsOpen = ref(false)
-const activeLineColorIndex = ref<number | null>(null)
-const activeTextColorIndex = ref<number | null>(null)
+const activeLineColorIndex = ref<number>(0)
+const activeTextColorIndex = ref<number>(0)
 
 const lineColors: Color[] = [
   {
@@ -174,7 +174,7 @@ div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 ro
   ColorButton(
     v-for="(color, index) in lineColors"
     :key="color.color" :color="color" :index="index"
-    :activeindex="activeLineColorIndex"
+    :active-index="activeLineColorIndex"
     @toggle-active="(index:number) => activeLineColorIndex = index")
   div(class="pl-2")
     StrokeWidthRange
@@ -192,7 +192,7 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
   ColorButton(
     v-for="(color, index) in textColors"
     :key="color.color" :color="color"
-    :index="index" :activeindex="activeTextColorIndex"
+    :index="index" :active-index="activeTextColorIndex"
     @toggle-active="(index:number) => activeTextColorIndex = index")
   ColorPickerPalette(v-if="textPaletteIsOpen" class="absolute -top-80")
 

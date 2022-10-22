@@ -13,7 +13,7 @@ export type Mode =
 const useStoreMode = defineStore({
   id: 'mode',
   state: () => ({
-    mode: 'none', // default
+    mode: 'none' as Mode, // default
   }),
 
   actions: {
