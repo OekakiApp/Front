@@ -56,8 +56,6 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to: RouteLocationNormalized) => {
-  localStorage.setItem('access', '')
-  localStorage.setItem('refresh', '')
   const accountStore = useAccountStore()
   const { isLoggedIn } = accountStore
   // ログイン状態、且つ未ログイン画面に遷移しようとした場合

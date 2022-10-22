@@ -54,7 +54,7 @@ api.interceptors.response.use(
           })
           return get
         })
-        .catch(async() => {
+        .catch(async () => {
           await Promise.reject(new Error('認証エラーです。'))
         })
       // return isGetAccessToken

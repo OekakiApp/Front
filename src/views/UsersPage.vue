@@ -1,3 +1,10 @@
+<script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import useAccountStore from '../stores/account'
+const accountStore = useAccountStore()
+const { name } = storeToRefs(useAccountStore())
+</script>
+
 <template lang="pug">
 div(class="grid grid-cols-12 mt-8")
   //- left
@@ -11,7 +18,7 @@ div(class="grid grid-cols-12 mt-8")
         li(class="border-b py-2")
           a(href="#" class="block") 設定
         li(class="pt-2")
-          a(href="#" class="block") ログアウト
+          router-link(@click="accountStore.logout()" to="/" class="block cursor-pointer") ログアウト
   //- right
   div(class="col-span-9 ml-8")
     //- top
@@ -19,7 +26,7 @@ div(class="grid grid-cols-12 mt-8")
       div(class="flex")
         div(class="avatar bg-gray-200")
         div(class="flex flex-col justify-center text-midnightBlue ml-4")
-          p(class="text-xl font-bold") Name
+          p(class="text-xl font-bold") {{ name }}
           p(class="text-sm") 自己紹介: 好きな食べ物は...
       div(class="mr-8")
         router-link(to="/profile/settings") 

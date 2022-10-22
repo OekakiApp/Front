@@ -21,6 +21,16 @@ const useAccountStore = defineStore({
       await this.renew()
     },
 
+    logout(): void {
+      // 認証用トークンの削除
+      localStorage.removeItem('access')
+      localStorage.removeItem('refresh')
+
+      // reset
+      this.$reset()
+      this.isAutoLoginOnce = true
+    },
+
     // ユーザー情報更新
     async renew() {
       const response = await api.get('/auth/users/me/')
