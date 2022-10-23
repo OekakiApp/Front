@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { type Color } from '@/components/SubToolMenu.vue'
-import useStoreLine from '@/stores/konva/line'
 import { ref } from 'vue'
 
 interface Props {
@@ -10,30 +9,33 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'toggle-active', index: number): void
+  (e: 'toggle-button-active', index: number): void
+  (e: 'toggle-picker-active', index: number, color: string): void
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const { setLineColor } = useStoreLine()
-
 const colorPicker = ref().value
 
-const handleClick = () => {
-  emit('toggle-active', props.index)
+const handleColorButtonClick = () => {
+  emit('toggle-button-active', props.index)
+}
+
+const handleColorPickerClick = (color: string) => {
+  emit('toggle-picker-active', props.index, color)
 }
 </script>
 
 <template lang="pug">
 //- button
 div(v-if="props.color.type === 'color-button'" class="rounded-full w-9 h-9 flex justify-center items-center mx-1" :class="{'active-circle': props.index === props.activeIndex }")
-  button(type="button" class="flex justify-center items-center" @click="() => {props.color.onClick();handleClick()}")
+  button(type="button" class="flex justify-center items-center" @click="() => {props.color.onClick();handleColorButtonClick()}")
     div(class="rounded-full w-7 h-7 m-0 cursor-pointer" :style="props.color.style")
 //- color-picker
 div(v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 flex justify-center items-center mx-1" :class="{'active-circle': props.index === props.activeIndex }")
   button(type="button" class="flex justify-center items-center")
-    input(ref="colorPicker" type="color" class="input-color-style" value="#000000" @input="() => {setLineColor(colorPicker.value);handleClick();}")
+    input(ref="colorPicker" type="color" class="input-color-style" value="#000000" @input="handleColorPickerClick(colorPicker.value)")
 </template>
 
 <style scoped>

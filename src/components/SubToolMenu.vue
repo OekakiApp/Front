@@ -189,7 +189,8 @@ div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 ro
     v-for="(color, index) in lineColors"
     :key="color.color" :color="color" :index="index"
     :active-index="activeLineColorIndex"
-    @toggle-active="(index:number) => activeLineColorIndex = index")
+    @toggle-button-active="(index:number) => activeLineColorIndex = index"
+    @toggle-picker-active="(index:number, color: string) => {activeLineColorIndex = index;setLineColor(color)}")
   div(class="pl-2")
     StrokeWidthRange
 //- eraser
@@ -206,6 +207,6 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
     v-for="(color, index) in textColors"
     :key="color.color" :color="color"
     :index="index" :active-index="activeTextColorIndex"
-    @toggle-active="(index:number) => activeTextColorIndex = index")
-
+    @toggle-button-active="(index:number) => activeTextColorIndex = index"
+    @toggle-picker-active="(index:number, color:string) =>{activeTextColorIndex = index;setTextColor(color);setTextOptionValue('textFillColor', color)}")
 </template>
