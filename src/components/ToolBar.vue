@@ -92,25 +92,16 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
     ul.flex
       //- select hand pen text sticky image
       li(v-for="(tool, index) of toolArray" :key="index" class="flex mx-2")
-        button(v-show="mode !== tool.mode" :data-tooltip-target="'tooltip-' + index" type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
+        button(v-show="mode !== tool.mode" type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
           span(class="material-symbols-outlined") {{tool.icon}}
-        button(v-show="mode === tool.mode" :data-tooltip-target="'tooltip-' + index" type="button" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
+        button(v-show="mode === tool.mode" type="button" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
           span(class="material-symbols-outlined") {{tool.icon}}
-        div(:id="'tooltip-' + index" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip dark:bg-gray-700") {{ tool.tooltip }}&nbsp;&nbsp;&nbsp;
-          span(class="text-slate-400") {{tool.shortcut}}
-          div(class="tooltip-arrow" data-popper-arrow)
       //- Undo
       li.flex.mx-2
-        button(:data-tooltip-target="'tooltip-undo'" type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+        button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") undo 
-        div(:id="'tooltip-undo'" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip dark:bg-gray-700") Undo&nbsp;&nbsp;&nbsp;
-          span(class="text-slate-400") Ctrl + Z
-          div(class="tooltip-arrow" data-popper-arrow)
       //- Redo
       li.flex.mx-2
-        button(:data-tooltip-target="'tooltip-redo'" type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+        button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") redo 
-        div(:id="'tooltip-redo'" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip dark:bg-gray-700") Redo&nbsp;&nbsp;&nbsp;
-          span(class="text-slate-400") Ctrl + Y
-          div(class="tooltip-arrow" data-popper-arrow)
 </template>

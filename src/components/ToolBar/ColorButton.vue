@@ -16,7 +16,7 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const colorPicker = ref().value
+const colorPicker = ref()
 
 const handleColorButtonClick = () => {
   emit('toggle-button-active', props.index)
@@ -54,11 +54,11 @@ div(v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 
   border-radius: 50%;
 }
 
-/* .input-color-style::-webkit-color-swatch {
+.input-color-style::-webkit-color-swatch {
   border-radius: 50%;
 }
 
 .input-color-style::-moz-color-swatch {
   border-radius: 50%;
-} */
+}
 </style>
