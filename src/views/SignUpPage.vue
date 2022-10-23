@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import useAccountStore from '../stores/account'
+
+const router = useRouter()
+// 現在のパスに対応するルートを取得
+const route = useRoute()
+const accountStore = useAccountStore()
 
 type InputTextType = {
   icon: string
@@ -46,33 +53,53 @@ const inputTexts: InputTextType[] = reactive([
 ])
 
 // TODO: 関数書き換え(map中 他textとの条件複雑になる) && 条件の見直し
-const signUp = () => {
+const submitSignup = () => {
+  const name = inputTexts[0].text
+  const email = inputTexts[1].text
+  const password = inputTexts[2].text
+  const rePassword = inputTexts[3].text
   validate()
+  if (
+    !inputTexts[0].isAlert &&
+    !inputTexts[1].isAlert &&
+    !inputTexts[2].isAlert &&
+    !inputTexts[3].isAlert
+  ) {
+    accountStore
+      .signup(name, email, password, rePassword)
+      .then(() => {
+        console.log('新規登録しました。')
+        const next = !isHashEmpty(route.query) ? route.query : '/'
+        router.replace(next)
+      })
+      .catch((error) => {
+        // TODO: エラー発生時はエラーメッセージを表示
+        console.log({ error })
+        console.log('失敗しました')
+      })
+  }
 }
 
+// TODO:validation
 const validate = () => {
-  inputTexts.map((_inputText) => {
-    const inputText: InputTextType = _inputText
-    const isBlankPasswordAndNowRePassword: boolean =
-      inputTexts[2].text === '' && inputText.icon === 'key'
+  const name = inputTexts[0].text
+  const email = inputTexts[1].text
+  const password = inputTexts[2].text
+  const rePassword = inputTexts[3].text
 
-    // パスワードと再パスワードの一致
-    if (inputText.text !== inputTexts[2].text) {
-      inputText.isAlert = true
-    } else if (inputText.text === '' && !isBlankPasswordAndNowRePassword) {
-      inputText.isAlert = true
-    } else {
-      inputText.isAlert = false
-    }
-    return inputText
-  })
+  inputTexts[0].isAlert = name === ''
+  inputTexts[1].isAlert = email === ''
+  inputTexts[2].isAlert = password === ''
+  inputTexts[3].isAlert = rePassword !== password
 }
+
+const isHashEmpty = (hash: any) => !Object.keys(hash).length
 </script>
 
 <template lang="pug">
 div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
   h2(class="sm:text-4xl text-2xl font-bold text-midnightBlue text-center md:mb-20 mb-12") 新規登録
-  form(class="mx-auto")
+  form(class="mx-auto"  @submit.prevent="submitSignup")
     div(v-for="(inputText, index) in inputTexts" :key="index" class="mb-8")
       //- alert
       div(v-show="inputText.isAlert" class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
@@ -86,7 +113,7 @@ div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
   class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-full p-2.5" required)
 
     div(class="flex justify-center items-center mb-4")
-      button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5" @click="signUp") 新規登録
+      button(type="submit" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5") 新規登録
 
     div
       p(class="text-right") ログインは

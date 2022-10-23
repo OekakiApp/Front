@@ -31,6 +31,21 @@ const useAccountStore = defineStore({
       this.isAutoLoginOnce = true
     },
 
+    async signup(
+      name: string,
+      email: string,
+      password: string,
+      rePassword: string,
+    ) {
+      const SignupResponse = await api.post('/auth/users/?', {
+        name,
+        email,
+        password,
+        rePassword,
+      })
+      await this.login(SignupResponse.data.email, password)
+    },
+
     // ユーザー情報更新
     async renew() {
       const response = await api.get('/auth/users/me/')

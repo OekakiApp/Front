@@ -10,7 +10,10 @@ const api = axios.create({
 })
 
 const getAccessToken = async () => {
-  const refreshToken = localStorage.getItem('refresh')
+  const refreshToken =
+    localStorage.getItem('refresh') !== 'undefined'
+      ? localStorage.getItem('refresh')
+      : ''
   const accessToken = await api.post('/auth/jwt/refresh/', {
     refresh: refreshToken,
   })
@@ -32,7 +35,7 @@ api.interceptors.request.use((_config: AxiosRequestConfig<any>) => {
 // 共通後処理
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  async (error) => { // eslint-disable-line
     const errorStatus = error.response?.status
     // バリデーションNG
     if (errorStatus === 400) {
@@ -42,22 +45,22 @@ api.interceptors.response.use(
       await Promise.reject(syntax)
     } else if (errorStatus === 401) {
       // 認証エラー
-      await getAccessToken()
+      const isGetAccessToken = await getAccessToken()
         .then(async (token) => {
           localStorage.setItem('access', token.data.access)
-          const get = await api.request({
+          const reRequest = await api.request({
             ...error.config,
             headers: {
               'Content-Type': 'application/json',
               'X-Requested-With': 'XMLHttpRequest',
             },
           })
-          return get
+          return reRequest
         })
         .catch(async () => {
           await Promise.reject(new Error('認証エラーです。'))
         })
-      // return isGetAccessToken
+      return isGetAccessToken
     } else if (errorStatus === 403) {
       // 権限エラー
       await Promise.reject(new Error('権限エラーです。'))

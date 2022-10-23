@@ -65,12 +65,15 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
   // 未ログイン状態、且つログインが必要な画面に遷移しようとした場合
   else if (!isLoggedIn && to.meta.requiresAuth === true) {
     // ユーザー情報を再取得
-    accountStore.renew().catch(async () => {
-      // 再取得できなければログイン画面に強制送還
+    accountStore.renew().catch(async (error) => {
       await forceToLoginPage(to)
+      console.log(error)
     })
-  } else if (!isLoggedIn && !accountStore.isAutoLoginOnce) {
-    accountStore.renew().catch(() => {
+  }
+  // 未ログイン状態、且つ一度もログインを更新していない場合
+  else if (!isLoggedIn && !accountStore.isAutoLoginOnce) {
+    accountStore.renew().catch((error) => {
+      console.log(error)
       accountStore.isAutoLoginOnce = true
     })
   }

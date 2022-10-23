@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import useAccountStore from '../stores/account'
+
 const accountStore = useAccountStore()
 const { name } = storeToRefs(useAccountStore())
 </script>
@@ -18,7 +19,7 @@ div(class="grid grid-cols-12 mt-8")
         li(class="border-b py-2")
           a(href="#" class="block") 設定
         li(class="pt-2")
-          router-link(@click="accountStore.logout()" to="/" class="block cursor-pointer") ログアウト
+          router-link(to="/" class="block cursor-pointer" @click="accountStore.logout()") ログアウト
   //- right
   div(class="col-span-9 ml-8")
     //- top
