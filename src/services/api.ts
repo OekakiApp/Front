@@ -35,7 +35,9 @@ api.interceptors.request.use((_config: AxiosRequestConfig<any>) => {
 // 共通後処理
 api.interceptors.response.use(
   (response) => response,
-  async (error) => { // eslint-disable-line
+  /* eslint-disable */
+  // consistent-return axiosをリターンしている為
+  async (error) => {
     const errorStatus = error.response?.status
     // バリデーションNG
     if (errorStatus === 400) {
@@ -69,6 +71,7 @@ api.interceptors.response.use(
       await Promise.reject(new Error('想定外のエラーが発生しました。'))
     }
   },
+  /* eslint-enable */
 )
 
 export default api
