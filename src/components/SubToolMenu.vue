@@ -7,89 +7,95 @@ import StrokeWidthRange from '@/components/ToolBar/StrokeWidthRange.vue'
 import FontSizeSelect from '@/components/ToolBar/FontSizeSelect.vue'
 import TextAlignmentSelect from '@/components/ToolBar/TextAlignmentSelect.vue'
 import TextVerticalAlignmentSelect from '@/components/ToolBar/TextVerticalAlignmentSelect.vue'
-import ColorPickerPalette from '@/components/ToolBar/ColorPickerPalette.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
-import useStoreColor from '@/stores/color'
 
 export type Color = {
+  name: string
+  type: 'color-button' | 'color-picker'
   color: string
-  style: {
-    'background-color'?: string
-    background?: string
+  style?: {
+    'background-color': string
   }
-  onClick: () => void
+  onClick?: () => void
 }
 
 const { mode } = storeToRefs(useStoreMode())
-const { drawColor } = storeToRefs(useStoreLine())
-const { fill } = storeToRefs(useStoreText())
 const { setLineColor } = useStoreLine()
 const { setTextOptionValue, setTextColor } = useStoreText()
-const { changeToPreparedColor } = useStoreColor()
 
-const linePaletteIsOpen = ref(false)
-const textPaletteIsOpen = ref(false)
 const activeLineColorIndex = ref<number>(0)
 const activeTextColorIndex = ref<number>(0)
 
 const lineColors: Color[] = [
   {
+    name: 'Black',
+    type: 'color-button',
     color: '#1E1E1E',
     style: { 'background-color': '#1E1E1E' },
     onClick: () => setLineColor('#1E1E1E'),
   },
   {
+    name: 'Red',
+    type: 'color-button',
     color: '#F24822',
     style: { 'background-color': '#F24822' },
     onClick: () => setLineColor('#F24822'),
   },
   {
+    name: 'Orange',
+    type: 'color-button',
     color: '#FFA629',
     style: { 'background-color': '#FFA629' },
     onClick: () => setLineColor('#FFA629'),
   },
   {
+    name: 'Yellow',
+    type: 'color-button',
     color: '#FFCD29',
     style: { 'background-color': '#FFCD29' },
     onClick: () => setLineColor('#FFCD29'),
   },
   {
+    name: 'Green',
+    type: 'color-button',
     color: '#14AE5C',
     style: { 'background-color': '#14AE5C' },
     onClick: () => setLineColor('#14AE5C'),
   },
   {
+    name: 'Blue',
+    type: 'color-button',
     color: '#0D99FF',
     style: { 'background-color': '#0D99FF' },
     onClick: () => setLineColor('#0D99FF'),
   },
   {
+    name: 'Violet',
+    type: 'color-button',
     color: '#9747FF',
     style: { 'background-color': '#9747FF' },
     onClick: () => setLineColor('#9747FF'),
   },
   {
+    name: 'White',
+    type: 'color-button',
     color: '#FFFFFF',
     style: { 'background-color': '#FFFFFF' },
     onClick: () => setLineColor('#FFFFFF'),
   },
   {
+    name: 'Custom',
+    type: 'color-picker',
     color: 'rainbow',
-    style: {
-      background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
-    },
-    onClick: () => {
-      linePaletteIsOpen.value = !linePaletteIsOpen.value
-      // 色をカラーピッカーにも同期させる
-      changeToPreparedColor(drawColor.value)
-    },
   },
 ]
 
 const textColors: Color[] = [
   {
+    name: 'Black',
+    type: 'color-button',
     color: '#1E1E1E',
     style: { 'background-color': '#1E1E1E' },
     onClick: () => {
@@ -98,6 +104,8 @@ const textColors: Color[] = [
     },
   },
   {
+    name: 'Red',
+    type: 'color-button',
     color: '#F24822',
     style: { 'background-color': '#F24822' },
     onClick: () => {
@@ -106,6 +114,8 @@ const textColors: Color[] = [
     },
   },
   {
+    name: 'Orange',
+    type: 'color-button',
     color: '#FFA629',
     style: { 'background-color': '#FFA629' },
     onClick: () => {
@@ -114,6 +124,8 @@ const textColors: Color[] = [
     },
   },
   {
+    name: 'Yellow',
+    type: 'color-button',
     color: '#FFCD29',
     style: { 'background-color': '#FFCD29' },
     onClick: () => {
@@ -122,6 +134,8 @@ const textColors: Color[] = [
     },
   },
   {
+    name: 'Green',
+    type: 'color-button',
     color: '#14AE5C',
     style: { 'background-color': '#14AE5C' },
     onClick: () => {
@@ -130,6 +144,8 @@ const textColors: Color[] = [
     },
   },
   {
+    name: 'Blue',
+    type: 'color-button',
     color: '#0D99FF',
     style: { 'background-color': '#0D99FF' },
     onClick: () => {
@@ -138,6 +154,8 @@ const textColors: Color[] = [
     },
   },
   {
+    name: 'Violet',
+    type: 'color-button',
     color: '#9747FF',
     style: { 'background-color': '#9747FF' },
     onClick: () => {
@@ -146,6 +164,8 @@ const textColors: Color[] = [
     },
   },
   {
+    name: 'White',
+    type: 'color-button',
     color: '#FFFFFF',
     style: { 'background-color': '#FFFFFF' },
     onClick: () => {
@@ -154,15 +174,9 @@ const textColors: Color[] = [
     },
   },
   {
+    name: 'Custom',
+    type: 'color-picker',
     color: 'rainbow',
-    style: {
-      background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
-    },
-    onClick: () => {
-      textPaletteIsOpen.value = !textPaletteIsOpen.value
-      // 色をカラーピッカーにも同期させる
-      changeToPreparedColor(fill.value)
-    },
   },
 ]
 </script>
@@ -178,7 +192,6 @@ div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 ro
     @toggle-active="(index:number) => activeLineColorIndex = index")
   div(class="pl-2")
     StrokeWidthRange
-  ColorPickerPalette(v-if="linePaletteIsOpen" class="absolute -top-80")
 //- eraser
 div(
   v-else-if="mode === 'eraser'"
@@ -194,6 +207,5 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
     :key="color.color" :color="color"
     :index="index" :active-index="activeTextColorIndex"
     @toggle-active="(index:number) => activeTextColorIndex = index")
-  ColorPickerPalette(v-if="textPaletteIsOpen" class="absolute -top-80")
 
 </template>
