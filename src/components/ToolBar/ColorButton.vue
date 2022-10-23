@@ -45,21 +45,20 @@ div(v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 
 }
 
 .input-color-style {
-  -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
   background-color: transparent;
   width: 2rem;
   height: 2.25rem;
   border: none;
   cursor: pointer;
+  border-radius: 50%;
 }
 
-.input-color-style::-webkit-color-swatch {
+/* .input-color-style::-webkit-color-swatch {
   border-radius: 50%;
 }
 
 .input-color-style::-moz-color-swatch {
   border-radius: 50%;
-}
+} */
 </style>
