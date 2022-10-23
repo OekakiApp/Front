@@ -1,31 +1,32 @@
 import Konva from 'konva'
 import { defineStore } from 'pinia'
-
-type Tool = 'pen' | 'eraser' | 'none'
+import type { Mode } from '@/stores/mode'
 
 interface Points {
   points: number[]
   color: string
+  dash: number[]
+  dashEnabled: boolean
   strokeWidth: number
 }
+
+type LineStyle = 'normal' | 'dash'
 
 const useStoreLine = defineStore({
   id: 'line',
   state: () => ({
-    tool: 'none',
     isDrawing: false,
-    drawColor: 'black', // default Color
+    drawColor: '#1E1E1E', // default Color
     strokeWidth: 1, // default stroke width
+    lineStyle: 'normal', // default line style
+    dash: [10, 10],
+    dashEnabled: false,
     globalCompositeOperation: 'source-over',
     lines: [] as Points[],
   }),
 
   actions: {
-    setTool(tool: Tool) {
-      this.tool = tool
-    },
-
-    setColor(selectedColor: string) {
+    setLineColor(selectedColor: string) {
       this.drawColor = selectedColor
     },
 
@@ -33,19 +34,25 @@ const useStoreLine = defineStore({
       this.strokeWidth = parseInt(selectedStrokeWidth, 10)
     },
 
-    setGlobalCompositeOperation() {
+    setLineStyle(selectedLineStyle: LineStyle) {
+      this.dashEnabled = selectedLineStyle !== 'normal'
+    },
+
+    setGlobalCompositeOperation(mode: Mode) {
       this.globalCompositeOperation =
-        this.tool === 'eraser' ? 'destination-out' : 'source-over'
+        mode === 'eraser' ? 'destination-out' : 'source-over'
     },
 
     setLines(line: Points) {
       this.lines = [...this.lines, line]
     },
 
-    handleMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
-      if (this.tool === 'none') return
+    handleMouseDown(e: Konva.KonvaEventObject<MouseEvent>, mode: Mode) {
+      // modeがpenかeraserでないならskip
+      if (mode !== 'pen' && mode !== 'eraser') return
       const stage = e.target.getStage()
-      if (e.target !== stage) return
+      // clickしたのがTextならskip（Textをdragするため）
+      if (e.target.getClassName() === 'Text') return
       this.isDrawing = true
       if (stage !== null) {
         const pos = stage.getRelativePointerPosition()
@@ -53,6 +60,8 @@ const useStoreLine = defineStore({
           points: [pos.x, pos.y],
           color: this.drawColor,
           strokeWidth: this.strokeWidth,
+          dash: this.dash,
+          dashEnabled: this.dashEnabled,
           globalCompositeOperation: this.globalCompositeOperation,
         }
         this.setLines(points)

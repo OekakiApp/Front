@@ -10,15 +10,15 @@ const selectedStrokeWidth = ref()
 
 <template lang="pug">
 div(class="block") 
-  label(for="step-range" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300 text-center") Stroke Width {{ strokeWidth }}
+  label(for="step-range" class="block text-sm font-medium text-gray-900 dark:text-gray-300 text-center") Stroke Width {{ strokeWidth }}
   input(
     id="steps-range"
     ref="selectedStrokeWidth"
+    v-model="strokeWidth"
     type="range"
-    value="1"
     min="1"
     max="10"
     step="1"
-    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+    class="w-28 h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
     @change="setStrokeWidth(selectedStrokeWidth.value)")
 </template>

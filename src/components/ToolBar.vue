@@ -1,113 +1,116 @@
 <script setup lang="ts">
+import { reactive } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import useStoreMode, { type Mode } from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
-import useStoreColor from '@/stores/color'
-import ColorButton from '@/components/ToolBar/ColorButton.vue'
-import StrokeWidthRange from '@/components/ToolBar/StrokeWidthRange.vue'
-import ColorPickerPalette from '@/components/ToolBar/ColorPickerPalette.vue'
+import SubToolMenu from '@/components/SubToolMenu.vue'
 
-export type Color = {
-  color: string
-  style: {
-    'background-color'?: string
-    background?: string
-  }
-  onClick: () => void
-}
+const { mode } = storeToRefs(useStoreMode())
+const { setMode } = useStoreMode()
+const { setLineStyle, setGlobalCompositeOperation } = useStoreLine()
 
-const { tool, drawColor } = storeToRefs(useStoreLine())
-const { setTool, setColor, setGlobalCompositeOperation } = useStoreLine()
-const { changeToPreparedColor } = useStoreColor()
-
-const paletteIsOpen = ref(false)
-const activeIndex = ref<number | null>(null)
-
-const colors: Color[] = [
+const toolArray: {
+  icon: string
+  mode: Mode
+  tooltip: string
+  shortcut: string
+  event: () => void
+}[] = reactive([
   {
-    color: '#1E1E1E',
-    style: { 'background-color': '#1E1E1E' },
-    onClick: () => setColor('#1E1E1E'),
-  },
-  {
-    color: '#F24822',
-    style: { 'background-color': '#F24822' },
-    onClick: () => setColor('#F24822'),
-  },
-  {
-    color: '#FFA629',
-    style: { 'background-color': '#FFA629' },
-    onClick: () => setColor('#FFA629'),
-  },
-  {
-    color: '#FFCD29',
-    style: { 'background-color': '#FFCD29' },
-    onClick: () => setColor('#FFCD29'),
-  },
-  {
-    color: '#14AE5C',
-    style: { 'background-color': '#14AE5C' },
-    onClick: () => setColor('#14AE5C'),
-  },
-  {
-    color: '#0D99FF',
-    style: { 'background-color': '#0D99FF' },
-    onClick: () => setColor('#0D99FF'),
-  },
-  {
-    color: '#9747FF',
-    style: { 'background-color': '#9747FF' },
-    onClick: () => setColor('#9747FF'),
-  },
-  {
-    color: '#FFFFFF',
-    style: { 'background-color': '#FFFFFF' },
-    onClick: () => setColor('#FFFFFF'),
-  },
-  {
-    color: 'rainbow',
-    style: {
-      background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
-    },
-    onClick: () => {
-      paletteIsOpen.value = !paletteIsOpen.value
-      // 色をカラーピッカーにも同期させる
-      changeToPreparedColor(drawColor.value)
+    icon: 'navigation',
+    mode: 'select',
+    tooltip: 'Select tool',
+    shortcut: 'V',
+    event: () => {
+      setMode('select')
     },
   },
-]
+  {
+    icon: 'pan_tool',
+    mode: 'hand',
+    tooltip: 'Hand tool',
+    shortcut: 'H',
+    event: () => {
+      setMode('hand')
+    },
+  },
+  {
+    icon: 'edit',
+    mode: 'pen',
+    tooltip: 'Pen',
+    shortcut: 'P',
+    event: () => {
+      setMode('pen')
+      setGlobalCompositeOperation(mode.value)
+    },
+  },
+  {
+    icon: 'auto_fix_normal',
+    mode: 'eraser',
+    tooltip: 'Eraser',
+    shortcut: 'Shift + Del',
+    event: () => {
+      setMode('eraser')
+      setLineStyle('normal')
+      setGlobalCompositeOperation(mode.value)
+    },
+  },
+  {
+    icon: 'title',
+    mode: 'text',
+    tooltip: 'Text',
+    shortcut: 'T',
+    event: () => {
+      setMode('text')
+    },
+  },
+  {
+    icon: 'sticky_note_2',
+    mode: 'sticky',
+    tooltip: 'Sticky note',
+    shortcut: 'S',
+    event: () => {
+      setMode('sticky')
+    },
+  },
+  {
+    icon: 'image',
+    mode: 'image',
+    tooltip: 'Image',
+    shortcut: 'I',
+    event: () => {
+      setMode('image')
+    },
+  },
+])
 </script>
 
 <template lang="pug">
-
-.flex.justify-center 
-  div(class="flex justify-center items-center p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 mt-3")
+div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/2")
+  SubToolMenu
+  div(class="flex justify-center items-center px-4 py-3 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 mx-auto")
     ul.flex
-      //- Pen
-      li.flex.mr-2
-        button(v-show="tool !== 'pen'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="() => {setTool('pen');setGlobalCompositeOperation();}")
-          span(class="material-symbols-outlined") edit 
-        button(v-show="tool === 'pen'" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setTool('none')")
-          span(class="material-symbols-outlined") edit 
-      //- Eraser
-      li.flex.mr-2
-        button(v-show="tool !== 'eraser'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="() => {setTool('eraser');setGlobalCompositeOperation()}")
-          span(class="material-symbols-outlined") delete
-        button(v-show="tool === 'eraser'" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setTool('none')")
-          span(class="material-symbols-outlined") delete
+      //- select hand pen text sticky image
+      li(v-for="(tool, index) of toolArray" :key="index" class="flex mx-2")
+        button(v-show="mode !== tool.mode" :data-tooltip-target="'tooltip-' + index" type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
+          span(class="material-symbols-outlined") {{tool.icon}}
+        button(v-show="mode === tool.mode" :data-tooltip-target="'tooltip-' + index" type="button" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
+          span(class="material-symbols-outlined") {{tool.icon}}
+        div(:id="'tooltip-' + index" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip dark:bg-gray-700") {{ tool.tooltip }}&nbsp;&nbsp;&nbsp;
+          span(class="text-slate-400") {{tool.shortcut}}
+          div(class="tooltip-arrow" data-popper-arrow)
       //- Undo
-      li.flex.mr-2
-        button(class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+      li.flex.mx-2
+        button(:data-tooltip-target="'tooltip-undo'" type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") undo 
+        div(:id="'tooltip-undo'" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip dark:bg-gray-700") Undo&nbsp;&nbsp;&nbsp;
+          span(class="text-slate-400") Ctrl + Z
+          div(class="tooltip-arrow" data-popper-arrow)
       //- Redo
-      li.flex.mr-2
-        button(class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+      li.flex.mx-2
+        button(:data-tooltip-target="'tooltip-redo'" type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") redo 
-
-    ColorButton(v-for="(color, index) in colors" :key="color.color" :color="color" :index="index" :activeindex="activeIndex" @toggle-active="(index:number) => activeIndex = index")
-    
-    StrokeWidthRange
-
-ColorPickerPalette(v-if="paletteIsOpen" class="absolute")
-
+        div(:id="'tooltip-redo'" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip dark:bg-gray-700") Redo&nbsp;&nbsp;&nbsp;
+          span(class="text-slate-400") Ctrl + Y
+          div(class="tooltip-arrow" data-popper-arrow)
 </template>
