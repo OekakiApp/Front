@@ -4,8 +4,10 @@ const useStoreStage = defineStore({
   id: 'stage',
   state: () => ({
     configKonva: {
-      width: window.innerWidth,
-      height: window.innerHeight / 1.5,
+      size: {
+        width: window.innerWidth,
+        height: window.innerWidth,
+      },
       scale: {
         x: 1,
         y: 1,
@@ -14,13 +16,35 @@ const useStoreStage = defineStore({
   }),
 
   actions: {
-    fitStageIntoParentContainer(container: any) {
-      const containerWidth = container.offsetWidth
-      const scale = containerWidth / this.configKonva.width
-      this.configKonva.width *= scale
-      // this.configKonva.height *= scale
-      this.configKonva.scale.x = scale
-      // this.configKonva.scale.y = scale
+    fitStageIntoParentContainer(container: HTMLDivElement) {
+      // Fixed stage size
+      const SCENE_BASE_WIDTH = 896
+      const SCENE_BASE_HEIGHT = 504
+
+      // Max upscale
+      const SCENE_MAX_WIDTH = 1280
+      const SCENE_MAX_HEIGHT = 720
+
+      const stageWidth =
+        container.offsetWidth % 2 !== 0
+          ? container.offsetWidth - 1
+          : container.offsetWidth
+
+      this.configKonva.size = {
+        width: stageWidth,
+        height: (stageWidth * 9) / 16, // aspect-ratio
+      }
+
+      const scaleX =
+        Math.min(this.configKonva.size.width, SCENE_MAX_WIDTH) /
+        SCENE_BASE_WIDTH
+
+      const scaleY =
+        Math.min(this.configKonva.size.height, SCENE_MAX_HEIGHT) /
+        SCENE_BASE_HEIGHT
+
+      const minRatio = Math.min(scaleX, scaleY)
+      this.configKonva.scale = { x: minRatio, y: minRatio }
     },
   },
 })

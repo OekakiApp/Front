@@ -4,6 +4,8 @@ import Konva from 'konva'
 
 type TextAlign = 'left' | 'center' | 'right'
 
+type TextVerticalAlign = 'top' | 'middle' | 'bottom'
+
 interface AreaPosition {
   x: number
   y: number
@@ -20,6 +22,7 @@ interface TextNode {
   fontSize: number
   fontFamily: string
   align: TextAlign
+  verticalAlign: TextVerticalAlign
   draggable: boolean
   width: number
   height: number
@@ -42,14 +45,11 @@ const useStoreText = defineStore({
       borderStroke: 'green',
       borderDash: [3, 3],
       keepRatio: true,
-      // enabledAnchors: [
-      //   'middle-left',
-      //   'middle-right',
-      //   'top-center',
-      //   'bottom-center',
-      // ],
       // set minimum width of text
-      boundBoxFunc: (oldBox: any, newBox: any) => {
+      boundBoxFunc: (
+        oldBox: { width: number; height: number },
+        newBox: { width: number; height: number },
+      ) => {
         const MIN_WIDTH = 100
         const MIN_HEIGHT = 20
         if (Math.abs(newBox.width) < MIN_WIDTH) return oldBox
@@ -62,20 +62,20 @@ const useStoreText = defineStore({
   }),
 
   actions: {
-    createNewTextNode(e: any) {
+    createNewTextNode(e: Konva.KonvaEventObject<MouseEvent>) {
       // get Stage
       const stage = e.target.getStage()
       // クリックしているのが、Stageでないならスキップ
       if (e.target !== stage) return
       // get x, y of Stage
-      const point = stage.getPointerPosition()
+      const point = stage.getRelativePointerPosition()
       // add text
       const id = nanoid()
       this.texts = [
         ...this.texts,
         {
           id,
-          text: 'Some text here',
+          text: 'Double click to edit text...',
           rotation: 0,
           x: point.x,
           y: point.y,
@@ -84,6 +84,7 @@ const useStoreText = defineStore({
           fontSize: 30,
           fontFamily: 'Arial',
           align: 'left',
+          verticalAlign: 'top',
           draggable: true,
           width: 200,
           height: 100,
@@ -95,7 +96,10 @@ const useStoreText = defineStore({
       ]
     },
 
-    setTextOptionValue(option: string, value: string | TextAlign) {
+    setTextOptionValue(
+      option: string,
+      value: string | TextAlign | TextVerticalAlign,
+    ) {
       const text = this.texts.find((t) => t.name === this.selectedTextName)
       if (text != null) {
         switch (option) {
@@ -107,6 +111,9 @@ const useStoreText = defineStore({
             break
           case 'textAlign':
             this.setTextAlign(text, value as TextAlign)
+            break
+          case 'textVerticalAlign':
+            this.setTextVerticalAlign(text, value as TextVerticalAlign)
             break
           default:
             break
@@ -129,11 +136,18 @@ const useStoreText = defineStore({
       text.align = selectedTextAlign
     },
 
-    handleTransform(transformer: any) {
+    setTextVerticalAlign(
+      textNode: TextNode,
+      selectedTextVerticalAlign: TextVerticalAlign,
+    ) {
+      const text = textNode
+      text.verticalAlign = selectedTextVerticalAlign
+    },
+
+    handleTransform(transformer: Konva.Transformer) {
       const selectedNode = transformer
         .getStage()
-        .getStage()
-        .findOne(`.${this.selectedTextName}`)
+        ?.findOne(`.${this.selectedTextName}`) as Konva.Text
 
       const text = this.texts.find((t) => t.name === this.selectedTextName)
 
@@ -141,16 +155,16 @@ const useStoreText = defineStore({
         console.log('transforming')
         text.width *= selectedNode.scaleX()
         text.height *= selectedNode.scaleY()
-        selectedNode.setScaleX(1)
-        selectedNode.setScaleY(1)
+        selectedNode.scaleX(1)
+        selectedNode.scaleY(1)
       }
     },
 
-    handleTransformEnd(e: any) {
+    handleTransformEnd(e: Konva.KonvaEventObject<MouseEvent>) {
       // shape is transformed, let us save new attrs back to the node
       // find element in our state
       const text = this.texts.find((t) => t.name === this.selectedTextName)
-
+      // update the state
       if (text != null) {
         console.log('transformend')
         text.x = e.target.x()
@@ -161,10 +175,14 @@ const useStoreText = defineStore({
       }
     },
 
-    handleStageMouseDown(e: any, transformer: any) {
+    handleStageMouseDown(
+      e: Konva.KonvaEventObject<MouseEvent>,
+      transformer: Konva.Transformer,
+    ) {
       // clicked on stage - clear selection
       if (e.target === e.target.getStage()) {
         this.selectedTextName = ''
+        // 選択されているnodesを空にする
         this.updateTransformer(transformer)
         return
       }
@@ -176,7 +194,7 @@ const useStoreText = defineStore({
         return
       }
 
-      // find clicked rect by its name
+      // find clicked text by its name
       const name = e.target.name()
       const text = this.texts.find((t) => t.name === name)
       if (text != null) {
@@ -187,19 +205,19 @@ const useStoreText = defineStore({
       this.updateTransformer(transformer)
     },
 
-    updateTransformer(transformer: any) {
+    updateTransformer(transformer: Konva.Transformer) {
       // here we need to manually attach or detach Transformer node
-      const transformerNode = transformer.getNode()
+      const transformerNode = transformer
       const stage = transformerNode.getStage()
       const { selectedTextName } = this
 
-      const selectedNode = stage.findOne(`.${selectedTextName}`)
+      const selectedNode = stage?.findOne(`.${selectedTextName}`)
       // do nothing if selected node is already attached
-      if (selectedNode === transformerNode.node()) {
+      if (selectedNode === transformerNode.nodes()[0]) {
         return
       }
 
-      if (selectedNode !== null) {
+      if (selectedNode !== undefined) {
         // attach to another node
         transformerNode.nodes([selectedNode])
       } else {
@@ -208,10 +226,10 @@ const useStoreText = defineStore({
       }
     },
 
-    toggleEdit(transformer: any, stageParentDiv: HTMLElement) {
-      const transformerNode = transformer.getNode()
-      const stage = transformerNode.getStage()
-      const textNode = transformer.getNode().getNode()
+    toggleEdit(transformer: Konva.Transformer, stageParentDiv: HTMLDivElement) {
+      const transformerNode = transformer
+      const stage = transformerNode.getStage() as Konva.Stage
+      const textNode = transformer.getNode() as Konva.Text
       // hide text and transformer
       this.hideTextAndTransformer(textNode, transformerNode)
       // at first lets find position of text node relative to the stage:
@@ -220,8 +238,8 @@ const useStoreText = defineStore({
       // textareaをcanvas上に乗せるので
       // Stage上でのtextの位置(x, y) + Stageまでの距離(x, y)が必要
       const areaPosition = {
-        x: (stage.container().offsetLeft as number) + textPosition.x,
-        y: (stage.container().offsetTop as number) + textPosition.y,
+        x: stage.container().offsetLeft + textPosition.x,
+        y: stage.container().offsetTop + textPosition.y,
       }
       // create textarea and style it
       this.createTextarea(
@@ -248,7 +266,7 @@ const useStoreText = defineStore({
       textNode: Konva.Text,
       transformerNode: Konva.Transformer,
       areaPosition: AreaPosition,
-      stageParentDiv: HTMLElement,
+      stageParentDiv: HTMLDivElement,
     ) {
       const textarea = document.createElement('textarea')
       stageParentDiv.appendChild(textarea)
@@ -286,18 +304,18 @@ const useStoreText = defineStore({
 
       textarea.focus()
 
-      textarea.addEventListener('keydown', (e) => {
-        // hide on enter
-        // but don't hide on shift + enter
-        if (e.key === '13' && !e.shiftKey) {
-          textNode.text(textarea.value)
-          this.removeTextarea(textNode, transformerNode, textarea)
-        }
-        // on esc do not set value back to node
-        if (e.key === '27') {
-          this.removeTextarea(textNode, transformerNode, textarea)
-        }
-      })
+      // textarea.addEventListener('keydown', (e) => {
+      //   // hide on enter
+      //   // but don't hide on shift + enter
+      //   if (e.key === 'Enter' && !e.shiftKey) {
+      //     textNode.text(textarea.value)
+      //     this.removeTextarea(textNode, transformerNode, textarea)
+      //   }
+      //   // on esc do not set value back to node
+      //   if (e.key === 'Escape') {
+      //     this.removeTextarea(textNode, transformerNode, textarea)
+      //   }
+      // })
 
       // クリックで解除時にエラーが出る
       textarea.addEventListener('blur', () => {
