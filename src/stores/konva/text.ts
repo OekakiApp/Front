@@ -158,6 +158,12 @@ const useStoreText = defineStore({
       this.fill = selectedTextColor
     },
 
+    deleteTexts() {
+      // ノードが選択中の場合、選択を外す
+      this.configTransformer.nodes = []
+      this.texts = []
+    },
+
     handleTransform(transformer: Konva.Transformer) {
       const selectedNode = transformer
         .getStage()

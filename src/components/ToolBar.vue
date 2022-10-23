@@ -4,10 +4,24 @@ import { storeToRefs } from 'pinia'
 import useStoreMode, { type Mode } from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import SubToolMenu from '@/components/SubToolMenu.vue'
+import useStoreText from '@/stores/konva/text'
 
 const { mode } = storeToRefs(useStoreMode())
 const { setMode } = useStoreMode()
-const { setLineStyle, setGlobalCompositeOperation } = useStoreLine()
+const { setLineStyle, setGlobalCompositeOperation, deleteLines } =
+  useStoreLine()
+const { deleteTexts } = useStoreText()
+
+const deleteCanvas = () => {
+  // eslint-disable-next-line no-alert
+  if (window.confirm('Are you sure you want to clear?')) {
+    // delete
+    deleteLines()
+    deleteTexts()
+    // eslint-disable-next-line no-alert
+    window.alert('Your work was cleared.')
+  }
+}
 
 const toolArray: {
   icon: string
@@ -104,4 +118,8 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
       li.flex.mx-2
         button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") redo 
+      //- Reset
+      li.flex.mx-2
+        button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="deleteCanvas")
+          span(class="material-symbols-outlined") delete
 </template>
