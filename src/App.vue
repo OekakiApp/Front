@@ -5,6 +5,20 @@ import { ref } from 'vue'
 import { RouterView } from 'vue-router'
 import Header from '@/components/Header.vue'
 import router from '@/router'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import useAuthStore from './stores/auth'
+
+const authStore = useAuthStore()
+const auth = getAuth()
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    authStore.setUser(user)
+    console.log('ログイン成功')
+  } else {
+    console.log('ログイン失敗')
+  }
+})
 
 const path = ref('')
 

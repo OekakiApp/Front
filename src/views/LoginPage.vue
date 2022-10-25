@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import useAuthStore from '../stores/auth'
 
 type InputTextType = {
   icon: string
@@ -9,6 +10,8 @@ type InputTextType = {
   isAlert: boolean
   alertText: string
 }
+
+const authStore = useAuthStore()
 
 const inputTexts: InputTextType[] = reactive([
   {
@@ -29,8 +32,11 @@ const inputTexts: InputTextType[] = reactive([
   },
 ])
 
-const login = () => {
+const submitLogin = () => {
+  const email = inputTexts[0].text
+  const password = inputTexts[1].text
   validate()
+  authStore.loginEmail(email, password)
 }
 
 const validate = () => {
@@ -49,7 +55,7 @@ const validate = () => {
 <template lang="pug">
 div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
   h2(class="sm:text-4xl text-2xl font-bold text-midnightBlue text-center md:mb-20 mb-12") ログイン
-  form(class="mx-auto")
+  form(class="mx-auto" @submit.prevent="submitLogin")
     div(v-for="(inputText, index) in inputTexts" :key="index" class="mb-8")
       //- alert
       div(v-show="inputText.isAlert" class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
@@ -63,7 +69,7 @@ div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
             class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-full p-2.5" required)
         
     div(class="flex justify-center items-center mb-4")
-      button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5" @click="login") ログイン
+      button(type="submit" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5") ログイン
 
     div
       p(class="text-right") 新規登録は
