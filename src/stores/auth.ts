@@ -21,17 +21,19 @@ const useAuthStore = defineStore('auth', {
       const auth = getAuth()
       createUserWithEmailAndPassword(auth, email, password)
         .then((result) => {
-          const user = result.user
+          const { user } = result
           updateProfile(user, {
             displayName: name,
-          }).then(async() => {
-            this.name = name
-            await router.replace({
-              name: 'Home',
-            })
-          }).catch((error) => {
-            console.log(error.message)
           })
+            .then(async () => {
+              this.name = name
+              await router.replace({
+                name: 'Home',
+              })
+            })
+            .catch((error) => {
+              console.log(error.message)
+            })
         })
         .catch((error) => {
           console.log(error.message)
@@ -41,7 +43,7 @@ const useAuthStore = defineStore('auth', {
       const auth = getAuth()
       signInWithEmailAndPassword(auth, email, password)
         .then(async (userCredential) => {
-          const user = userCredential.user
+          const { user } = userCredential
           this.setUser(user)
           await router.replace({
             name: 'Home',
@@ -54,7 +56,7 @@ const useAuthStore = defineStore('auth', {
     logout() {
       const auth = getAuth()
       signOut(auth)
-        .then(async() => {
+        .then(async () => {
           this.$reset()
           await router.replace({
             name: 'Home',

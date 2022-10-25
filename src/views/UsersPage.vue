@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import useAuthStore from '../stores/auth'
+
 const authStore = useAuthStore()
 const { name } = storeToRefs(useAuthStore())
 </script>
@@ -18,7 +19,7 @@ div(class="grid grid-cols-12 mt-8")
         li(class="border-b py-2")
           a(href="#" class="block") 設定
         li(class="pt-2")
-          button(@click="authStore.logout()" class="block") ログアウト
+          button(class="block" @click="authStore.logout()") ログアウト
   //- right
   div(class="col-span-9 ml-8")
     //- top
