@@ -1,4 +1,5 @@
 /* eslint-disable */
+// import/no-cycle
 import { defineStore } from 'pinia'
 import router from '../router/index'
 import {
@@ -9,11 +10,13 @@ import {
   updateProfile,
   User,
 } from 'firebase/auth'
+import Icon from '../assets/user_icon.png'
 /* eslint-enable */
 
 const useAuthStore = defineStore('auth', {
   state: () => ({
     name: '',
+    icon: Icon,
     isLoggedIn: false,
   }),
   actions: {
@@ -27,9 +30,7 @@ const useAuthStore = defineStore('auth', {
           })
             .then(async () => {
               this.name = name
-              await router.replace({
-                name: 'Home',
-              })
+              await forceToHomePage()
             })
             .catch((error) => {
               console.log(error.message)
@@ -45,9 +46,7 @@ const useAuthStore = defineStore('auth', {
         .then(async (userCredential) => {
           const { user } = userCredential
           this.setUser(user)
-          await router.replace({
-            name: 'Home',
-          })
+          await forceToHomePage()
         })
         .catch((error) => {
           console.log(error.message)
@@ -58,9 +57,7 @@ const useAuthStore = defineStore('auth', {
       signOut(auth)
         .then(async () => {
           this.$reset()
-          await router.replace({
-            name: 'Home',
-          })
+          await forceToHomePage()
         })
         .catch((error) => {
           console.log(error.message)
@@ -69,9 +66,16 @@ const useAuthStore = defineStore('auth', {
 
     setUser(user: User) {
       this.name = user.displayName ?? ''
+      this.icon = user.photoURL ?? Icon
       this.isLoggedIn = true
     },
   },
 })
+
+async function forceToHomePage() {
+  await router.replace({
+    name: 'Home',
+  })
+}
 
 export default useAuthStore
