@@ -1,7 +1,7 @@
 /* eslint-disable */
 // import/no-cycle
 import { defineStore } from 'pinia'
-import router from '../router/index'
+import router from '@/router/index'
 import {
   getAuth,
   signOut,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import useAuthStore from '../stores/auth'
+import useAuthStore from '@/stores/auth'
 
 const authStore = useAuthStore()
 const { isLoggedIn, icon } = storeToRefs(authStore)

@@ -5,7 +5,7 @@ import {
   createWebHistory,
   RouteLocationNormalized,
 } from 'vue-router'
-import useAuthStore from '../stores/auth'
+import useAuthStore from '@/stores/auth'
 import HomeView from '@/views/HomePage.vue'
 import LoginView from '@/views/LoginPage.vue'
 import SignUpView from '@/views/SignUpPage.vue'

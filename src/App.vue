@@ -6,7 +6,7 @@ import { RouterView } from 'vue-router'
 import Header from '@/components/Header.vue'
 import router from '@/router'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import useAuthStore from './stores/auth'
+import useAuthStore from '@/stores/auth'
 
 const authStore = useAuthStore()
 const auth = getAuth()
