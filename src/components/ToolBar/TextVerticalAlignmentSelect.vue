@@ -8,6 +8,7 @@ const textVerticalAlignmentArray: { icon: string; onClick: () => void }[] =
   reactive([
     {
       icon: 'vertical_align_top',
+      tooltip: 'Top',
       onClick: () => {
         setTextOptionValue('textVerticalAlign', 'top')
         setTextVerticalAlign('top')
@@ -15,6 +16,7 @@ const textVerticalAlignmentArray: { icon: string; onClick: () => void }[] =
     },
     {
       icon: 'vertical_align_center',
+      tooltip: 'Middle',
       onClick: () => {
         setTextOptionValue('textVerticalAlign', 'middle')
         setTextVerticalAlign('middle')
@@ -22,6 +24,7 @@ const textVerticalAlignmentArray: { icon: string; onClick: () => void }[] =
     },
     {
       icon: 'vertical_align_bottom',
+      tooltip: 'Bottom',
       onClick: () => {
         setTextOptionValue('textVerticalAlign', 'bottom')
         setTextVerticalAlign('bottom')
@@ -31,7 +34,7 @@ const textVerticalAlignmentArray: { icon: string; onClick: () => void }[] =
 </script>
 
 <template lang="pug">
-div(class="flex justify-center items-center mx-1") 
-  button(v-for="align of textVerticalAlignmentArray" :key="align.icon" class="flex items-center hover:bg-slate-300" @click="align.onClick")
+div(class="flex justify-center items-center mx-1")
+  button(v-for="align of textVerticalAlignmentArray" :key="align.icon" :data-tip="align.tooltip" class="tooltip flex items-center hover:bg-slate-300" @click="align.onClick")
       span(class="material-symbols-outlined") {{ align.icon }}
 </template>

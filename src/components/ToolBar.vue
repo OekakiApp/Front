@@ -92,16 +92,16 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
     ul.flex
       //- select hand pen text sticky image
       li(v-for="(tool, index) of toolArray" :key="index" class="flex mx-2")
-        button(v-show="mode !== tool.mode" type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
+        button(v-show="mode !== tool.mode" type="button" :data-tip="tool.mode + ' ' + tool.shortcut" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
           span(class="material-symbols-outlined") {{tool.icon}}
-        button(v-show="mode === tool.mode" type="button" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
+        button(v-show="mode === tool.mode" type="button" :data-tip="tool.mode + ' ' + tool.shortcut" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
           span(class="material-symbols-outlined") {{tool.icon}}
       //- Undo
       li.flex.mx-2
-        button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+        button(type="button" :data-tip="'Undo ' + 'Ctrl + Z'" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") undo 
       //- Redo
       li.flex.mx-2
-        button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+        button(type="button" :data-tip="'Redo ' + 'Ctrl + Y'" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") redo 
 </template>

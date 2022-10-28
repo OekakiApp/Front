@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^3.1.0",
+    "daisyui": "^2.33.0",
     "flowbite": "^1.5.3",
     "konva": "^8.3.13",
     "nanoid": "^4.0.0",
