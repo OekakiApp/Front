@@ -33,8 +33,7 @@ div(v-if="props.color.type === 'color-button'" class="rounded-full w-9 h-9 flex 
   button(type="button" class="flex justify-center items-center" @click="() => {props.color.onClick();handleColorButtonClick()}")
     div(class="tooltip rounded-full w-7 h-7 m-0 cursor-pointer" :data-tip="props.color.name" :style="props.color.style")
 //- color-picker
-div(
-  v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 flex justify-center items-center mx-0.5" :class="{'active-circle': props.index === props.activeIndex }")
+div(v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 flex justify-center items-center mx-0.5" :class="{'active-circle': props.index === props.activeIndex }")
   button(type="button" class="flex justify-center items-center")
     input(ref="colorPicker" type="color" class="tooltip input-color-style" :data-tip="props.color.name" value="#000000" @input="handleColorPickerClick(colorPicker.value)")
 </template>
