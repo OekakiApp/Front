@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { storeToRefs } from 'pinia'
+import Konva from 'konva'
 import useStoreMode, { type Mode } from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import useStoreText from '@/stores/konva/text'
+
+interface Props {
+  stage: Konva.Stage
+}
+
+const props = defineProps<Props>()
 
 const { mode } = storeToRefs(useStoreMode())
 const { setMode } = useStoreMode()
@@ -97,6 +104,23 @@ const toolArray: {
     },
   },
 ])
+
+const downloadURI = (uri: string, name: string) => {
+  const link = document.createElement('a')
+  link.download = name
+  link.href = uri
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+const saveImage = () => {
+  const dataURL = props.stage.getStage().toDataURL({
+    quality: 1,
+    pixelRatio: 2,
+  })
+  downloadURI(dataURL, 'stage.png')
+}
 </script>
 
 <template lang="pug">
@@ -122,4 +146,8 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
       li.flex.mx-2
         button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="deleteCanvas")
           span(class="material-symbols-outlined") delete
+      //- Download
+      li.flex.mx-2
+        button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="saveImage")
+          span(class="material-symbols-outlined") file_download
 </template>

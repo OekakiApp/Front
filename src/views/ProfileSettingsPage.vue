@@ -45,7 +45,7 @@ div(class="flex max-w-3xl mx-auto mt-8")
   //- left
   div(class="flex flex-col items-center")
     div(class="big-avatar bg-gray-200")
-    a(href="" class="text-midnightBlue text-center pt-2") 変更する
+    a(href="#" class="text-midnightBlue text-center pt-2") 変更する
 
   //- right
   div(class="mx-auto w-3/5")
