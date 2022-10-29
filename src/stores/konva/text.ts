@@ -75,39 +75,41 @@ const useStoreText = defineStore({
   actions: {
     createNewTextNode(e: Konva.KonvaEventObject<MouseEvent>, mode: Mode) {
       if (mode !== 'text') return
+      // クリックしているのが、Textならスキップ
+      if (e.target.className === 'Text') return
       // get Stage
       const stage = e.target.getStage()
-      // クリックしているのが、Stageでないならスキップ
-      if (e.target !== stage) return
-      // get x, y of Stage
-      const point = stage.getRelativePointerPosition()
-      // add text
-      const id = nanoid()
-      this.texts = [
-        ...this.texts,
-        {
-          id,
-          text: 'Double click to edit text...',
-          rotation: 0,
-          x: point.x,
-          y: point.y,
-          scaleX: 1,
-          scaleY: 1,
-          fontSize: this.fontSize,
-          fontStyle: this.fontStyle as FontStyle,
-          textDecoration: this.textDecoration as TextDecoration,
-          fontFamily: 'Arial',
-          align: this.align as TextAlign,
-          verticalAlign: this.verticalAlign as TextVerticalAlign,
-          draggable: true,
-          width: 200,
-          height: 100,
-          fill: this.fill,
-          wrap: 'word',
-          ellipsis: false,
-          name: `${id}`,
-        },
-      ]
+      if (stage !== null) {
+        // get x, y of Stage
+        const point = stage.getRelativePointerPosition()
+        // add text
+        const id = nanoid()
+        this.texts = [
+          ...this.texts,
+          {
+            id,
+            text: 'Double click to edit text...',
+            rotation: 0,
+            x: point.x,
+            y: point.y,
+            scaleX: 1,
+            scaleY: 1,
+            fontSize: this.fontSize,
+            fontStyle: this.fontStyle as FontStyle,
+            textDecoration: this.textDecoration as TextDecoration,
+            fontFamily: 'Arial',
+            align: this.align as TextAlign,
+            verticalAlign: this.verticalAlign as TextVerticalAlign,
+            draggable: true,
+            width: 200,
+            height: 100,
+            fill: this.fill,
+            wrap: 'word',
+            ellipsis: false,
+            name: `${id}`,
+          },
+        ]
+      }
     },
 
     setTextOptionValue(
@@ -156,6 +158,12 @@ const useStoreText = defineStore({
 
     setTextColor(selectedTextColor: string) {
       this.fill = selectedTextColor
+    },
+
+    deleteTexts() {
+      // ノードが選択中の場合、選択を外す
+      this.configTransformer.nodes = []
+      this.texts = []
     },
 
     handleTransform(transformer: Konva.Transformer) {
