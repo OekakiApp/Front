@@ -94,7 +94,7 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
       li(v-for="(tool, index) of toolArray" :key="index" class="flex mx-2")
         button(v-show="mode !== tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
           span(class="material-symbols-outlined") {{tool.icon}}
-        button(v-show="mode === tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
+        button(v-show="mode === tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="tooltip bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
           span(class="material-symbols-outlined") {{tool.icon}}
       //- Undo
       li.flex.mx-2
