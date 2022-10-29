@@ -47,6 +47,10 @@ const useStoreLine = defineStore({
       this.lines = [...this.lines, line]
     },
 
+    deleteLines() {
+      this.lines = []
+    },
+
     handleMouseDown(e: Konva.KonvaEventObject<MouseEvent>, mode: Mode) {
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return
