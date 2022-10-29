@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBPDCkC4ntfvCJe2aNYKFzKpvN6RCPUe_E',
-  authDomain: 'graimer-recursion.firebaseapp.com',
-  projectId: 'graimer-recursion',
-  storageBucket: 'graimer-recursion.appspot.com',
-  messagingSenderId: '978055071400',
-  appId: '1:978055071400:web:527c8d9b8e7c0b3dbba49d',
-  measurementId: 'G-3FHTD4YJ7Z',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
 // Initialize Firebase
