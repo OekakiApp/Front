@@ -2,11 +2,11 @@ import { defineStore } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
 import type { Mode } from '@/stores/mode'
+import WebFont from 'webfontloader'
 
 type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
 type TextDecoration = 'empty string' | 'line-through' | 'underline'
 type TextAlign = 'left' | 'center' | 'right'
-type TextVerticalAlign = 'top' | 'middle' | 'bottom'
 
 interface AreaPosition {
   x: number
@@ -26,7 +26,6 @@ interface TextNode {
   textDecoration: TextDecoration
   fontFamily: string
   align: TextAlign
-  verticalAlign: TextVerticalAlign
   draggable: boolean
   width: number
   height: number
@@ -40,13 +39,14 @@ const useStoreText = defineStore({
   id: 'text',
   state: () => ({
     fontSize: 30, // default font size
-    fontFamily: 'Arial',
+    fontFamily: 'Roboto',
     fontStyle: 'normal',
     textDecoration: 'empty string',
     fill: '#1E1E1E',
     align: 'left',
     verticalAlign: 'top',
     texts: [] as TextNode[],
+    isFontLoaded: false,
 
     configTransformer: {
       nodes: [],
@@ -83,37 +83,75 @@ const useStoreText = defineStore({
       const point = stage.getRelativePointerPosition()
       // add text
       const id = nanoid()
-      this.texts = [
-        ...this.texts,
-        {
-          id,
-          text: 'Double click to edit text...',
-          rotation: 0,
-          x: point.x,
-          y: point.y,
-          scaleX: 1,
-          scaleY: 1,
-          fontSize: this.fontSize,
-          fontStyle: this.fontStyle as FontStyle,
-          textDecoration: this.textDecoration as TextDecoration,
-          fontFamily: 'Arial',
-          align: this.align as TextAlign,
-          verticalAlign: this.verticalAlign as TextVerticalAlign,
-          draggable: true,
-          width: 200,
-          height: 100,
-          fill: this.fill,
-          wrap: 'word',
-          ellipsis: false,
-          name: `${id}`,
-        },
-      ]
+
+      if (!this.isFontLoaded) {
+        // Webフォント読み込み時のコントロール
+        WebFont.load({
+          google: {
+            families: ['Roboto', 'Yomogi', 'Titan One', 'Pacifico'],
+          },
+          loading: () => {
+            console.log('font is loading')
+          },
+          // 全てWebフォントの読み込みが完了したときに発火
+          active: () => {
+            this.isFontLoaded = true
+            console.log('fonts is loaded!')
+            this.texts = [
+              ...this.texts,
+              {
+                id,
+                text: 'Double click to edit text...',
+                rotation: 0,
+                x: point.x,
+                y: point.y,
+                scaleX: 1,
+                scaleY: 1,
+                fontSize: this.fontSize,
+                fontStyle: this.fontStyle as FontStyle,
+                textDecoration: this.textDecoration as TextDecoration,
+                fontFamily: this.fontFamily,
+                align: this.align as TextAlign,
+                draggable: true,
+                width: 200,
+                height: 100,
+                fill: this.fill,
+                wrap: 'word',
+                ellipsis: false,
+                name: `${id}`,
+              },
+            ]
+          },
+        })
+      } else {
+        this.texts = [
+          ...this.texts,
+          {
+            id,
+            text: 'Double click to edit text...',
+            rotation: 0,
+            x: point.x,
+            y: point.y,
+            scaleX: 1,
+            scaleY: 1,
+            fontSize: this.fontSize,
+            fontStyle: this.fontStyle as FontStyle,
+            textDecoration: this.textDecoration as TextDecoration,
+            fontFamily: this.fontFamily,
+            align: this.align as TextAlign,
+            draggable: true,
+            width: 200,
+            height: 100,
+            fill: this.fill,
+            wrap: 'word',
+            ellipsis: false,
+            name: `${id}`,
+          },
+        ]
+      }
     },
 
-    setTextOptionValue(
-      option: string,
-      value: string | TextAlign | TextVerticalAlign,
-    ) {
+    setTextOptionValue(option: string, value: string | TextAlign) {
       const text = this.texts.find((t) => t.name === this.selectedTextName)
       if (text != null) {
         switch (option) {
@@ -125,9 +163,6 @@ const useStoreText = defineStore({
             break
           case 'textAlign':
             text.align = value as TextAlign
-            break
-          case 'textVerticalAlign':
-            text.verticalAlign = value as TextVerticalAlign
             break
           case 'textFillColor':
             text.fill = value
@@ -148,10 +183,6 @@ const useStoreText = defineStore({
 
     setTextAlign(selectedTextAlign: TextAlign) {
       this.align = selectedTextAlign
-    },
-
-    setTextVerticalAlign(selectedTextVerticalAlign: TextVerticalAlign) {
-      this.verticalAlign = selectedTextVerticalAlign
     },
 
     setTextColor(selectedTextColor: string) {
@@ -307,6 +338,7 @@ const useStoreText = defineStore({
       textarea.style.textAlign = textNode.align()
       textarea.style.color = textNode.fill()
       textarea.style.scale = textNode.getStage()?.scaleX().toString() as string
+      textarea.spellcheck = false
       let rotation = textNode.rotation()
       let transform = ''
       if (rotation === null) {
