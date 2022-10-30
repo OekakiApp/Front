@@ -75,10 +75,11 @@ const useStoreText = defineStore({
   actions: {
     createNewTextNode(e: Konva.KonvaEventObject<MouseEvent>, mode: Mode) {
       if (mode !== 'text') return
+      // クリックしているのが、Textならスキップ
+      if (e.target.className === 'Text') return
       // get Stage
       const stage = e.target.getStage()
-      // クリックしているのが、Stageでないならスキップ
-      if (e.target !== stage) return
+      if (stage === null) return
       // get x, y of Stage
       const point = stage.getRelativePointerPosition()
       // add text
@@ -187,6 +188,12 @@ const useStoreText = defineStore({
 
     setTextColor(selectedTextColor: string) {
       this.fill = selectedTextColor
+    },
+
+    deleteTexts() {
+      // ノードが選択中の場合、選択を外す
+      this.configTransformer.nodes = []
+      this.texts = []
     },
 
     handleTransform(transformer: Konva.Transformer) {

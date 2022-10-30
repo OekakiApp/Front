@@ -81,6 +81,7 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
 
       v-layer
+        v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
         v-line(
           v-for="line ,index in lines"
           :key="index"
@@ -96,5 +97,5 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
           )
         v-transformer(ref="transformer" :config="configTransformer")
 
-ToolBar 
+ToolBar(:stage="stage")
 </template>
