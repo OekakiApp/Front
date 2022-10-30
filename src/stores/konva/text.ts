@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
-import type { Mode } from '@/types/mode'
+import { Mode } from '@/types/mode'
 import WebFont from 'webfontloader'
 import {
   FontStyle,

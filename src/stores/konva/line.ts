@@ -1,6 +1,6 @@
 import Konva from 'konva'
 import { defineStore } from 'pinia'
-import type { Mode } from '@/types/mode'
+import { Mode } from '@/types/mode'
 import { Points, LineStyle } from '@/types/konva'
 
 const useStoreLine = defineStore({
