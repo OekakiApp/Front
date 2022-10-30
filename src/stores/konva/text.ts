@@ -7,6 +7,7 @@ import WebFont from 'webfontloader'
 type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
 type TextDecoration = 'empty string' | 'line-through' | 'underline'
 type TextAlign = 'left' | 'center' | 'right'
+type TextVerticalAlign = 'top' | 'middle' | 'bottom'
 
 interface AreaPosition {
   x: number
@@ -184,6 +185,10 @@ const useStoreText = defineStore({
 
     setTextAlign(selectedTextAlign: TextAlign) {
       this.align = selectedTextAlign
+    },
+
+    setTextVerticalAlign(selectedTextVerticalAlign: TextVerticalAlign) {
+      this.verticalAlign = selectedTextVerticalAlign
     },
 
     setTextColor(selectedTextColor: string) {
