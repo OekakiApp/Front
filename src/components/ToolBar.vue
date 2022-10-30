@@ -2,7 +2,8 @@
 import { reactive } from 'vue'
 import { storeToRefs } from 'pinia'
 import Konva from 'konva'
-import useStoreMode, { type Mode } from '@/stores/mode'
+import useStoreMode from '@/stores/mode'
+import { Mode } from '@/types/mode'
 import useStoreLine from '@/stores/konva/line'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import useStoreText from '@/stores/konva/text'
@@ -137,11 +138,11 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
       //- Undo
       li.flex.mx-2
         button(type="button" :data-tip="'Undo : ' + 'Ctrl + Z'" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
-          span(class="material-symbols-outlined") undo 
+          span(class="material-symbols-outlined") undo
       //- Redo
       li.flex.mx-2
         button(type="button" :data-tip="'Redo : ' + 'Ctrl + Y'" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
-          span(class="material-symbols-outlined") redo 
+          span(class="material-symbols-outlined") redo
       //- Reset
       li.flex.mx-2
         button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="deleteCanvas")

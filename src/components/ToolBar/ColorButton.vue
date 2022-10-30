@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Color } from '@/components/SubToolMenu.vue'
+import { Color } from '@/types/index'
 import { ref } from 'vue'
 
 interface Props {

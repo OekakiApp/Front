@@ -1,40 +1,16 @@
 import { defineStore } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
-import type { Mode } from '@/stores/mode'
+import type { Mode } from '@/types/mode'
 import WebFont from 'webfontloader'
-
-type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
-type TextDecoration = 'empty string' | 'line-through' | 'underline'
-type TextAlign = 'left' | 'center' | 'right'
-type TextVerticalAlign = 'top' | 'middle' | 'bottom'
-
-interface AreaPosition {
-  x: number
-  y: number
-}
-
-interface TextNode {
-  id: string
-  text: string
-  rotation: number
-  x: number
-  y: number
-  scaleX: number
-  scaleY: number
-  fontSize: number
-  fontStyle: FontStyle
-  textDecoration: TextDecoration
-  fontFamily: string
-  align: TextAlign
-  draggable: boolean
-  width: number
-  height: number
-  fill: string
-  wrap: 'word' | 'char' | 'none'
-  ellipsis: boolean
-  name: string
-}
+import {
+  FontStyle,
+  TextDecoration,
+  TextAlign,
+  TextVerticalAlign,
+  AreaPosition,
+  TextNode,
+} from '@/types/konva'
 
 const useStoreText = defineStore({
   id: 'text',

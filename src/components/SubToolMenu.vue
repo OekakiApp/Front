@@ -10,16 +10,16 @@ import TextAlignmentSelect from '@/components/ToolBar/TextAlignmentSelect.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
-
-export type Color = {
-  name: string
-  type: 'color-button' | 'color-picker'
-  color: string
-  style?: {
-    'background-color': string
-  }
-  onClick?: () => void
-}
+import { Color } from '@/types/index'
+// export type Color = {
+//   name: string
+//   type: 'color-button' | 'color-picker'
+//   color: string
+//   style?: {
+//     'background-color': string
+//   }
+//   onClick?: () => void
+// }
 
 const { mode } = storeToRefs(useStoreMode())
 const { setLineColor } = useStoreLine()
@@ -201,7 +201,7 @@ div(
 //- text
 div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12 h-16")
   FontSizeSelect
-  FontFamilySelect 
+  FontFamilySelect
   TextAlignmentSelect
   ColorButton(
     v-for="(color, index) in textColors"
