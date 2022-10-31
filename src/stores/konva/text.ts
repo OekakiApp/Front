@@ -7,7 +7,6 @@ import WebFont from 'webfontloader'
 type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
 type TextDecoration = 'empty string' | 'line-through' | 'underline'
 type TextAlign = 'left' | 'center' | 'right'
-type TextVerticalAlign = 'top' | 'middle' | 'bottom'
 
 interface AreaPosition {
   x: number
@@ -187,10 +186,6 @@ const useStoreText = defineStore({
       this.align = selectedTextAlign
     },
 
-    setTextVerticalAlign(selectedTextVerticalAlign: TextVerticalAlign) {
-      this.verticalAlign = selectedTextVerticalAlign
-    },
-
     setTextColor(selectedTextColor: string) {
       this.fill = selectedTextColor
     },
@@ -361,46 +356,12 @@ const useStoreText = defineStore({
 
       textarea.focus()
 
-      // textarea.addEventListener('keydown', (e) => {
-      //   // hide on enter
-      //   // but don't hide on shift + enter
-      //   if (e.key === 'Enter' && !e.shiftKey) {
-      //     textNode.text(textarea.value)
-      //     this.removeTextarea(textNode, transformerNode, textarea)
-      //   }
-      //   // on esc do not set value back to node
-      //   if (e.key === 'Escape') {
-      //     this.removeTextarea(textNode, transformerNode, textarea)
-      //   }
-      // })
-
       // クリックで解除時にエラーが出る
       textarea.addEventListener('blur', () => {
         textNode.text(textarea.value)
         this.removeTextarea(textNode, transformerNode, textarea)
       })
-
-      // setTimeout(() => {
-      //   window.addEventListener('click', (e) => {
-      //     if (e.target !== textarea) {
-      //       textNode.text(textarea.value)
-      //       this.removeTextarea(textNode, transformerNode, textarea)
-      //     }
-      //   })
-      // })
     },
-
-    // handleOutsideClick(
-    //   e: any,
-    //   textNode: Konva.Text,
-    //   transformerNode: Konva.Transformer,
-    //   textarea: HTMLTextAreaElement,
-    // ) {
-    //   if (e.target !== textarea) {
-    //     textNode.text(textarea.value)
-    //     this.removeTextarea(textNode, transformerNode, textarea)
-    //   }
-    // },
 
     removeTextarea(
       textNode: Konva.Text,
