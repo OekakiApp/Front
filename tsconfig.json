@@ -16,7 +16,11 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "typeRoots": ["types", "node_modules/@types"]
+  },
+  "vueCompilerOptions": {
+    "plugins": [
+      "@volar/vue-language-plugin-pug"
+    ]
   },
   "include": [
     "src/**/*.ts",

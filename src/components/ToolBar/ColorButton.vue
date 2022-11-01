@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Color } from '@/types/index'
 import { ref } from 'vue'
+import { Color } from '@/types/index'
 
 interface Props {
   color: Color
