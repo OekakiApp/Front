@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import useAuthStore from '@/stores/auth'
-import { InputTextType } from '@/types/index'
-
+// import { InputTextType } from '@/types/index'
+interface InputTextType {
+  icon: string
+  inputType: string
+  placeholder: string
+  text: string
+  isAlert: boolean
+  alertText: string
+}
 const authStore = useAuthStore()
 
 const inputTexts: InputTextType[] = reactive([

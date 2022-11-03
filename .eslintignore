@@ -7,3 +7,4 @@ docs/
 *.config.js
 .*lintrc.js
 *.config.cjs
+.env

@@ -10,16 +10,16 @@ import TextAlignmentSelect from '@/components/ToolBar/TextAlignmentSelect.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
-import { Color } from '@/types/index'
-// export type Color = {
-//   name: string
-//   type: 'color-button' | 'color-picker'
-//   color: string
-//   style?: {
-//     'background-color': string
-//   }
-//   onClick?: () => void
-// }
+// import { Color } from '@/types/index'
+interface Color {
+  name: string
+  type: 'color-button' | 'color-picker'
+  color: string
+  style?: {
+    'background-color': string
+  }
+  onClick: () => void
+}
 
 const { mode } = storeToRefs(useStoreMode())
 const { setLineColor } = useStoreLine()
@@ -89,6 +89,8 @@ const lineColors: Color[] = [
     name: 'Custom',
     type: 'color-picker',
     color: 'rainbow',
+    // 便宜上何も設定しない関数を挿入する
+    onClick: () => setLineColor(''),
   },
 ]
 
@@ -177,6 +179,8 @@ const textColors: Color[] = [
     name: 'Custom',
     type: 'color-picker',
     color: 'rainbow',
+    // 便宜上何も設定しない関数を挿入する
+    onClick: () => setLineColor(''),
   },
 ]
 </script>

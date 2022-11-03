@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 import { storeToRefs } from 'pinia'
 import Konva from 'konva'
 import useStoreMode from '@/stores/mode'
-import { Mode } from '@/types/mode'
+// import { Mode } from '@/types/mode'
 import useStoreLine from '@/stores/konva/line'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import useStoreText from '@/stores/konva/text'
@@ -11,7 +11,15 @@ import useStoreText from '@/stores/konva/text'
 interface Props {
   stage: Konva.Stage
 }
-
+type Mode =
+  | 'select'
+  | 'hand'
+  | 'pen'
+  | 'eraser'
+  | 'text'
+  | 'sticky'
+  | 'image'
+  | 'none'
 const props = defineProps<Props>()
 
 const { mode } = storeToRefs(useStoreMode())
