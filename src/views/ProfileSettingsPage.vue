@@ -13,7 +13,7 @@ import {
 
 const authUser = getAuth().currentUser!
 const authStore = useAuthStore()
-let icon = ref(authStore.icon)
+const icon = ref(authStore.icon)
 
 const iconRef = ref(null)
 
@@ -39,10 +39,9 @@ const textArea = reactive({
 const saveProfile = () => {
   const alertFlag = validate()
   if (!alertFlag) return
-  else {
-    updateFireBase()
-    router.push({ name: 'Users' })
-  }
+
+  updateFireBase()
+  router.push({ name: 'Users' })
 }
 
 const onFileUploadToFirebase = () => {
@@ -78,14 +77,14 @@ const updateFireBase = async () => {
   // icon
   if (authStore.icon !== icon.value && iconRef.value) {
     const file: File = iconRef.value.files[0]
-    const fileRef = storageRef(storage, 'user-image/' + file.name)
+    const fileRef = storageRef(storage, `user-image/${file.name}`)
     const uploadTask = uploadBytesResumable(fileRef, file)
 
     uploadTask.on(
       'state_changed',
       (snapshot) => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        console.log('Upload is ' + progress + '% done')
+        console.log(`Upload is ${progress}% done`)
         switch (snapshot.state) {
           case 'paused':
             console.log('Upload is paused')
@@ -134,8 +133,8 @@ div(class="flex max-w-3xl mx-auto mt-8")
   div(class="flex flex-col items-center")
     div
       img(:src="icon" class="big-avatar ring-2 ring-gray-700 ")
-    label(class="upload-label") ファイルを選択
-      input(id="icon" type="file" ref="iconRef" accept=".png, .jpeg, .jpg" @change="onFileUploadToFirebase()")
+    label(class="upload-label inline-block cursor-pointer my-4 p-2") ファイルを選択
+      input(id="icon" ref="iconRef" type="file" accept=".png, .jpeg, .jpg" @change="onFileUploadToFirebase()")
 
   //- right
   div(class="mx-auto w-3/5")
@@ -167,26 +166,6 @@ div(class="flex max-w-3xl mx-auto mt-8")
   height: 150px;
   border-radius: 50%;
 }
-/* labelをボタンらしく */
-.upload-label {
-  display: inline-block;
-  cursor: pointer;
-  margin: 1em 0;
-  padding: 0.7em 1em;
-  line-height: 1.4;
-  background: #3e8bff;
-  color: #fff;
-  font-size: 0.95em;
-  border-radius: 2.5em;
-  transition: 0.2s;
-}
-
-/* ホバー時 */
-.upload-label:hover {
-  box-shadow: 0 8px 10px -2px rgba(0, 0, 0, 0.2);
-  /* 影を表示 */
-}
-
 /* inputは隠す */
 .upload-label input {
   display: none;
