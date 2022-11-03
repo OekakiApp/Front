@@ -2,7 +2,7 @@ import Konva from 'konva'
 import { defineStore, storeToRefs } from 'pinia'
 // eslint-disable-next-line import/no-cycle
 import useStoreText from '@/stores/konva/text'
-import useStoreMode from '../mode'
+import useStoreMode from '@/stores/mode'
 
 const useStoreTransformer = defineStore({
   id: 'transformer',

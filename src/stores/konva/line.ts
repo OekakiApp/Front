@@ -1,6 +1,5 @@
 import Konva from 'konva'
-import { defineStore } from 'pinia'
-import type { Mode } from '@/stores/mode'
+import { defineStore, storeToRefs } from 'pinia'
 import useStoreMode from '@/stores/mode'
 import { nanoid } from 'nanoid'
 
@@ -40,9 +39,10 @@ const useStoreLine = defineStore({
       this.dashEnabled = selectedLineStyle !== 'normal'
     },
 
-    setGlobalCompositeOperation(mode: Mode) {
+    setGlobalCompositeOperation() {
+      const { mode } = storeToRefs(useStoreMode())
       this.globalCompositeOperation =
-        mode === 'eraser' ? 'destination-out' : 'source-over'
+        mode.value === 'eraser' ? 'destination-out' : 'source-over'
     },
 
     setLines(line: Points) {

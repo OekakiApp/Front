@@ -4,7 +4,7 @@ import Konva from 'konva'
 import WebFont from 'webfontloader'
 import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
-import useStoreTransformer from './transformer'
+import useStoreTransformer from '@/stores/konva/transformer'
 
 type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
 type TextDecoration = 'empty string' | 'line-through' | 'underline'

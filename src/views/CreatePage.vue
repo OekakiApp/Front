@@ -45,10 +45,10 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   else if (e.key === 'v') setMode('select')
   else if (e.key === 'p' || e.key === 'm') {
     setMode('pen')
-    setGlobalCompositeOperation('pen')
+    setGlobalCompositeOperation()
   } else if (e.shiftKey && e.key === 'Delete') {
     setMode('eraser')
-    setGlobalCompositeOperation('eraser')
+    setGlobalCompositeOperation()
   } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
   // open image file
