@@ -14,7 +14,12 @@ const { texts, configTransformer } = storeToRefs(useStoreText())
 
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
-const { handleMouseDown, handleMouseMove, handleMouseUp } = useStoreLine()
+const {
+  handleMouseDown,
+  handleMouseMove,
+  handleMouseUp,
+  setGlobalCompositeOperation,
+} = useStoreLine()
 
 const {
   createNewTextNode,
@@ -32,9 +37,13 @@ const transformer = ref()
 const changeModeByShortCut = (e: KeyboardEvent) => {
   if (e.key === 'h') setMode('hand')
   else if (e.key === 'v') setMode('select')
-  else if (e.key === 'p' || e.key === 'm') setMode('pen')
-  else if (e.shiftKey && e.key === 'Delete') setMode('eraser')
-  else if (e.key === 't') setMode('text')
+  else if (e.key === 'p' || e.key === 'm') {
+    setMode('pen')
+    setGlobalCompositeOperation('pen')
+  } else if (e.shiftKey && e.key === 'Delete') {
+    setMode('eraser')
+    setGlobalCompositeOperation('eraser')
+  } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
   // open image file
   // undo

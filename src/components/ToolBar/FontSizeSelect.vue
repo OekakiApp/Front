@@ -9,8 +9,9 @@ const selectedFontSize = ref()
 </script>
 
 <template lang="pug">
-div(class="block mr-2") 
+div(class="tooltip block mr-2" :data-tip="'Font size'")
   label( for="font-size" class="hidden mb-2 text-sm font-medium text-gray-900 dark:text-gray-400") Line style
+
   select(
     id="font-size"
     ref="selectedFontSize"

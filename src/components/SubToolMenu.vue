@@ -5,8 +5,8 @@ import LineStyleSelect from '@/components/ToolBar/LineStyleSelect.vue'
 import ColorButton from '@/components/ToolBar/ColorButton.vue'
 import StrokeWidthRange from '@/components/ToolBar/StrokeWidthRange.vue'
 import FontSizeSelect from '@/components/ToolBar/FontSizeSelect.vue'
+import FontFamilySelect from '@/components/ToolBar/FontFamilySelect.vue'
 import TextAlignmentSelect from '@/components/ToolBar/TextAlignmentSelect.vue'
-import TextVerticalAlignmentSelect from '@/components/ToolBar/TextVerticalAlignmentSelect.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
@@ -183,7 +183,7 @@ const textColors: Color[] = [
 
 <template lang="pug">
 //- pen
-div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12")
+div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12 h-16")
   LineStyleSelect
   ColorButton(
     v-for="(color, index) in lineColors"
@@ -196,13 +196,13 @@ div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 ro
 //- eraser
 div(
   v-else-if="mode === 'eraser'"
-  class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2")
+  class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2  h-16")
   StrokeWidthRange
 //- text
-div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12")
+div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12 h-16")
   FontSizeSelect
+  FontFamilySelect 
   TextAlignmentSelect
-  TextVerticalAlignmentSelect
   ColorButton(
     v-for="(color, index) in textColors"
     :key="color.color" :color="color"

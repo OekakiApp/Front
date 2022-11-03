@@ -9,8 +9,8 @@ const selectedStrokeWidth = ref()
 </script>
 
 <template lang="pug">
-div(class="block") 
-  label(for="step-range" class="block text-sm font-medium text-gray-900 dark:text-gray-300 text-center") Stroke Width {{ strokeWidth }}
+div(class="tooltip flex items-center" :data-tip="'Stroke width'") 
+  label(for="step-range" class="block text-sm font-medium text-gray-900 dark:text-gray-300 text-center") 
   input(
     id="steps-range"
     ref="selectedStrokeWidth"
@@ -21,4 +21,5 @@ div(class="block")
     step="1"
     class="w-28 h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
     @change="setStrokeWidth(selectedStrokeWidth.value)")
+  p(class="ml-1 w-4") {{ strokeWidth }}
 </template>

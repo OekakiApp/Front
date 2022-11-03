@@ -9,8 +9,9 @@ const selectedLineStyle = ref()
 </script>
 
 <template lang="pug">
-div(class="block mr-2") 
+div(class="tooltip block mr-2" :data-tip="'Line style'")
   label( for="line-style" class="hidden mb-2 text-sm font-medium text-gray-900 dark:text-gray-400") Line style
+
   select(
     id="line-style"
     ref="selectedLineStyle"
