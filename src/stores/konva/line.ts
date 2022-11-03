@@ -1,6 +1,8 @@
 import Konva from 'konva'
 import { defineStore } from 'pinia'
 import type { Mode } from '@/stores/mode'
+import useStoreMode from '@/stores/mode'
+import { nanoid } from 'nanoid'
 
 interface Points {
   points: number[]
@@ -51,16 +53,20 @@ const useStoreLine = defineStore({
       this.lines = []
     },
 
-    handleMouseDown(e: Konva.KonvaEventObject<MouseEvent>, mode: Mode) {
+    handleMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
+      const { mode } = useStoreMode()
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return
       const stage = e.target.getStage()
       // clickしたのがTextならskip（Textをdragするため）
       if (e.target.getClassName() === 'Text') return
       this.isDrawing = true
+      const id = nanoid()
       if (stage !== null) {
         const pos = stage.getRelativePointerPosition()
         const points = {
+          id,
+          name: 'line',
           points: [pos.x, pos.y],
           color: this.drawColor,
           strokeWidth: this.strokeWidth,
