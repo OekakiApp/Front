@@ -8,8 +8,8 @@ div
       h1(class="text-9xl") Graimer
     p(class="mt-6 text-2xl") 自由な発想で、世界に一人の自分を紹介しよう
     div(class="d-flex mt-12 mb-48")
-      button(class="btn btn-primary mr-6") 作品を見る
-      button(class="btn btn-primary ml-6") 新規登録する
+      router-link(class="btn btn-primary mr-6" to="/works") 作品を見る
+      router-link(class="btn btn-primary ml-6" to="sign_up") 新規登録する
   //- How To Use
   //- FAQ
   div(class="card w-full p-24 bg-base-100 shadow-xl bg-slate-100 mb-36")
