@@ -5,7 +5,7 @@ export interface Color {
   style?: {
     'background-color': string
   }
-  onClick?: () => void
+  onClick: () => void
 }
 
 export interface InputTextType {

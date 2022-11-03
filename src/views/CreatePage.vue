@@ -6,6 +6,10 @@ import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
+import Konva from 'konva'
+
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
@@ -74,10 +78,10 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       ref="stage"
       :draggable="mode === 'hand'"
       :config="configKonva"
-      @mousedown="(e) => {handleMouseDown(e, mode);handleStageMouseDown(e, transformer.getNode())}"
+      @mousedown="(e: KonvaEventObject<MouseEvent>) => {handleMouseDown(e, mode);handleStageMouseDown(e, transformer.getNode())}"
       @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
-      @dblclick="(e) => createNewTextNode(e, mode)")
+      @dblclick="(e: KonvaEventObject<MouseEvent>) => createNewTextNode(e, mode)")
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
 
       v-layer

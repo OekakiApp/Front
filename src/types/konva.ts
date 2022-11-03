@@ -4,6 +4,7 @@ export interface Points {
   dash: number[]
   dashEnabled: boolean
   strokeWidth: number
+  globalCompositeOperation: string
 }
 
 export type LineStyle = 'normal' | 'dash'
