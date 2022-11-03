@@ -10,6 +10,7 @@ interface Color {
   }
   onClick: () => void
 }
+
 interface Props {
   color: Color
   index: number

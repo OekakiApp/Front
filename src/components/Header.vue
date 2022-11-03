@@ -10,7 +10,7 @@ const { isLoggedIn, icon } = storeToRefs(authStore)
 nav(class="bg-bleachWhite px-2 sm:px-4 py-2.5 rounded")
   div(class="container flex flex-wrap justify-between items-center mx-auto")
     router-link(to="/")
-      h1(class="text-midnightBlue text-xl font-bold") App Name
+      h1(class="text-midnightBlue text-xl font-bold") Graimer
     div
       div(v-if="isLoggedIn")
         router-link(to="users")
