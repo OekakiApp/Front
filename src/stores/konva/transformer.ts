@@ -228,20 +228,14 @@ const useStoreTransformer = defineStore({
     },
 
     // 要素の変形
-    handleTransform(transformer: Konva.Transformer) {
-      const stage = transformer.getNode().getStage()
-      if (stage === null) return
-
-      const shape = stage.find(`#${this.selectedShapeId}`)[0]
+    handleTransform(e: Konva.KonvaEventObject<MouseEvent>) {
+      const shape = e.target
+      // textの場合
       if (shape.name() === 'text') {
         console.log('transforming')
-        const { texts } = storeToRefs(useStoreText())
-        const text = texts.value.find((t) => t.id === this.selectedShapeId)
-        if (text !== undefined) {
-          text.width *= shape.scaleX()
-          shape.scaleX(1)
-          shape.scaleY(1)
-        }
+        shape.width(shape.width() * shape.scaleX())
+        shape.scaleX(1)
+        shape.scaleY(1)
       }
     },
 
@@ -249,17 +243,19 @@ const useStoreTransformer = defineStore({
     handleTransformEnd(e: Konva.KonvaEventObject<MouseEvent>) {
       // shape is transformed, let us save new attrs back to the node
       // find element in our state
-      const { target } = e
+      const shape = e.target
       // update the state
-      if (target.name() === 'text') {
+      if (shape.name() === 'text') {
         console.log('transformend')
         const { texts } = storeToRefs(useStoreText())
-        const text = texts.value.find((t) => t.id === this.selectedShapeId)
+        const text = texts.value.find((t) => t.id === shape.id())
+        console.log(text)
         if (text !== undefined) {
-          text.x = e.target.x()
-          text.y = e.target.y()
-          text.rotation = e.target.rotation()
-          text.scaleX = e.target.scaleX()
+          text.x = shape.x()
+          text.y = shape.y()
+          text.width = shape.width()
+          text.rotation = shape.rotation()
+          text.scaleX = shape.scaleX()
         }
       }
     },

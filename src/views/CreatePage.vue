@@ -23,7 +23,7 @@ const {
   setGlobalCompositeOperation,
 } = useStoreLine()
 
-const { createNewTextNode, toggleEdit } = useStoreText()
+const { createNewTextNode, toggleEdit, handleTextDragEnd } = useStoreText()
 
 const {
   handleMouseDownTransformer,
@@ -104,8 +104,9 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
           v-for="text in texts"
           :key="text.id"
           :config="text"
+          @dragend="(e) => handleTextDragEnd(e)"
           @transformend="handleTransformEnd"
-          @transform="() => handleTransform(transformer)"
+          @transform="(e) => handleTransform(e)"
           @dblclick="(e) => toggleEdit(e, transformer, stageParentDiv)"
           )
         //- v-rect(

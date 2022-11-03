@@ -292,6 +292,17 @@ const useStoreText = defineStore({
       transformerNode.show()
       transformerNode.forceUpdate()
     },
+
+    // save text position
+    handleTextDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
+      const shape = e.target
+      const text = this.texts.find((t) => t.id === shape.id())
+      if (text !== undefined) {
+        text.x = shape.x()
+        text.y = shape.y()
+      }
+      console.log(text)
+    },
   },
 })
 
