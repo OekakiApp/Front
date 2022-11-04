@@ -15,7 +15,7 @@ const authUser = getAuth().currentUser!
 const authStore = useAuthStore()
 const icon = ref(authStore.icon)
 
-const iconRef = ref(null)
+const iconRef = ref<HTMLInputElement | null>(null)
 
 const inputText = reactive({
   icon: 'person',
@@ -45,7 +45,7 @@ const saveProfile = () => {
 }
 
 const onFileUploadToFirebase = () => {
-  if (iconRef.value) {
+  if (iconRef.value && iconRef.value.files) {
     const file: File = iconRef.value.files[0]
     icon.value = URL.createObjectURL(file)
   }
@@ -75,7 +75,7 @@ const updateFireBase = async () => {
       })
   }
   // icon
-  if (authStore.icon !== icon.value && iconRef.value) {
+  if (authStore.icon !== icon.value && iconRef.value && iconRef.value.files) {
     const file: File = iconRef.value.files[0]
     const fileRef = storageRef(storage, `user-image/${file.name}`)
     const uploadTask = uploadBytesResumable(fileRef, file)
