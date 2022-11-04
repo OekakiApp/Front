@@ -4,8 +4,11 @@ import { storeToRefs } from 'pinia'
 import Konva from 'konva'
 import useStoreMode, { type Mode } from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
-import SubToolMenu from '@/components/SubToolMenu.vue'
 import useStoreText from '@/stores/konva/text'
+import useStoreStage from '@/stores/konva/stage'
+import SubToolMenu from '@/components/SubToolMenu.vue'
+import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
+import useStoreTransformer from '@/stores/konva/transformer'
 
 interface Props {
   stage: Konva.Stage
@@ -18,6 +21,10 @@ const { setMode } = useStoreMode()
 const { setLineStyle, setGlobalCompositeOperation, deleteLines } =
   useStoreLine()
 const { deleteTexts } = useStoreText()
+const { configShapeTransformer, selectedShapeId } = storeToRefs(
+  useStoreTransformer(),
+)
+const { historyStep, canvasHistory } = storeToRefs(useStoreStage())
 
 const deleteCanvas = () => {
   // eslint-disable-next-line no-alert
@@ -25,6 +32,15 @@ const deleteCanvas = () => {
     // delete
     deleteLines()
     deleteTexts()
+
+    // reset transformer
+    configShapeTransformer.value.nodes = []
+    selectedShapeId.value = ''
+
+    // reset history
+    historyStep.value = 0
+    canvasHistory.value = [{ lines: [], texts: [] }]
+
     // eslint-disable-next-line no-alert
     window.alert('Your work was cleared.')
   }
@@ -37,24 +53,24 @@ const toolArray: {
   shortcut: string
   event: () => void
 }[] = reactive([
-  {
-    icon: 'navigation',
-    mode: 'select',
-    tooltip: 'Select tool',
-    shortcut: 'V',
-    event: () => {
-      setMode('select')
-    },
-  },
-  {
-    icon: 'pan_tool',
-    mode: 'hand',
-    tooltip: 'Hand tool',
-    shortcut: 'H',
-    event: () => {
-      setMode('hand')
-    },
-  },
+  // {
+  //   icon: 'navigation',
+  //   mode: 'select',
+  //   tooltip: 'Select tool',
+  //   shortcut: 'V',
+  //   event: () => {
+  //     setMode('select')
+  //   },
+  // },
+  // {
+  //   icon: 'pan_tool',
+  //   mode: 'hand',
+  //   tooltip: 'Hand tool',
+  //   shortcut: 'H',
+  //   event: () => {
+  //     setMode('hand')
+  //   },
+  // },
   {
     icon: 'edit',
     mode: 'pen',
@@ -134,14 +150,9 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
           span(class="material-symbols-outlined") {{tool.icon}}
         button(v-show="mode === tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="tooltip bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
           span(class="material-symbols-outlined") {{tool.icon}}
-      //- Undo
-      li.flex.mx-2
-        button(type="button" :data-tip="'Undo : ' + 'Ctrl + Z'" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
-          span(class="material-symbols-outlined") undo 
-      //- Redo
-      li.flex.mx-2
-        button(type="button" :data-tip="'Redo : ' + 'Ctrl + Y'" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
-          span(class="material-symbols-outlined") redo 
+
+      UndoRedoButton
+
       //- Reset
       li.flex.mx-2
         button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="deleteCanvas")

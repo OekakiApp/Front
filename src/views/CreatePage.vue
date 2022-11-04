@@ -17,9 +17,10 @@ const { configShapeTransformer } = storeToRefs(useStoreTransformer())
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
 const {
-  handleMouseDown,
-  handleMouseMove,
-  handleMouseUp,
+  handleLineMouseDown,
+  handleLineMouseMove,
+  handleLineMouseUp,
+  handleLineMouseLeave,
   setGlobalCompositeOperation,
 } = useStoreLine()
 
@@ -86,10 +87,11 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       ref="stage"
       :draggable="mode === 'hand'"
       :config="configKonva"
-      @mousedown="(e) => {handleMouseDown(e);handleMouseDownTransformer(e)}"
-      @mousemove="(e) => {handleMouseMove(e);}"
-      @mouseup="() => {handleMouseUp();}"
-      @dblclick="(e) => createNewTextNode(e)"
+      @mousedown="(e) => {handleLineMouseDown(e);handleMouseDownTransformer(e);}"
+      @mousemove="(e) => {handleLineMouseMove(e);}"
+      @mouseup="() => {handleLineMouseUp();}"
+      @mouseleave="() => {handleLineMouseLeave();}"
+      @dblclick="(e) => {createNewTextNode(e);}"
       )
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
 
