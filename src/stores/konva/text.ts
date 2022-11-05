@@ -4,6 +4,8 @@ import Konva from 'konva'
 import WebFont from 'webfontloader'
 import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
+import useStoreStage from '@/stores/konva/stage'
+// eslint-disable-next-line import/no-cycle
 import useStoreTransformer from '@/stores/konva/transformer'
 
 type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
@@ -15,7 +17,7 @@ interface AreaPosition {
   y: number
 }
 
-interface TextNode {
+export interface TextNode {
   id: string
   text: string
   rotation: number
@@ -99,6 +101,7 @@ const useStoreText = defineStore({
                 name: 'text',
               },
             ]
+            useStoreStage().handleEventEndSaveHistory()
           },
         })
       } else {
@@ -124,6 +127,7 @@ const useStoreText = defineStore({
             name: 'text',
           },
         ]
+        useStoreStage().handleEventEndSaveHistory()
       }
     },
 
@@ -147,6 +151,7 @@ const useStoreText = defineStore({
           default:
             break
         }
+        useStoreStage().handleEventEndSaveHistory()
       }
     },
 
@@ -273,12 +278,17 @@ const useStoreText = defineStore({
           textarea.scrollHeight + textNode.fontSize()
         }px`
       })
-      // クリックで解除時にエラーが出る
+
       textarea.addEventListener('blur', () => {
         textNode.text(textarea.value)
+        const text = this.texts.find((t) => t.id === textNode.id())
+        if (text !== undefined) {
+          text.text = textarea.value
+        }
         this.removeTextarea(textNode, transformerNode, textarea)
         // 編集終了
         this.isEditing = false
+        useStoreStage().handleEventEndSaveHistory()
       })
     },
 
@@ -301,7 +311,7 @@ const useStoreText = defineStore({
         text.x = shape.x()
         text.y = shape.y()
       }
-      console.log(text)
+      useStoreStage().handleEventEndSaveHistory()
     },
   },
 })

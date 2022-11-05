@@ -19,9 +19,10 @@ const { configShapeTransformer } = storeToRefs(useStoreTransformer())
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
 const {
-  handleMouseDown,
-  handleMouseMove,
-  handleMouseUp,
+  handleLineMouseDown,
+  handleLineMouseMove,
+  handleLineMouseUp,
+  handleLineMouseLeave,
   setGlobalCompositeOperation,
 } = useStoreLine()
 
@@ -63,7 +64,7 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
     setGlobalCompositeOperation()
   } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
-  // open image file
+  else if (e.key === 'i') setMode('image')
   // undo
   // redo
 }
@@ -99,11 +100,11 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       :draggable="mode === 'hand'"
       :config="configKonva"
       @mouseenter="(e) => {handlePointerMouseEnter(e);}"
-      @mouseleave="(e) => {handlePointerStageMouseLeave(e);}"
-      @mousedown="(e) => {handleMouseDown(e);handleMouseDownTransformer(e)}"
-      @mousemove="(e) => {handleMouseMove(e);handlePointerMouseMove(e);}"
-      @mouseup="() => {handleMouseUp();}"
-      @dblclick="(e) => createNewTextNode(e)"
+      @mouseleave="(e) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
+      @mousedown="(e) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
+      @mousemove="(e) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
+      @mouseup="() => {handleLineMouseUp();}"
+      @dblclick="(e) => {createNewTextNode(e);}"
       )
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
 

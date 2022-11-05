@@ -1,8 +1,10 @@
 import Konva from 'konva'
 import { defineStore, storeToRefs } from 'pinia'
+import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
 import useStoreText from '@/stores/konva/text'
-import useStoreMode from '@/stores/mode'
+// eslint-disable-next-line import/no-cycle
+import useStoreStage from '@/stores/konva/stage'
 
 const useStoreTransformer = defineStore({
   id: 'transformer',
@@ -258,6 +260,7 @@ const useStoreTransformer = defineStore({
           text.scaleX = shape.scaleX()
         }
       }
+      useStoreStage().handleEventEndSaveHistory()
     },
 
     // keydownで選択中の要素を削除
@@ -275,8 +278,10 @@ const useStoreTransformer = defineStore({
             (text) => text.id !== selectedNode.id(),
           )
           this.configShapeTransformer.nodes = []
+          this.selectedShapeId = ''
         }
       }
+      useStoreStage().handleEventEndSaveHistory()
     },
   },
 })

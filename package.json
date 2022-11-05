@@ -20,12 +20,14 @@
     ]
   },
   "dependencies": {
+    "@types/lodash": "^4.14.187",
     "@types/webfontloader": "^1.6.35",
     "@vitejs/plugin-vue": "^3.1.0",
     "daisyui": "^2.33.0",
     "firebase": "^9.12.1",
     "flowbite": "^1.5.3",
     "konva": "^8.3.13",
+    "lodash": "^4.17.21",
     "nanoid": "^4.0.0",
     "pinia": "^2.0.22",
     "vite": "^3.1.0",
