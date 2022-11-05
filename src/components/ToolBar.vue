@@ -62,7 +62,7 @@ const toolArray: {
     shortcut: 'P',
     event: () => {
       setMode('pen')
-      setGlobalCompositeOperation(mode.value)
+      setGlobalCompositeOperation()
     },
   },
   {
@@ -73,7 +73,7 @@ const toolArray: {
     event: () => {
       setMode('eraser')
       setLineStyle('normal')
-      setGlobalCompositeOperation(mode.value)
+      setGlobalCompositeOperation()
     },
   },
   {
