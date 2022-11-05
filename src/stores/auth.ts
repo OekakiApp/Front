@@ -28,8 +28,7 @@ const useAuthStore = defineStore('auth', {
     icon: Icon,
     profile: '',
     isLoggedIn: false,
-    canvases: [] as DocumentData,
-    test: [] as DocumentData,
+    canvases: {} as DocumentData, // eslint-disable-line
   }),
   actions: {
     signupEmail(email: string, password: string, name: string) {
@@ -88,7 +87,7 @@ const useAuthStore = defineStore('auth', {
         collection(db, 'users'),
         where('uid', '==', user.uid),
       )
-      console.log(user.uid)
+
       await getDocs(userQuery)
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
@@ -111,7 +110,8 @@ const useAuthStore = defineStore('auth', {
       await getDocs(canvasQuery)
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
-            this.canvases.push(doc.data())
+            let canvasID = doc.id
+            this.canvases[canvasID] = doc.data()
           })
         })
         .catch((error) => {
