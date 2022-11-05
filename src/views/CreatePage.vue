@@ -2,10 +2,12 @@
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref } from 'vue'
 import ToolBar from '@/components/ToolBar.vue'
+import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
+import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 
 const { mode } = storeToRefs(useStoreMode())
@@ -33,6 +35,16 @@ const {
   handleKeyDownSelectedNodeDelete,
 } = useStoreTransformer()
 
+const {
+  handlePointerMouseEnter,
+  handlePointerMouseMove,
+  handlePointerStageMouseLeave,
+  handlePointerMouseLeave,
+  handlePointerMouseOver,
+  handlePointerMouseDown,
+  handlePointerMouseUp,
+} = useStorePointer()
+
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
@@ -52,7 +64,7 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
     setGlobalCompositeOperation()
   } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
-  // open image file
+  else if (e.key === 'i') setMode('image')
   // undo
   // redo
 }
@@ -87,10 +99,11 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       ref="stage"
       :draggable="mode === 'hand'"
       :config="configKonva"
-      @mousedown="(e) => {handleLineMouseDown(e);handleMouseDownTransformer(e);}"
-      @mousemove="(e) => {handleLineMouseMove(e);}"
+      @mouseenter="(e) => {handlePointerMouseEnter(e);}"
+      @mouseleave="(e) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
+      @mousedown="(e) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
+      @mousemove="(e) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
       @mouseup="() => {handleLineMouseUp();}"
-      @mouseleave="() => {handleLineMouseLeave();}"
       @dblclick="(e) => {createNewTextNode(e);}"
       )
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
@@ -108,9 +121,15 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
           :config="text"
           @dragend="(e) => handleTextDragEnd(e)"
           @transformend="handleTransformEnd"
+          @mouseover="(e) => {handlePointerMouseOver(e);}"
+          @mousedown="(e) => {handlePointerMouseDown(e);}"
+          @mouseup="(e) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e) => {handlePointerMouseLeave(e);}"
           @transform="(e) => handleTransform(e)"
           @dblclick="(e) => toggleEdit(e, transformer, stageParentDiv)"
           )
+        //- pen eraser時のcursor
+        UserCursor
         //- v-rect(
         //- ref="selectionRectangle"
         //- :config="configSelectionRectangle"

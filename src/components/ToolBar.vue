@@ -27,23 +27,17 @@ const { configShapeTransformer, selectedShapeId } = storeToRefs(
 const { historyStep, canvasHistory } = storeToRefs(useStoreStage())
 
 const deleteCanvas = () => {
-  // eslint-disable-next-line no-alert
-  if (window.confirm('Are you sure you want to clear?')) {
-    // delete
-    deleteLines()
-    deleteTexts()
+  // delete
+  deleteLines()
+  deleteTexts()
 
-    // reset transformer
-    configShapeTransformer.value.nodes = []
-    selectedShapeId.value = ''
+  // reset transformer
+  configShapeTransformer.value.nodes = []
+  selectedShapeId.value = ''
 
-    // reset history
-    historyStep.value = 0
-    canvasHistory.value = [{ lines: [], texts: [] }]
-
-    // eslint-disable-next-line no-alert
-    window.alert('Your work was cleared.')
-  }
+  // reset history
+  historyStep.value = 0
+  canvasHistory.value = [{ lines: [], texts: [] }]
 }
 
 const toolArray: {
@@ -146,19 +140,31 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
     ul.flex
       //- select hand pen text sticky image
       li(v-for="(tool, index) of toolArray" :key="index" class="flex mx-2")
-        button(v-show="mode !== tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
+        button(v-show="mode !== tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
           span(class="material-symbols-outlined") {{tool.icon}}
-        button(v-show="mode === tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="tooltip bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
+        button(v-show="mode === tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="btn tooltip bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
           span(class="material-symbols-outlined") {{tool.icon}}
 
       UndoRedoButton
 
       //- Reset
       li.flex.mx-2
-        button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="deleteCanvas")
+        label(htmlFor="my-modal" class="btn bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") delete
       //- Download
       li.flex.mx-2
-        button(type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="saveImage")
+        button(type="button" class="btn bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="saveImage")
           span(class="material-symbols-outlined") file_download
+
+input(id="my-modal" type="checkbox" className="modal-toggle")
+div(className="modal")
+  div(className="modal-box")
+    h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
+    p(className="py-4 text-red-600") ※ この操作は取り消せません。
+    div(class="flex justify-end")
+      div(className="modal-action mr-3")
+        label(htmlFor="my-modal" className="btn w-36") Cancel
+      div(className="modal-action")
+        label(htmlFor="my-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="deleteCanvas") OK
+
 </template>
