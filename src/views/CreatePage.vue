@@ -103,7 +103,6 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       ref="stage"
       :draggable="mode === 'hand'"
       :config="configKonva"
-
       @mouseenter="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseEnter(e);}"
       @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
       @mousedown="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
