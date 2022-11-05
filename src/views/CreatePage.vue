@@ -9,6 +9,10 @@ import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
+import Konva from 'konva'
+
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
@@ -99,15 +103,13 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       ref="stage"
       :draggable="mode === 'hand'"
       :config="configKonva"
-      @mouseenter="(e) => {handlePointerMouseEnter(e);}"
-      @mouseleave="(e) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
-      @mousedown="(e) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
-      @mousemove="(e) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
+      @mouseenter="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseEnter(e);}"
+      @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
+      @mousedown="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
+      @mousemove="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
       @mouseup="() => {handleLineMouseUp();}"
-      @dblclick="(e) => {createNewTextNode(e);}"
+      @dblclick="(e: KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
       )
-      //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
-
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
         v-line(
@@ -119,14 +121,14 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
           v-for="text in texts"
           :key="text.id"
           :config="text"
-          @dragend="(e) => handleTextDragEnd(e)"
+          @dragend="(e: KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
           @transformend="handleTransformEnd"
-          @mouseover="(e) => {handlePointerMouseOver(e);}"
-          @mousedown="(e) => {handlePointerMouseDown(e);}"
-          @mouseup="(e) => {handlePointerMouseUp(e)}"
-          @mouseleave="(e) => {handlePointerMouseLeave(e);}"
-          @transform="(e) => handleTransform(e)"
-          @dblclick="(e) => toggleEdit(e, transformer, stageParentDiv)"
+          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
+          @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
           )
         //- pen eraser時のcursor
         UserCursor

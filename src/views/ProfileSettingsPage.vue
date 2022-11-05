@@ -128,7 +128,7 @@ const validate = (): boolean => {
 }
 </script>
 <template lang="pug">
-div(class="flex max-w-3xl mx-auto mt-8") 
+div(class="flex max-w-3xl mx-auto mt-8")
   //- left
   div(class="flex flex-col items-center")
     div
@@ -145,9 +145,9 @@ div(class="flex max-w-3xl mx-auto mt-8")
         div
           label(class="block mb-2 font-medium text-midnightBlue") {{ inputText.label }}
           input(
-        :id="inputText.icon" v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder" :value="inputText.text" 
+        :id="inputText.icon" v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder"
           class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-full p-2.5" required)
-      
+
       div
         div(v-show="textArea.isAlert" class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
           span(class="font-medium") {{textArea.alertText}}

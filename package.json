@@ -34,6 +34,7 @@
     "vue": "^3.2.37",
     "vue-konva": "^3.0.1",
     "vue-router": "^4.1.5",
+    "vue-tsc": "^1.0.9",
     "webfontloader": "^1.6.28"
   },
   "devDependencies": {
@@ -43,6 +44,7 @@
     "@types/jest": "^29.1.1",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
     "@typescript-eslint/parser": "^5.38.1",
+    "@volar/vue-language-plugin-pug": "^1.0.9",
     "@vue/eslint-config-typescript": "^11.0.2",
     "@vue/test-utils": "^2.1.0",
     "autoprefixer": "^10.4.12",
@@ -69,7 +71,6 @@
     "ts-jest": "^26.5.6",
     "typescript": "^4.8.4",
     "vue-jest": "^5.0.0-alpha.10",
-    "vue-loader": "^16.8.3",
-    "vue-tsc": "^0.40.4"
+    "vue-loader": "^16.8.3"
   }
 }

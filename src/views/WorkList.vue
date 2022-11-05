@@ -10,11 +10,4 @@ div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
       a(href="" class="text-midnightBlue pl-2") Name
 </template>
 
-<style scoped>
-.mini-avatar {
-  vertical-align: middle;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-}
-</style>
+<style scoped></style>

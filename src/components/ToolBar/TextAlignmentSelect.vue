@@ -4,7 +4,11 @@ import { reactive } from 'vue'
 
 const { setTextOptionValue, setTextAlign } = useStoreText()
 
-const textAlignmentArray: { icon: string; onClick: () => void }[] = reactive([
+const textAlignmentArray: {
+  icon: string
+  tooltip: string
+  onClick: () => void
+}[] = reactive([
   {
     icon: 'format_align_left',
     tooltip: 'Left',
@@ -33,7 +37,7 @@ const textAlignmentArray: { icon: string; onClick: () => void }[] = reactive([
 </script>
 
 <template lang="pug">
-div(class="flex justify-center items-center mx-1") 
+div(class="flex justify-center items-center mx-1")
   button(v-for="align of textAlignmentArray" :key="align.icon" :data-tip="align.tooltip" class="tooltip flex items-center hover:bg-slate-300" @click="align.onClick")
     span(class="material-symbols-outlined") {{align.icon}}
 </template>
