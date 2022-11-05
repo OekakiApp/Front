@@ -209,4 +209,22 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
     :index="index" :active-index="activeTextColorIndex"
     @toggle-button-active="(index:number) => activeTextColorIndex = index"
     @toggle-picker-active="(index:number, color:string) =>{activeTextColorIndex = index;setTextColor(color);setTextOptionValue('textFillColor', color)}")
+div(v-else-if="mode === 'image'" class="flex justify-between items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12 h-80")
+  div(class="flex items-end w-full h-full")
+    div(class="mr-2")
+      input(type="file" class="bg-white file-input file-input-bordered file-input-sm w-full max-w-xs")
+    div(class="bg-white flex-1 grid grid-cols-3 w-full h-full overflow-y-scroll")
+      div(class="relative")
+        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 m-1")
+          span(class="font-bold") ✕
+        img(src="@/assets/user_icon.png" class="w-full aspect-auto col-span-1 p-2")
+      div(class="relative")
+        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 m-1")
+          span(class="font-bold") ✕
+        img(src="@/assets/user_icon.png" class="w-full aspect-auto col-span-1 p-2")
+      div(class="relative")
+        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 m-1")
+          span(class="font-bold") ✕
+        img(src="@/assets/user_icon.png" class="w-full aspect-auto col-span-1 p-2")
+      
 </template>
