@@ -17,7 +17,7 @@ const checkFontSize = (value: string) => {
   return parsedFontSize.toString()
 }
 
-const handleInputFontSize = (e: InputEvent) => {
+const handleInputFontSize = (e: Event) => {
   const inputElement = e.target as HTMLInputElement
   setFontSize(checkFontSize(inputElement.value))
   setTextOptionValue('fontSize', checkFontSize(inputElement.value))
