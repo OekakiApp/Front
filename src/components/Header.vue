@@ -32,4 +32,11 @@ nav(class="bg-bleachWhite px-2 sm:px-4 py-2.5 rounded")
           router-link(to="login" class="text-lg hover:text-dustyOrange" :class='{"text-dustyOrange": isLoginPage}') ログイン
 </template>
 
-<style scoped></style>
+<style scoped>
+.mini-avatar {
+  vertical-align: middle;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+}
+</style>

@@ -2,6 +2,7 @@
 // import/no-cycle
 import { defineStore } from 'pinia'
 import router from '@/router/index'
+import { db } from '@/firebase/index'
 import {
   getAuth,
   signOut,
@@ -10,13 +11,16 @@ import {
   updateProfile,
   User,
 } from 'firebase/auth'
+import { query, getDocs, where, collection } from 'firebase/firestore'
 import Icon from '../assets/user_icon.png'
 /* eslint-enable */
 
 const useAuthStore = defineStore('auth', {
   state: () => ({
+    uid: '',
     name: '',
     icon: Icon,
+    profile: '',
     isLoggedIn: false,
   }),
   actions: {
@@ -45,7 +49,7 @@ const useAuthStore = defineStore('auth', {
       signInWithEmailAndPassword(auth, email, password)
         .then(async (userCredential) => {
           const { user } = userCredential
-          this.setUser(user)
+          await this.setUser(user)
           await forceToHomePage()
         })
         .catch((error) => {
@@ -64,10 +68,27 @@ const useAuthStore = defineStore('auth', {
         })
     },
 
-    setUser(user: User) {
+    async setUser(user: User) {
+      this.uid = user.uid
       this.name = user.displayName ?? ''
       this.icon = user.photoURL ?? Icon
       this.isLoggedIn = true
+
+      // get profile
+      const userQuery = query(
+        collection(db, 'users'),
+        where('uid', '==', user.uid),
+      )
+      await getDocs(userQuery)
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            this.profile = doc.data().profile
+            localStorage.setItem('usersId', doc.id)
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     },
   },
 })
