@@ -2,10 +2,12 @@
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref } from 'vue'
 import ToolBar from '@/components/ToolBar.vue'
+import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
+import useStorePointer from '@/stores/konva/pointer'
 
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
@@ -28,6 +30,16 @@ const {
   handleTransformEnd,
   toggleEdit,
 } = useStoreText()
+
+const {
+  handlePointerMouseEnter,
+  handlePointerMouseMove,
+  handlePointerStageMouseLeave,
+  handlePointerMouseLeave,
+  handlePointerMouseOver,
+  handlePointerMouseDown,
+  handlePointerMouseUp,
+} = useStorePointer()
 
 const stageParentDiv = ref()
 const stage = ref()
@@ -74,9 +86,11 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       ref="stage"
       :draggable="mode === 'hand'"
       :config="configKonva"
+      @mouseenter="(e) => {handlePointerMouseEnter(e);}"
       @mousedown="(e) => {handleMouseDown(e, mode);handleStageMouseDown(e, transformer.getNode())}"
-      @mousemove="handleMouseMove"
+      @mousemove="(e) => {handleMouseMove(e);handlePointerMouseMove(e);}"
       @mouseup="handleMouseUp"
+      @mouseleave="(e) => {handlePointerStageMouseLeave(e);}"
       @dblclick="(e) => createNewTextNode(e, mode)")
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
 
@@ -93,9 +107,15 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
           :config="text"
           @transformend="handleTransformEnd"
           @transform="() => handleTransform(transformer.getNode())"
+          @mouseover="(e) => {handlePointerMouseOver(e);}"
+          @mousedown="(e) => {handlePointerMouseDown(e);}"
+          @mouseup="(e) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e) => {handlePointerMouseLeave(e);}"
           @dblclick="() => toggleEdit(transformer.getNode(), stageParentDiv)"
           )
         v-transformer(ref="transformer" :config="configTransformer")
+        //- pen eraser時のcursor
+        UserCursor
 
 ToolBar(:stage="stage")
 </template>
