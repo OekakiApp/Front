@@ -8,11 +8,13 @@ import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStorePointer from '@/stores/konva/pointer'
+import useStoreTransformer from '@/stores/konva/transformer'
 
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
-const { texts, configTransformer } = storeToRefs(useStoreText())
+const { texts, isEditing } = storeToRefs(useStoreText())
+const { configShapeTransformer } = storeToRefs(useStoreTransformer())
 
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
@@ -23,13 +25,14 @@ const {
   setGlobalCompositeOperation,
 } = useStoreLine()
 
+const { createNewTextNode, toggleEdit, handleTextDragEnd } = useStoreText()
+
 const {
-  createNewTextNode,
-  handleStageMouseDown,
+  handleMouseDownTransformer,
   handleTransform,
   handleTransformEnd,
-  toggleEdit,
-} = useStoreText()
+  handleKeyDownSelectedNodeDelete,
+} = useStoreTransformer()
 
 const {
   handlePointerMouseEnter,
@@ -44,17 +47,20 @@ const {
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
+// const selectionRectangle = ref()
 
 // ショートカット
 const changeModeByShortCut = (e: KeyboardEvent) => {
+  // テキスト編集中はショートカット無効
+  if (isEditing.value) return
   if (e.key === 'h') setMode('hand')
   else if (e.key === 'v') setMode('select')
   else if (e.key === 'p' || e.key === 'm') {
     setMode('pen')
-    setGlobalCompositeOperation('pen')
+    setGlobalCompositeOperation()
   } else if (e.shiftKey && e.key === 'Delete') {
     setMode('eraser')
-    setGlobalCompositeOperation('eraser')
+    setGlobalCompositeOperation()
   } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
   // open image file
@@ -67,14 +73,20 @@ onMounted(() => {
   window.addEventListener('resize', () =>
     fitStageIntoParentContainer(stageParentDiv.value),
   )
-  window.addEventListener('keydown', changeModeByShortCut)
+  window.addEventListener('keydown', (e) => {
+    changeModeByShortCut(e)
+    handleKeyDownSelectedNodeDelete(e)
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', () =>
     fitStageIntoParentContainer(stageParentDiv.value),
   )
-  window.removeEventListener('keydown', changeModeByShortCut)
+  window.removeEventListener('keydown', (e) => {
+    changeModeByShortCut(e)
+    handleKeyDownSelectedNodeDelete(e)
+  })
 })
 </script>
 
@@ -87,11 +99,12 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       :draggable="mode === 'hand'"
       :config="configKonva"
       @mouseenter="(e) => {handlePointerMouseEnter(e);}"
-      @mousedown="(e) => {handleMouseDown(e, mode);handleStageMouseDown(e, transformer.getNode())}"
-      @mousemove="(e) => {handleMouseMove(e);handlePointerMouseMove(e);}"
-      @mouseup="handleMouseUp"
       @mouseleave="(e) => {handlePointerStageMouseLeave(e);}"
-      @dblclick="(e) => createNewTextNode(e, mode)")
+      @mousedown="(e) => {handleMouseDown(e);handleMouseDownTransformer(e)}"
+      @mousemove="(e) => {handleMouseMove(e);handlePointerMouseMove(e);}"
+      @mouseup="() => {handleMouseUp();}"
+      @dblclick="(e) => createNewTextNode(e)"
+      )
       //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
 
       v-layer
@@ -102,20 +115,25 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
           :config="{stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
           )
         v-text(
-          v-for="text, index in texts"
-          :key="index"
+          v-for="text in texts"
+          :key="text.id"
           :config="text"
+          @dragend="(e) => handleTextDragEnd(e)"
           @transformend="handleTransformEnd"
-          @transform="() => handleTransform(transformer.getNode())"
           @mouseover="(e) => {handlePointerMouseOver(e);}"
           @mousedown="(e) => {handlePointerMouseDown(e);}"
           @mouseup="(e) => {handlePointerMouseUp(e)}"
           @mouseleave="(e) => {handlePointerMouseLeave(e);}"
-          @dblclick="() => toggleEdit(transformer.getNode(), stageParentDiv)"
+          @transform="(e) => handleTransform(e)"
+          @dblclick="(e) => toggleEdit(e, transformer, stageParentDiv)"
           )
-        v-transformer(ref="transformer" :config="configTransformer")
         //- pen eraser時のcursor
         UserCursor
+        //- v-rect(
+        //- ref="selectionRectangle"
+        //- :config="configSelectionRectangle"
+        //- )
+        v-transformer(ref="transformer" :config="configShapeTransformer")
 
 ToolBar(:stage="stage")
 </template>
