@@ -7,6 +7,7 @@ import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
+import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import Konva from 'konva'
@@ -18,6 +19,7 @@ const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
+const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer } = storeToRefs(useStoreTransformer())
 
 const { setMode } = useStoreMode()
@@ -48,6 +50,8 @@ const {
   handlePointerMouseDown,
   handlePointerMouseUp,
 } = useStorePointer()
+
+const { setImages } = useStoreImage()
 
 const stageParentDiv = ref()
 const stage = ref()
@@ -98,7 +102,7 @@ onUnmounted(() => {
 <template lang="pug">
 
 div(class="m-auto border-4 max-w-screen-xl relative my-8")
-  div(ref="stageParentDiv" class="bg-white w-full")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
       ref="stage"
       :draggable="mode === 'hand'"
@@ -112,6 +116,12 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
       )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
+        v-image(
+          v-for="image in konvaImages"
+          :key="image.id"
+          :draggable="true"
+          :config="{image:image.imageElement, x: image.x-image.imageElement.width/2, y: image.y-image.imageElement.height/2}"
+        )
         v-line(
           v-for="line ,index in lines"
           :key="index"
