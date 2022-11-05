@@ -22,6 +22,7 @@ const useStorePointer = defineStore({
         this.isLinePointer = true
         stage.container().style.cursor = 'none'
       } else if (mode.value === 'text') {
+        if (e.target.className === 'Text') return
         stage.container().style.cursor = 'pointer'
       }
     },
