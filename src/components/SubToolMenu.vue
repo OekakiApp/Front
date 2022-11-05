@@ -220,7 +220,7 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
 div(v-else-if="mode === 'image'" class="flex justify-between bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12 max-h-80")
   div(class="flex items-end w-full h-full")
     div(class="mr-2")
-      input(type="file" class="bg-white file-input file-input-bordered file-input-sm max-w-xs rounded-lg" accept=".png, .jpeg, .jpg" @change="addImageList")
+      input(type="file" class="bg-white file-input file-input-bordered file-input-sm max-w-xs rounded-lg" accept=".png, .jpeg, .jpg" @change="(e: InputEvent) => addImageList(e)")
     div(class="bg-slate-50 flex-1 grid grid-cols-3 h-full max-h-72 overflow-y-scroll rounded-lg")
       //- image list
       div(v-for="image of uploadedImages" :key="image.id" class="relative")
