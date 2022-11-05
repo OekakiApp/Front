@@ -25,7 +25,7 @@ const useStoreImage = defineStore({
   }),
 
   actions: {
-    addImageList(e: InputEvent) {
+    addImageList(e: Event) {
       const inputElement = e.target as HTMLInputElement
       if (inputElement === null) return
       const { files } = inputElement
