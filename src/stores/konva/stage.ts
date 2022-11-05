@@ -1,4 +1,16 @@
-import { defineStore } from 'pinia'
+import { defineStore, storeToRefs } from 'pinia'
+// eslint-disable-next-line import/no-cycle
+import useStoreLine, { Points } from '@/stores/konva/line'
+// eslint-disable-next-line import/no-cycle
+import useStoreText, { TextNode } from '@/stores/konva/text'
+// eslint-disable-next-line import/no-cycle
+import useStoreTransformer from '@/stores/konva/transformer'
+import _ from 'lodash'
+
+interface History {
+  lines: Points[]
+  texts: TextNode[]
+}
 
 const useStoreStage = defineStore({
   id: 'stage',
@@ -13,6 +25,8 @@ const useStoreStage = defineStore({
         y: 1,
       },
     },
+    historyStep: 0,
+    canvasHistory: [{ lines: [], texts: [] }] as History[],
   }),
 
   actions: {
@@ -25,28 +39,82 @@ const useStoreStage = defineStore({
       const SCENE_MAX_WIDTH = 1280
       const SCENE_MAX_HEIGHT = 720
 
-      if (container !== undefined) {
-        const stageWidth =
-          container.offsetWidth % 2 !== 0
-            ? container.offsetWidth - 1
-            : container.offsetWidth
+      if (container === null) return
 
-        this.configKonva.size = {
-          width: stageWidth,
-          height: (stageWidth * 9) / 16, // aspect-ratio
-        }
+      const stageWidth =
+        container.offsetWidth % 2 !== 0
+          ? container.offsetWidth - 1
+          : container.offsetWidth
 
-        const scaleX =
-          Math.min(this.configKonva.size.width, SCENE_MAX_WIDTH) /
-          SCENE_BASE_WIDTH
-
-        const scaleY =
-          Math.min(this.configKonva.size.height, SCENE_MAX_HEIGHT) /
-          SCENE_BASE_HEIGHT
-
-        const minRatio = Math.min(scaleX, scaleY)
-        this.configKonva.scale = { x: minRatio, y: minRatio }
+      this.configKonva.size = {
+        width: stageWidth,
+        height: (stageWidth * 9) / 16, // aspect-ratio
       }
+
+      const scaleX =
+        Math.min(this.configKonva.size.width, SCENE_MAX_WIDTH) /
+        SCENE_BASE_WIDTH
+
+      const scaleY =
+        Math.min(this.configKonva.size.height, SCENE_MAX_HEIGHT) /
+        SCENE_BASE_HEIGHT
+
+      const minRatio = Math.min(scaleX, scaleY)
+      this.configKonva.scale = { x: minRatio, y: minRatio }
+    },
+
+    handleEventEndSaveHistory() {
+      const { lines } = storeToRefs(useStoreLine())
+      const { texts } = storeToRefs(useStoreText())
+      // 参照切る
+      const copyLines = _.cloneDeep(lines.value)
+      const copyTexts = _.cloneDeep(texts.value)
+      this.canvasHistory = this.canvasHistory.slice(0, this.historyStep + 1)
+      // 履歴保存
+      const history = {
+        lines: copyLines,
+        texts: copyTexts,
+      }
+      this.canvasHistory = this.canvasHistory.concat([history])
+      this.historyStep += 1
+    },
+
+    handleUndo() {
+      // これ以上遡れない場合何もしない
+      if (this.historyStep === 0) return
+      this.historyStep -= 1
+      // 参照切る
+      const previous = _.cloneDeep(this.canvasHistory[this.historyStep])
+      // line text image 上書き
+      const { lines } = storeToRefs(useStoreLine())
+      const { texts } = storeToRefs(useStoreText())
+      lines.value = previous.lines
+      texts.value = previous.texts
+      // transformer 解除
+      const { configShapeTransformer, selectedShapeId } = storeToRefs(
+        useStoreTransformer(),
+      )
+      configShapeTransformer.value.nodes = []
+      selectedShapeId.value = ''
+    },
+
+    handleRedo() {
+      // 履歴の上限の場合何もしない
+      if (this.historyStep === this.canvasHistory.length - 1) return
+      this.historyStep += 1
+      // 参照切る
+      const next = _.cloneDeep(this.canvasHistory[this.historyStep])
+      // line text image 上書き
+      const { lines } = storeToRefs(useStoreLine())
+      const { texts } = storeToRefs(useStoreText())
+      lines.value = next.lines
+      texts.value = next.texts
+      // transformer 解除
+      const { configShapeTransformer, selectedShapeId } = storeToRefs(
+        useStoreTransformer(),
+      )
+      configShapeTransformer.value.nodes = []
+      selectedShapeId.value = ''
     },
   },
 })

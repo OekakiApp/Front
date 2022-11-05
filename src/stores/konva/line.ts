@@ -1,16 +1,9 @@
 import Konva from 'konva'
-import { defineStore } from 'pinia'
-// import { Mode } from '@/types/mode'
-// import { Points, LineStyle } from '@/types/konva'
-export type Mode =
-  | 'select'
-  | 'hand'
-  | 'pen'
-  | 'eraser'
-  | 'text'
-  | 'sticky'
-  | 'image'
-  | 'none'
+import { defineStore, storeToRefs } from 'pinia'
+import useStoreMode from '@/stores/mode'
+import { nanoid } from 'nanoid'
+// eslint-disable-next-line import/no-cycle
+import useStoreStage from '@/stores/konva/stage'
 
 export interface Points {
   points: number[]
@@ -80,9 +73,10 @@ const useStoreLine = defineStore({
       this.dashEnabled = selectedLineStyle !== 'normal'
     },
 
-    setGlobalCompositeOperation(mode: Mode) {
+    setGlobalCompositeOperation() {
+      const { mode } = storeToRefs(useStoreMode())
       this.globalCompositeOperation =
-        mode === 'eraser' ? 'destination-out' : 'source-over'
+        mode.value === 'eraser' ? 'destination-out' : 'source-over'
     },
 
     setLines(line: Points) {
@@ -93,16 +87,20 @@ const useStoreLine = defineStore({
       this.lines = []
     },
 
-    handleMouseDown(e: Konva.KonvaEventObject<MouseEvent>, mode: Mode) {
+    handleLineMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
+      const { mode } = useStoreMode()
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return
       const stage = e.target.getStage()
       // clickしたのがTextならskip（Textをdragするため）
       if (e.target.getClassName() === 'Text') return
       this.isDrawing = true
+      const id = nanoid()
       if (stage !== null) {
         const pos = stage.getRelativePointerPosition()
         const points = {
+          id,
+          name: 'line',
           points: [pos.x, pos.y],
           color: this.drawColor,
           strokeWidth: this.strokeWidth,
@@ -114,7 +112,7 @@ const useStoreLine = defineStore({
       }
     },
 
-    handleMouseMove(e: Konva.KonvaEventObject<MouseEvent>) {
+    handleLineMouseMove(e: Konva.KonvaEventObject<MouseEvent>) {
       // no drawing - skipping
       if (!this.isDrawing) {
         return
@@ -132,8 +130,19 @@ const useStoreLine = defineStore({
       }
     },
 
-    handleMouseUp() {
+    handleLineMouseUp() {
+      const { mode } = useStoreMode()
+      // modeがpenかeraserでないならskip
+      if (mode !== 'pen' && mode !== 'eraser') return
       this.isDrawing = false
+      useStoreStage().handleEventEndSaveHistory()
+    },
+
+    handleLineMouseLeave() {
+      // 描画中にキャンバスからマウスが外れたら、描画終了
+      if (!this.isDrawing) return
+      this.isDrawing = false
+      useStoreStage().handleEventEndSaveHistory()
     },
   },
 })
