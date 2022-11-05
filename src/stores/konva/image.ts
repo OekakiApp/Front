@@ -10,6 +10,7 @@ interface UploadedImage {
 
 interface KonvaImage {
   id: string
+  name: string
   imageElement: HTMLImageElement
   x: number
   y: number
@@ -20,7 +21,6 @@ const useStoreImage = defineStore({
   state: () => ({
     dragUrl: '',
     uploadedImages: [] as UploadedImage[],
-    // Konva Image
     konvaImages: [] as KonvaImage[],
   }),
 
@@ -87,11 +87,12 @@ const useStoreImage = defineStore({
       this.konvaImages = this.konvaImages.concat([
         {
           id,
+          name: 'image',
           imageElement: newImg,
           ...stage.getRelativePointerPosition(), // {x, y}
         },
       ])
-
+      // モード終了し、サブメニューを閉じる
       const { setMode } = useStoreMode()
       setMode('none')
     },
