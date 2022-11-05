@@ -12,14 +12,14 @@ import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 
-export type Color = {
+interface Color {
   name: string
   type: 'color-button' | 'color-picker'
   color: string
   style?: {
     'background-color': string
   }
-  onClick?: () => void
+  onClick: () => void
 }
 
 const { mode } = storeToRefs(useStoreMode())
@@ -92,6 +92,8 @@ const lineColors: Color[] = [
     name: 'Custom',
     type: 'color-picker',
     color: 'rainbow',
+    // 便宜上何も設定しない関数を挿入する
+    onClick: () => setLineColor(''),
   },
 ]
 
@@ -180,6 +182,8 @@ const textColors: Color[] = [
     name: 'Custom',
     type: 'color-picker',
     color: 'rainbow',
+    // 便宜上何も設定しない関数を挿入する
+    onClick: () => setLineColor(''),
   },
 ]
 </script>
@@ -204,7 +208,7 @@ div(
 //- text
 div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12 h-16")
   FontSizeSelect
-  FontFamilySelect 
+  FontFamilySelect
   TextAlignmentSelect
   ColorButton(
     v-for="(color, index) in textColors"

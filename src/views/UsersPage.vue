@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import useAuthStore from '@/stores/auth'
 
 const authStore = useAuthStore()
-const { name } = storeToRefs(useAuthStore())
+const { name, icon, profile } = storeToRefs(useAuthStore())
 </script>
 
 <template lang="pug">
@@ -25,10 +25,11 @@ div(class="grid grid-cols-12 mt-8")
     //- top
     div(class="flex justify-between pb-4 border-b")
       div(class="flex")
-        div(class="avatar bg-gray-200")
-        div(class="flex flex-col justify-center text-midnightBlue ml-4")
-          p(class="text-xl font-bold") {{ name }}
-          p(class="text-sm") 自己紹介: 好きな食べ物は...
+        div
+          img(:src="icon" class="avatar ring-2 ring-gray-700 ")
+        div(class="flex flex-col justify-around text-midnightBlue ml-4")
+          p(class="text-2xl font-bold") {{ name }}
+          p(class="text-sm") 自己紹介: {{ profile }}
       div(class="mr-8")
         router-link(to="/profile/settings") 
           button(class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-3 py-1") 編集
@@ -50,8 +51,8 @@ div(class="grid grid-cols-12 mt-8")
 <style scoped>
 .avatar {
   vertical-align: middle;
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
 }
 </style>

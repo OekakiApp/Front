@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import useAuthStore from '@/stores/auth'
-
-const authStore = useAuthStore()
-
-type InputTextType = {
+// import { InputTextType } from '@/types/index'
+interface InputTextType {
   icon: string
   inputType: string
   placeholder: string
@@ -12,6 +10,7 @@ type InputTextType = {
   isAlert: boolean
   alertText: string
 }
+const authStore = useAuthStore()
 
 const inputTexts: InputTextType[] = reactive([
   {
@@ -90,7 +89,7 @@ div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
         span(class="material-symbols-outlined mr-2") {{inputText.icon}}
         div(class="w-full flex-fill mb-0")
           input(
-:id="inputText.icon" v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder" :value="inputText.text" 
+:id="inputText.icon" v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder"
   class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-full p-2.5" required)
 
     div(class="flex justify-center items-center mb-4")
