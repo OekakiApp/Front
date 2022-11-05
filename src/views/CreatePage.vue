@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import ToolBar from '@/components/ToolBar.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
+import useAuthStore from '@/stores/auth'
 
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, configTransformer } = storeToRefs(useStoreText())
+const { canvases } = storeToRefs(useAuthStore())
 
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
@@ -56,6 +59,10 @@ onMounted(() => {
     fitStageIntoParentContainer(stageParentDiv.value),
   )
   window.addEventListener('keydown', changeModeByShortCut)
+
+  const canvasId: number = Number(useRoute().params.canvas_id)
+  lines.value = canvases.value[canvasId].lines
+  texts.value = canvases.value[canvasId].texts
 })
 
 onUnmounted(() => {

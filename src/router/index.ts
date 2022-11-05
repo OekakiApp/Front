@@ -35,7 +35,7 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: '/create',
+      path: '/create/:canvas_id',
       name: 'Create',
       component: CreatePage,
       meta: { requiresAuth: true },

@@ -14,6 +14,7 @@ const auth = getAuth()
 onAuthStateChanged(auth, (user) => {
   if (user) {
     authStore.setUser(user)
+    authStore.getCanvases()
     console.log('ログイン成功')
   } else {
     console.log('ログイン失敗')
