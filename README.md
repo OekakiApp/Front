@@ -9,8 +9,8 @@
 
 - [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
 
-###　技術スタック
-# フロントエンド
+##　技術スタック
+### フロントエンド
 - Vue3
 - TypeScript
 - tailwindCSS
@@ -18,28 +18,28 @@
 - konva
 - Vue konva
 
-# 各種Linterなど
+### 各種Linterなど
 - ESLint
 - Prettier
 - Commit Lint
 - husky
 
-# バックエンド、データベース
+### バックエンド、データベース
 - FireBase
 
-# テストツール
+### テストツール
 - Jest
 
-# ビルドツール
+### ビルドツール
 - Vite
 
-# CI/CD
+### CI/CD
 - Github Actions
 
-# ホスティングサービス
+### ホスティングサービス
 - Github Pages
 
 
-### URL
+## URL
 下記からお試しください↓
 https://oekakiapp.github.io/Front/
