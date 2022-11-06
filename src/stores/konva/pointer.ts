@@ -25,7 +25,6 @@ const useStorePointer = defineStore({
         if (e.target.className === 'Text') return
         stage.container().style.cursor = 'pointer'
       } else if (mode.value === 'image') {
-        //   if (e.target.className === 'Image') return
         stage.container().style.cursor = 'grab'
       }
     },

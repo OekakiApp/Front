@@ -76,6 +76,8 @@ const toolArray: {
     event: () => {
       setMode('pen')
       setGlobalCompositeOperation()
+      configShapeTransformer.value.nodes = []
+      selectedShapeId.value = ''
     },
   },
   {
