@@ -15,12 +15,13 @@ import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
-import useStoreText from '@/stores/konva/text'
+import useStoreText, { fontFamilyList } from '@/stores/konva/text'
 import useAuthStore from '@/stores/auth'
 import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import Konva from 'konva'
+import WebFont from 'webfontloader'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 type KonvaEventObject<T> = Konva.KonvaEventObject<T>
@@ -29,8 +30,8 @@ const StorageReference = storageRef(storage, '')
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
+const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
 const { canvases } = storeToRefs(useAuthStore())
-const { texts, isEditing } = storeToRefs(useStoreText())
 const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
@@ -124,6 +125,22 @@ onMounted(() => {
     handleKeyDownSelectedNodeDelete(e)
   })
 
+  // Font読み込み
+  if (!isFontLoaded.value) {
+    WebFont.load({
+      google: {
+        families: fontFamilyList,
+      },
+      loading: () => {
+        console.log('font is loading')
+      },
+      // 全てWebフォントの読み込みが完了したときに発火
+      active: () => {
+        isFontLoaded.value = true
+        console.log('fonts is loaded!')
+      },
+    })
+  }
   // 初期化
   lines.value = []
   texts.value = []
@@ -256,7 +273,7 @@ const updateImageMetadata = async (fileRef: typeof StorageReference) => {
 div(class="flex justify-center items-center my-4")
   input( v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-1/3 p-1 mr-8" @focus='focusInput()' @blur='blurInput()')
   button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-2 py-1" @click='saveCanvas()') 保存
-div(class="m-auto border-4 max-w-screen-xl relative")
+div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
       ref="stage"
@@ -309,6 +326,6 @@ div(class="m-auto border-4 max-w-screen-xl relative")
         //- :config="configSelectionRectangle"
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
-
-ToolBar(:stage="stage")
+div(class="container")
+  ToolBar(:stage="stage")
 </template>

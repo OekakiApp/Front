@@ -141,9 +141,9 @@ const saveImage = () => {
 </script>
 
 <template lang="pug">
-div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/2")
+div(class="flex flex-col items-center relative")
   SubToolMenu
-  div(class="flex justify-center items-center px-4 py-3 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 mx-auto")
+  div(class="flex justify-center items-centers w-full max-w-screen-xl px-4 py-3 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 z-0")
     ul.flex
       //- select hand pen text sticky image
       li(v-for="(tool, index) of toolArray" :key="index" class="flex mx-2")

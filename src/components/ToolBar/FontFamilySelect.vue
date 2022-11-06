@@ -15,10 +15,12 @@ div(class="block mr-2")
     id="font-family"
     ref="selectedFontFamily"
     v-model="fontFamily"
-    class="block pr-7 py-1 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+    class="block pr-7 py-1 w-44 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+    :style="{fontFamily: fontFamily}"
     @change="() => {setFontFamily(selectedFontFamily.value);setTextOptionValue('fontFamily', selectedFontFamily.value);}")
-    option(value="Roboto") Roboto
-    option(value="Yomogi") Yomogi
-    option(value="Titan One") Titan One
-    option(value="Pacifico") Pacifico
+    option(value="Roboto" style="font-family: Roboto;") Roboto
+    option(value="Yomogi" style="font-family: Yomogi;") Yomogi
+    option(value="Kiwi Maru" style="font-family: Kiwi Maru;") Kiwi Maru
+    option(value="Train One" style="font-family: Train One;") Train One
+    option(value="Dela Gothic One" style="font-family: Dela Gothic One;") Dela Gothic One
   </template>
