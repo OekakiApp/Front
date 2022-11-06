@@ -22,7 +22,11 @@ const useStorePointer = defineStore({
         this.isLinePointer = true
         stage.container().style.cursor = 'none'
       } else if (mode.value === 'text') {
+        if (e.target.className === 'Text') return
         stage.container().style.cursor = 'pointer'
+      } else if (mode.value === 'image') {
+        //   if (e.target.className === 'Image') return
+        stage.container().style.cursor = 'grab'
       }
     },
 
@@ -64,6 +68,8 @@ const useStorePointer = defineStore({
 
       if (mode.value === 'text') {
         stage.container().style.cursor = 'pointer'
+      } else if (mode.value === 'image') {
+        stage.container().style.cursor = 'grab'
       } else {
         stage.container().style.cursor = 'default'
       }

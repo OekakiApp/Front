@@ -5,10 +5,11 @@ import Konva from 'konva'
 import useStoreMode, { type Mode } from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
+import useStoreImage from '@/stores/konva/image'
+import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreStage from '@/stores/konva/stage'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
-import useStoreTransformer from '@/stores/konva/transformer'
 
 interface Props {
   stage: Konva.Stage
@@ -21,6 +22,7 @@ const { setMode } = useStoreMode()
 const { setLineStyle, setGlobalCompositeOperation, deleteLines } =
   useStoreLine()
 const { deleteTexts } = useStoreText()
+const { deleteImages } = useStoreImage()
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
 )
@@ -30,6 +32,7 @@ const deleteCanvas = () => {
   // delete
   deleteLines()
   deleteTexts()
+  deleteImages()
 
   // reset transformer
   configShapeTransformer.value.nodes = []
@@ -37,7 +40,7 @@ const deleteCanvas = () => {
 
   // reset history
   historyStep.value = 0
-  canvasHistory.value = [{ lines: [], texts: [] }]
+  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
 }
 
 const toolArray: {
@@ -95,15 +98,15 @@ const toolArray: {
       setMode('text')
     },
   },
-  {
-    icon: 'sticky_note_2',
-    mode: 'sticky',
-    tooltip: 'Sticky note',
-    shortcut: 'S',
-    event: () => {
-      setMode('sticky')
-    },
-  },
+  // {
+  //   icon: 'sticky_note_2',
+  //   mode: 'sticky',
+  //   tooltip: 'Sticky note',
+  //   shortcut: 'S',
+  //   event: () => {
+  //     setMode('sticky')
+  //   },
+  // },
   {
     icon: 'image',
     mode: 'image',
@@ -144,15 +147,20 @@ div(class="flex flex-col items-center absolute bottom-2 left-1/2 -translate-x-1/
           span(class="material-symbols-outlined") {{tool.icon}}
         button(v-show="mode === tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="btn tooltip bg-blue-500 hover:bg-blue-500 font-semibold text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="setMode('none')")
           span(class="material-symbols-outlined") {{tool.icon}}
+      //- Undo Redo
       UndoRedoButton
       //- Reset
       li.flex.mx-2
-        label(htmlFor="my-modal" class="btn bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+        label(htmlFor="my-modal" data-tip="Reset" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
           span(class="material-symbols-outlined") delete
       //- Download
       li.flex.mx-2
-        button(type="button" class="btn bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="saveImage")
+        button(type="button" data-tip="Download" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="saveImage")
           span(class="material-symbols-outlined") file_download
+      //- Save
+      li.flex.mx-2
+        button(type="button" data-tip="Save" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+          span(class="material-symbols-outlined") save
 
 input(id="my-modal" type="checkbox" className="modal-toggle")
 div(className="modal")

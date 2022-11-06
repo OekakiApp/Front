@@ -51,7 +51,7 @@ const {
   handlePointerMouseUp,
 } = useStorePointer()
 
-const { setImages } = useStoreImage()
+const { setImages, handleImageDragEnd } = useStoreImage()
 
 const stageParentDiv = ref()
 const stage = ref()
@@ -120,12 +120,19 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
           v-for="image in konvaImages"
           :key="image.id"
           :draggable="true"
-          :config="{image:image.imageElement, x: image.x-image.imageElement.width/2, y: image.y-image.imageElement.height/2}"
+          :config="image"
+          @dragend="(e: KonvaEventObject<DragEvent>) => {handleImageDragEnd(e);}"
+          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
+          @transformend="handleTransformEnd"
         )
         v-line(
-          v-for="line ,index in lines"
-          :key="index"
-          :config="{stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
+          v-for="line in lines"
+          :key="line.id"
+          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
           )
         v-text(
           v-for="text in texts"

@@ -2,18 +2,25 @@ import Konva from 'konva'
 import { nanoid } from 'nanoid'
 import { defineStore } from 'pinia'
 import useStoreMode from '@/stores/mode'
+// eslint-disable-next-line import/no-cycle
+import useStoreStage from '@/stores/konva/stage'
 
 interface UploadedImage {
   id: string
   imgSrc: string
 }
 
-interface KonvaImage {
+export interface KonvaImage {
   id: string
   name: string
-  imageElement: HTMLImageElement
+  image: HTMLImageElement
   x: number
   y: number
+  width: number
+  height: number
+  rotation: number
+  scaleX: number
+  scaleY: number
 }
 
 const useStoreImage = defineStore({
@@ -84,17 +91,42 @@ const useStoreImage = defineStore({
         newImg.height *= 100 / originalWidth
       }
       const id = nanoid()
+      const relativePointerPosition = stage.getRelativePointerPosition()
       this.konvaImages = this.konvaImages.concat([
         {
           id,
           name: 'image',
-          imageElement: newImg,
-          ...stage.getRelativePointerPosition(), // {x, y}
+          image: newImg,
+          x: relativePointerPosition.x - newImg.width / 2,
+          y: relativePointerPosition.y - newImg.height / 2,
+          width: newImg.width,
+          height: newImg.height,
+          rotation: 0,
+          scaleX: 1,
+          scaleY: 1,
         },
       ])
+
+      useStoreStage().handleEventEndSaveHistory()
+
       // モード終了し、サブメニューを閉じる
       const { setMode } = useStoreMode()
       setMode('none')
+    },
+
+    deleteImages() {
+      this.konvaImages = []
+    },
+
+    // save text position
+    handleImageDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
+      const shape = e.target
+      const text = this.konvaImages.find((i) => i.id === shape.id())
+      if (text !== undefined) {
+        text.x = shape.x()
+        text.y = shape.y()
+      }
+      useStoreStage().handleEventEndSaveHistory()
     },
   },
 })

@@ -172,9 +172,6 @@ const useStoreText = defineStore({
     },
 
     deleteTexts() {
-      // ノードが選択中の場合、選択を外す
-      const { configShapeTransformer } = useStoreTransformer()
-      configShapeTransformer.nodes = []
       this.texts = []
     },
 
