@@ -323,13 +323,8 @@ const useStoreTransformer = defineStore({
 
     // keydownで選択中の要素を削除
     handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
-      const { texts, isEditing } = storeToRefs(useStoreText())
       if (e.key === 'Delete') {
-        // 編集中の場合スキップ
-        if (isEditing.value) return
-        const selectedNode = this.configShapeTransformer.nodes[0]
         if (this.configShapeTransformer.nodes.length === 0) return
-
         const selectedNode = this.configShapeTransformer.nodes[0]
 
         // text
