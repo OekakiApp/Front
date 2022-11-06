@@ -40,11 +40,13 @@ const {
   toggleEdit,
 } = useStoreText()
 
+const { setCanvas } = useAuthStore()
+
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
 const usersId = localStorage.getItem('usersId')
-const canvasId = useRoute().params.canvas_id
+const canvasId = ref(useRoute().params.canvas_id)
 
 // ショートカット
 const changeModeByShortCut = (e: KeyboardEvent) => {
@@ -69,15 +71,20 @@ onMounted(() => {
     fitStageIntoParentContainer(stageParentDiv.value),
   )
   window.addEventListener('keydown', changeModeByShortCut)
-  console.log(typeof canvasId === 'string')
 
-  if (typeof canvasId === 'string' && canvases.value[canvasId] !== undefined) {
-    console.log('途中から')
-    const canvas = canvases.value[canvasId]
+  // 初期化
+  lines.value = []
+  texts.value = []
+
+  const canvasVal = canvasId.value
+  // 途中からの場合
+  if (
+    typeof canvasVal === 'string' &&
+    canvases.value[canvasVal] !== undefined
+  ) {
+    const canvas = canvases.value[canvasVal]
     lines.value = canvas.lines
     texts.value = canvas.texts
-  } else {
-    console.log('新規')
   }
 })
 
@@ -90,9 +97,13 @@ onUnmounted(() => {
 
 async function saveCanvas(): Promise<void> {
   // 途中からの場合
-  if (typeof canvasId === 'string' && canvases.value[canvasId] !== undefined) {
-    await updateDoc(doc(db, 'canvas', canvasId), {
-      name: 'test ' + canvasId,
+  let canvasVal = canvasId.value
+  if (
+    typeof canvasVal === 'string' &&
+    canvases.value[canvasVal] !== undefined
+  ) {
+    await updateDoc(doc(db, 'canvas', canvasVal), {
+      name: `test ${canvasVal}`,
       lines: lines.value,
       texts: texts.value,
     })
@@ -100,24 +111,27 @@ async function saveCanvas(): Promise<void> {
   // 新規の場合
   else {
     const canvasRef = await addDoc(collection(db, 'canvas'), {
-      name: 'test ' + canvasId,
+      name: `test ${canvasVal}`,
       lines: lines.value,
       texts: texts.value,
       uid: usersId,
     })
-    console.log('Document written with ID: ', canvasRef.id)
+    canvasId.value = canvasRef.id
+    canvasVal = canvasId.value
   }
-  await saveImage()
+
+  saveImage()
 }
 
-const saveImage = async () => {
+const saveImage = () => {
+  const canvasVal = canvasId.value
   const file = stage.value.getStage().toDataURL({
     quality: 1,
     pixelRatio: 2,
     mimeType: 'image/png',
   })
 
-  uploadURI(file, canvasId + '.png')
+  uploadURI(file, `${canvasVal}.png`)
 }
 
 const uploadURI = async (uri: string, name: string) => {
@@ -146,16 +160,18 @@ const uploadURI = async (uri: string, name: string) => {
       console.log(error)
     },
     () => {
+      const canvasVal = canvasId.value
       getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-        console.log(downloadURL)
-        if (
-          typeof canvasId === 'string' &&
-          canvases.value[canvasId] !== undefined
-        ) {
-          await updateDoc(doc(db, 'canvas', canvasId), {
+        if (typeof canvasVal === 'string') {
+          await updateDoc(doc(db, 'canvas', canvasVal), {
             image: downloadURL,
           })
           await updateImageMetadata(fileRef)
+
+          // store 更新
+          if (typeof canvasVal === 'string') {
+            await setCanvas(canvasVal)
+          }
         }
       })
     },

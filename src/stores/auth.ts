@@ -17,6 +17,8 @@ import {
   where,
   collection,
   DocumentData,
+  doc,
+  getDoc,
 } from 'firebase/firestore'
 import Icon from '../assets/user_icon.png'
 /* eslint-enable */
@@ -29,6 +31,7 @@ const useAuthStore = defineStore('auth', {
     profile: '',
     isLoggedIn: false,
     canvases: {} as DocumentData, // eslint-disable-line
+    //  @typescript-eslint/consistent-type-assertions
   }),
   actions: {
     signupEmail(email: string, password: string, name: string) {
@@ -90,8 +93,8 @@ const useAuthStore = defineStore('auth', {
 
       await getDocs(userQuery)
         .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            this.profile = doc.data().profile
+          querySnapshot.forEach((document) => {
+            this.profile = document.data().profile
             localStorage.setItem('usersId', user.uid)
           })
         })
@@ -109,14 +112,22 @@ const useAuthStore = defineStore('auth', {
 
       await getDocs(canvasQuery)
         .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            let canvasID = doc.id
-            this.canvases[canvasID] = doc.data()
+          querySnapshot.forEach((document) => {
+            const canvasID = document.id
+            this.canvases[canvasID] = document.data()
           })
         })
         .catch((error) => {
           console.log(error)
         })
+    },
+    // auth canvas update
+    async setCanvas(canvasID: string) {
+      const docRef = doc(db, 'canvas', canvasID)
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        this.canvases[canvasID] = docSnap.data()
+      }
     },
   },
 })
