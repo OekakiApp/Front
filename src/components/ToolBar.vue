@@ -89,6 +89,8 @@ const toolArray: {
       setMode('eraser')
       setLineStyle('normal')
       setGlobalCompositeOperation()
+      configShapeTransformer.value.nodes = []
+      selectedShapeId.value = ''
     },
   },
   {

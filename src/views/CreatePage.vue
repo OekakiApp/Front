@@ -20,7 +20,9 @@ const { configKonva } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
 const { konvaImages } = storeToRefs(useStoreImage())
-const { configShapeTransformer } = storeToRefs(useStoreTransformer())
+const { configShapeTransformer, selectedShapeId } = storeToRefs(
+  useStoreTransformer(),
+)
 
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
@@ -67,9 +69,13 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   else if (e.key === 'p' || e.key === 'm') {
     setMode('pen')
     setGlobalCompositeOperation()
+    configShapeTransformer.value.nodes = []
+    selectedShapeId.value = ''
   } else if (e.shiftKey && e.key === 'Delete') {
     setMode('eraser')
     setGlobalCompositeOperation()
+    configShapeTransformer.value.nodes = []
+    selectedShapeId.value = ''
   } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
   else if (e.key === 'i') setMode('image')
