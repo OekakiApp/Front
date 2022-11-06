@@ -14,7 +14,7 @@ module.exports = {
         seaPink: '#F99292',
         chardonnay: '#FFC679',
         collapseOpen: '#ff5757',
-        antiChardonnay: '#5F98E5'
+        antiChardonnay: '#5F98E5',
       },
     },
   },
