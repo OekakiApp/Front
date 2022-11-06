@@ -1,7 +1,6 @@
 import { defineStore, storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
-import WebFont from 'webfontloader'
 import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
@@ -16,6 +15,15 @@ interface AreaPosition {
   x: number
   y: number
 }
+
+// Fontfamily List
+export const fontFamilyList = [
+  'Roboto',
+  'Yomogi',
+  'Kiwi Maru',
+  'Train One',
+  'Dela Gothic One',
+]
 
 export interface TextNode {
   id: string
@@ -66,69 +74,29 @@ const useStoreText = defineStore({
       // add text
       const id = nanoid()
 
-      if (!this.isFontLoaded) {
-        // Webフォント読み込み時のコントロール
-        WebFont.load({
-          google: {
-            families: ['Roboto', 'Yomogi', 'Titan One', 'Pacifico'],
-          },
-          loading: () => {
-            console.log('font is loading')
-          },
-          // 全てWebフォントの読み込みが完了したときに発火
-          active: () => {
-            this.isFontLoaded = true
-            console.log('fonts is loaded!')
-            this.texts = [
-              ...this.texts,
-              {
-                id,
-                text: 'Double click to edit text...',
-                rotation: 0,
-                x: point.x,
-                y: point.y,
-                scaleX: 1,
-                fontSize: this.fontSize,
-                fontStyle: this.fontStyle as FontStyle,
-                textDecoration: this.textDecoration as TextDecoration,
-                fontFamily: this.fontFamily,
-                align: this.align as TextAlign,
-                draggable: true,
-                width: 200,
-                fill: this.fill,
-                wrap: 'word',
-                ellipsis: false,
-                name: 'text',
-              },
-            ]
-            useStoreStage().handleEventEndSaveHistory()
-          },
-        })
-      } else {
-        this.texts = [
-          ...this.texts,
-          {
-            id,
-            text: 'Double click to edit text...',
-            rotation: 0,
-            x: point.x,
-            y: point.y,
-            scaleX: 1,
-            fontSize: this.fontSize,
-            fontStyle: this.fontStyle as FontStyle,
-            textDecoration: this.textDecoration as TextDecoration,
-            fontFamily: this.fontFamily,
-            align: this.align as TextAlign,
-            draggable: true,
-            width: 200,
-            fill: this.fill,
-            wrap: 'word',
-            ellipsis: false,
-            name: 'text',
-          },
-        ]
-        useStoreStage().handleEventEndSaveHistory()
-      }
+      this.texts = [
+        ...this.texts,
+        {
+          id,
+          text: 'Double click to edit text...',
+          rotation: 0,
+          x: point.x,
+          y: point.y,
+          scaleX: 1,
+          fontSize: this.fontSize,
+          fontStyle: this.fontStyle as FontStyle,
+          textDecoration: this.textDecoration as TextDecoration,
+          fontFamily: this.fontFamily,
+          align: this.align as TextAlign,
+          draggable: true,
+          width: 200,
+          fill: this.fill,
+          wrap: 'word',
+          ellipsis: false,
+          name: 'text',
+        },
+      ]
+      useStoreStage().handleEventEndSaveHistory()
     },
 
     setTextOptionValue(option: string, value: string | TextAlign) {
@@ -172,9 +140,6 @@ const useStoreText = defineStore({
     },
 
     deleteTexts() {
-      // ノードが選択中の場合、選択を外す
-      const { configShapeTransformer } = useStoreTransformer()
-      configShapeTransformer.nodes = []
       this.texts = []
     },
 

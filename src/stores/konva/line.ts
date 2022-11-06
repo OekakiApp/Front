@@ -6,6 +6,8 @@ import { nanoid } from 'nanoid'
 import useStoreStage from '@/stores/konva/stage'
 
 export interface Points {
+  id: string
+  name: string
   points: number[]
   color: string
   dash: number[]
@@ -26,27 +28,6 @@ export interface AreaPosition {
   y: number
 }
 
-export interface TextNode {
-  id: string
-  text: string
-  rotation: number
-  x: number
-  y: number
-  scaleX: number
-  scaleY: number
-  fontSize: number
-  fontStyle: FontStyle
-  textDecoration: TextDecoration
-  fontFamily: string
-  align: TextAlign
-  draggable: boolean
-  width: number
-  height: number
-  fill: string
-  wrap: 'word' | 'char' | 'none'
-  ellipsis: boolean
-  name: string
-}
 const useStoreLine = defineStore({
   id: 'line',
   state: () => ({

@@ -4,6 +4,8 @@ import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
 import useStoreText from '@/stores/konva/text'
 // eslint-disable-next-line import/no-cycle
+import useStoreImage from '@/stores/konva/image'
+// eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
 
 const useStoreTransformer = defineStore({
@@ -195,9 +197,11 @@ const useStoreTransformer = defineStore({
 
       // find clicked shape by its id
       const id = e.target.id()
+      const { setMode } = useStoreMode()
+
+      // text
       if (e.target.className === 'Text') {
         // モードを切り替える
-        const { setMode } = useStoreMode()
         setMode('text')
 
         // change text transformer anchors
@@ -227,15 +231,55 @@ const useStoreTransformer = defineStore({
           ]
         }
       }
+      // image
+      else if (e.target.className === 'Image') {
+        // モードを切り替える
+        setMode('none')
+        // change image transformer anchors
+        this.configShapeTransformer.enabledAnchors = [
+          'top-left',
+          'top-right',
+          'bottom-left',
+          'bottom-right',
+        ]
+
+        const { konvaImages } = storeToRefs(useStoreImage())
+        const image = konvaImages.value.find((i) => i.id === id)
+        if (image !== undefined) {
+          this.selectedShapeId = id
+          console.log(this.selectedShapeId)
+          this.configShapeTransformer.nodes = [e.target]
+        } else {
+          this.selectedShapeId = ''
+          this.configShapeTransformer.nodes = []
+          // reset transformer anchors
+          this.configShapeTransformer.enabledAnchors = [
+            'top-left',
+            'top-center',
+            'top-right',
+            'middle-right',
+            'middle-left',
+            'bottom-left',
+            'bottom-center',
+            'bottom-right',
+          ]
+        }
+      }
     },
 
     // 要素の変形
     handleTransform(e: Konva.KonvaEventObject<MouseEvent>) {
       const shape = e.target
-      // textの場合
+      // text
       if (shape.name() === 'text') {
-        console.log('transforming')
         shape.width(shape.width() * shape.scaleX())
+        shape.scaleX(1)
+        shape.scaleY(1)
+      }
+      // image
+      else if (shape.name() === 'image') {
+        shape.width(shape.width() * shape.scaleX())
+        shape.height(shape.height() * shape.scaleY())
         shape.scaleX(1)
         shape.scaleY(1)
       }
@@ -247,11 +291,10 @@ const useStoreTransformer = defineStore({
       // find element in our state
       const shape = e.target
       // update the state
+      // text
       if (shape.name() === 'text') {
-        console.log('transformend')
         const { texts } = storeToRefs(useStoreText())
         const text = texts.value.find((t) => t.id === shape.id())
-        console.log(text)
         if (text !== undefined) {
           text.x = shape.x()
           text.y = shape.y()
@@ -260,22 +303,51 @@ const useStoreTransformer = defineStore({
           text.scaleX = shape.scaleX()
         }
       }
+      // image
+      else if (shape.name() === 'image') {
+        console.log('transformend')
+        const { konvaImages } = storeToRefs(useStoreImage())
+        const image = konvaImages.value.find((i) => i.id === shape.id())
+        if (image !== undefined) {
+          image.x = shape.x()
+          image.y = shape.y()
+          image.width = shape.width()
+          image.height = shape.height()
+          image.rotation = shape.rotation()
+          image.scaleX = shape.scaleX()
+          image.scaleY = shape.scaleY()
+        }
+      }
       useStoreStage().handleEventEndSaveHistory()
     },
 
     // keydownで選択中の要素を削除
     handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
       const { texts, isEditing } = storeToRefs(useStoreText())
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        console.log('delete')
+      if (e.key === 'Delete') {
         // 編集中の場合スキップ
         if (isEditing.value) return
         const selectedNode = this.configShapeTransformer.nodes[0]
         if (this.configShapeTransformer.nodes.length === 0) return
 
+        const selectedNode = this.configShapeTransformer.nodes[0]
+
+        // text
         if (selectedNode.name() === 'text') {
+          const { texts, isEditing } = storeToRefs(useStoreText())
+          // テキスト編集中の場合スキップ
+          if (isEditing.value) return
           texts.value = texts.value.filter(
             (text) => text.id !== selectedNode.id(),
+          )
+          this.configShapeTransformer.nodes = []
+          this.selectedShapeId = ''
+        }
+        // image
+        else if (selectedNode.name() === 'image') {
+          const { konvaImages } = storeToRefs(useStoreImage())
+          konvaImages.value = konvaImages.value.filter(
+            (image) => image.id !== selectedNode.id(),
           )
           this.configShapeTransformer.nodes = []
           this.selectedShapeId = ''

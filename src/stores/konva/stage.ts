@@ -4,12 +4,15 @@ import useStoreLine, { Points } from '@/stores/konva/line'
 // eslint-disable-next-line import/no-cycle
 import useStoreText, { TextNode } from '@/stores/konva/text'
 // eslint-disable-next-line import/no-cycle
+import useStoreImage, { KonvaImage } from '@/stores/konva/image'
+// eslint-disable-next-line import/no-cycle
 import useStoreTransformer from '@/stores/konva/transformer'
 import _ from 'lodash'
 
 interface History {
   lines: Points[]
   texts: TextNode[]
+  images: KonvaImage[]
 }
 
 const useStoreStage = defineStore({
@@ -26,7 +29,7 @@ const useStoreStage = defineStore({
       },
     },
     historyStep: 0,
-    canvasHistory: [{ lines: [], texts: [] }] as History[],
+    canvasHistory: [{ lines: [], texts: [], images: [] }] as History[],
   }),
 
   actions: {
@@ -66,14 +69,17 @@ const useStoreStage = defineStore({
     handleEventEndSaveHistory() {
       const { lines } = storeToRefs(useStoreLine())
       const { texts } = storeToRefs(useStoreText())
+      const { konvaImages } = storeToRefs(useStoreImage())
       // 参照切る
       const copyLines = _.cloneDeep(lines.value)
       const copyTexts = _.cloneDeep(texts.value)
+      const copyImages = _.cloneDeep(konvaImages.value)
       this.canvasHistory = this.canvasHistory.slice(0, this.historyStep + 1)
       // 履歴保存
       const history = {
         lines: copyLines,
         texts: copyTexts,
+        images: copyImages,
       }
       this.canvasHistory = this.canvasHistory.concat([history])
       this.historyStep += 1
@@ -88,8 +94,10 @@ const useStoreStage = defineStore({
       // line text image 上書き
       const { lines } = storeToRefs(useStoreLine())
       const { texts } = storeToRefs(useStoreText())
+      const { konvaImages } = storeToRefs(useStoreImage())
       lines.value = previous.lines
       texts.value = previous.texts
+      konvaImages.value = previous.images
       // transformer 解除
       const { configShapeTransformer, selectedShapeId } = storeToRefs(
         useStoreTransformer(),
@@ -107,8 +115,10 @@ const useStoreStage = defineStore({
       // line text image 上書き
       const { lines } = storeToRefs(useStoreLine())
       const { texts } = storeToRefs(useStoreText())
+      const { konvaImages } = storeToRefs(useStoreImage())
       lines.value = next.lines
       texts.value = next.texts
+      konvaImages.value = next.images
       // transformer 解除
       const { configShapeTransformer, selectedShapeId } = storeToRefs(
         useStoreTransformer(),
