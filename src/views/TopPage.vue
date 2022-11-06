@@ -30,7 +30,7 @@ div
       p Introduce Yourself with full of imagination
     p(class="mt-6 text-2xl") 自由な発想で、世界に一人の自分を紹介しよう
     div(class="d-flex mt-12 mb-36")
-      router-link(class="btn btn-primary ml-6" to="sign_up") 新規登録する
+      router-link(class="btn border-chardonnay bg-chardonnay hover:bg-dustyOrange hover:border-dustyOrange ml-6" to="sign_up") 新規登録する
   //- How To Use
   div(class="card w-full p-16 bg-base-100 shadow-xl bg-slate-100 mb-36")
     div(class="card-body")
@@ -51,9 +51,9 @@ div
       div(class="card-actions justify-end pb-12")
       div(v-for="(faq, index) in faqs" :key=index class="collapse mb-6")
         input(type="checkbox" class="peer w-full")
-        div(class="collapse-title bg-primary text-primary-content peer-checked:bg-secondary peer-checked:text-secondary-content")
+        div(class="collapse-title bg-chardonnay text-primary-content peer-checked:bg-collapseOpen peer-checked:text-secondary-content")
           p {{ faq.question }}
-        div(class="collapse-content bg-primary text-primary-content peer-checked:bg-secondary peer-checked:text-secondary-content")
+        div(class="collapse-content bg-chardonnay text-primary-content peer-checked:bg-collapseOpen peer-checked:text-secondary-content")
           p {{ faq.answer}}
 </template>
 
