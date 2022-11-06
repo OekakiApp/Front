@@ -24,6 +24,7 @@ import Konva from 'konva'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 type KonvaEventObject<T> = Konva.KonvaEventObject<T>
+const StorageReference = storageRef(storage, '')
 
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
@@ -230,7 +231,7 @@ const uploadURI = async (uri: string, name: string) => {
   )
 }
 
-const updateImageMetadata = async (fileRef: any) => {
+const updateImageMetadata = async (fileRef: typeof StorageReference) => {
   const newMetadata = {
     contentType: 'image/png',
   }
