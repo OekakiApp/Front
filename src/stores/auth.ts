@@ -19,6 +19,7 @@ import {
   DocumentData,
   doc,
   getDoc,
+  setDoc,
 } from 'firebase/firestore'
 import Icon from '../assets/user_icon.png'
 /* eslint-enable */
@@ -42,6 +43,12 @@ const useAuthStore = defineStore('auth', {
           updateProfile(user, {
             displayName: name,
           })
+            .then(async () => {
+              await setDoc(doc(db, 'users', user.uid), {
+                profile: user.displayName,
+                uid: user.uid,
+              })
+            })
             .then(async () => {
               this.name = name
               await forceToWorkPage()
@@ -84,7 +91,7 @@ const useAuthStore = defineStore('auth', {
       this.name = user.displayName ?? ''
       this.icon = user.photoURL ?? Icon
       this.isLoggedIn = true
-
+      localStorage.setItem('usersId', user.uid)
       // get profile
       const userQuery = query(
         collection(db, 'users'),
@@ -94,7 +101,6 @@ const useAuthStore = defineStore('auth', {
         .then((querySnapshot) => {
           querySnapshot.forEach((document) => {
             this.profile = document.data().profile
-            localStorage.setItem('usersId', user.uid)
           })
         })
         .catch((error) => {
