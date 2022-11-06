@@ -95,7 +95,7 @@ const useAuthStore = defineStore('auth', {
 
 async function forceToHomePage() {
   await router.replace({
-    name: 'Home',
+    name: 'Works',
   })
 }
 
