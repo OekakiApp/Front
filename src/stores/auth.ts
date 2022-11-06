@@ -11,7 +11,15 @@ import {
   updateProfile,
   User,
 } from 'firebase/auth'
-import { query, getDocs, where, collection } from 'firebase/firestore'
+import {
+  query,
+  getDocs,
+  where,
+  collection,
+  DocumentData,
+  doc,
+  getDoc,
+} from 'firebase/firestore'
 import Icon from '../assets/user_icon.png'
 /* eslint-enable */
 
@@ -22,6 +30,8 @@ const useAuthStore = defineStore('auth', {
     icon: Icon,
     profile: '',
     isLoggedIn: false,
+    canvases: {} as DocumentData, // eslint-disable-line
+    //  @typescript-eslint/consistent-type-assertions
   }),
   actions: {
     signupEmail(email: string, password: string, name: string) {
@@ -50,6 +60,7 @@ const useAuthStore = defineStore('auth', {
         .then(async (userCredential) => {
           const { user } = userCredential
           await this.setUser(user)
+          await this.getCanvases()
           await forceToHomePage()
         })
         .catch((error) => {
@@ -81,14 +92,41 @@ const useAuthStore = defineStore('auth', {
       )
       await getDocs(userQuery)
         .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            this.profile = doc.data().profile
-            localStorage.setItem('usersId', doc.id)
+          querySnapshot.forEach((document) => {
+            this.profile = document.data().profile
+            localStorage.setItem('usersId', user.uid)
           })
         })
         .catch((error) => {
           console.log(error)
         })
+    },
+
+    async getCanvases() {
+      const usersId: string = localStorage.getItem('usersId') ?? ''
+      const canvasQuery = query(
+        collection(db, 'canvas'),
+        where('uid', '==', usersId),
+      )
+
+      await getDocs(canvasQuery)
+        .then((querySnapshot) => {
+          querySnapshot.forEach((document) => {
+            const canvasID = document.id
+            this.canvases[canvasID] = document.data()
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    // auth canvas update
+    async setCanvas(canvasID: string) {
+      const docRef = doc(db, 'canvas', canvasID)
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        this.canvases[canvasID] = docSnap.data()
+      }
     },
   },
 })
