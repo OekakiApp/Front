@@ -13,6 +13,8 @@ module.exports = {
         dustyOrange: '#F5843E',
         seaPink: '#F99292',
         chardonnay: '#FFC679',
+        collapseOpen: '#ff5757',
+        antiChardonnay: '#5F98E5',
       },
     },
   },

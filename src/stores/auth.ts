@@ -44,7 +44,7 @@ const useAuthStore = defineStore('auth', {
           })
             .then(async () => {
               this.name = name
-              await forceToHomePage()
+              await forceToWorkPage()
             })
             .catch((error) => {
               console.log(error.message)
@@ -61,7 +61,7 @@ const useAuthStore = defineStore('auth', {
           const { user } = userCredential
           await this.setUser(user)
           await this.getCanvases()
-          await forceToHomePage()
+          await forceToWorkPage()
         })
         .catch((error) => {
           console.log(error.message)
@@ -131,6 +131,11 @@ const useAuthStore = defineStore('auth', {
   },
 })
 
+async function forceToWorkPage() {
+  await router.replace({
+    name: 'Works',
+  })
+}
 async function forceToHomePage() {
   await router.replace({
     name: 'Home',
