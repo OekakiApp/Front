@@ -45,6 +45,7 @@ const router = createRouter({
       path: '/works',
       name: 'Works',
       component: WorkListView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/users',
