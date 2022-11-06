@@ -288,6 +288,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
       )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
+      v-layer
         v-image(
           v-for="image in konvaImages"
           :key="image.id"
