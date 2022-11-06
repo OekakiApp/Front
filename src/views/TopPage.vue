@@ -51,9 +51,9 @@ div
       div(class="card-actions justify-end pb-12")
       div(v-for="(faq, index) in faqs" :key=index class="collapse mb-6")
         input(type="checkbox" class="peer w-full")
-        div(class="collapse-title bg-chardonnay text-primary-content peer-checked:bg-collapseOpen peer-checked:text-secondary-content")
+        div(class="collapse-title bg-chardonnay text-black peer-checked:bg-antiChardonnay  peer-checked:text-secondary-content")
           p {{ faq.question }}
-        div(class="collapse-content bg-chardonnay text-primary-content peer-checked:bg-collapseOpen peer-checked:text-secondary-content")
+        div(class="collapse-content bg-chardonnay text-black peer-checked:bg-antiChardonnay peer-checked:text-secondary-content")
           p {{ faq.answer}}
 </template>
 
