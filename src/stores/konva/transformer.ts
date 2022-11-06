@@ -266,7 +266,7 @@ const useStoreTransformer = defineStore({
     // keydownで選択中の要素を削除
     handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
       const { texts, isEditing } = storeToRefs(useStoreText())
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (e.key === 'Delete') {
         console.log('delete')
         // 編集中の場合スキップ
         if (isEditing.value) return

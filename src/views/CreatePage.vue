@@ -6,11 +6,12 @@ import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
-import useStoreText from '@/stores/konva/text'
+import useStoreText, { fontFamilyList } from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import Konva from 'konva'
+import WebFont from 'webfontloader'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 type KonvaEventObject<T> = Konva.KonvaEventObject<T>
@@ -18,7 +19,7 @@ type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
-const { texts, isEditing } = storeToRefs(useStoreText())
+const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
 const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer } = storeToRefs(useStoreTransformer())
 
@@ -86,6 +87,22 @@ onMounted(() => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
   })
+  // Font読み込み
+  if (!isFontLoaded.value) {
+    WebFont.load({
+      google: {
+        families: fontFamilyList,
+      },
+      loading: () => {
+        console.log('font is loading')
+      },
+      // 全てWebフォントの読み込みが完了したときに発火
+      active: () => {
+        isFontLoaded.value = true
+        console.log('fonts is loaded!')
+      },
+    })
+  }
 })
 
 onUnmounted(() => {
@@ -101,7 +118,7 @@ onUnmounted(() => {
 
 <template lang="pug">
 
-div(class="m-auto border-4 max-w-screen-xl relative my-8")
+div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
       ref="stage"
@@ -147,6 +164,6 @@ div(class="m-auto border-4 max-w-screen-xl relative my-8")
         //- :config="configSelectionRectangle"
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
-
-ToolBar(:stage="stage")
+div(class="container")
+  ToolBar(:stage="stage")
 </template>
