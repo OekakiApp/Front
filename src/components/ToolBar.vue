@@ -161,10 +161,6 @@ div(class="flex flex-col items-center relative")
       li.flex.mx-2
         button(type="button" data-tip="Download" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="saveImage")
           span(class="material-symbols-outlined") file_download
-      //- Save
-      li.flex.mx-2
-        button(type="button" data-tip="Save" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
-          span(class="material-symbols-outlined") save
 
 input(id="my-modal" type="checkbox" className="modal-toggle")
 div(className="modal")
