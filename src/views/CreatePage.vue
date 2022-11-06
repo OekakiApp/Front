@@ -32,7 +32,9 @@ const { lines } = storeToRefs(useStoreLine())
 const { canvases } = storeToRefs(useAuthStore())
 const { texts, isEditing } = storeToRefs(useStoreText())
 const { konvaImages } = storeToRefs(useStoreImage())
-const { configShapeTransformer } = storeToRefs(useStoreTransformer())
+const { configShapeTransformer, selectedShapeId } = storeToRefs(
+  useStoreTransformer(),
+)
 
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
@@ -63,7 +65,7 @@ const {
   handlePointerMouseUp,
 } = useStorePointer()
 
-const { setImages } = useStoreImage()
+const { setImages, handleImageDragEnd } = useStoreImage()
 
 const { setCanvas } = useAuthStore()
 
@@ -98,9 +100,13 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   else if (e.key === 'p' || e.key === 'm') {
     setMode('pen')
     setGlobalCompositeOperation()
+    configShapeTransformer.value.nodes = []
+    selectedShapeId.value = ''
   } else if (e.shiftKey && e.key === 'Delete') {
     setMode('eraser')
     setGlobalCompositeOperation()
+    configShapeTransformer.value.nodes = []
+    selectedShapeId.value = ''
   } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
   else if (e.key === 'i') setMode('image')
@@ -269,12 +275,19 @@ div(class="m-auto border-4 max-w-screen-xl relative")
           v-for="image in konvaImages"
           :key="image.id"
           :draggable="true"
-          :config="{image:image.imageElement, x: image.x-image.imageElement.width/2, y: image.y-image.imageElement.height/2}"
+          :config="image"
+          @dragend="(e: KonvaEventObject<DragEvent>) => {handleImageDragEnd(e);}"
+          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
+          @transformend="handleTransformEnd"
         )
         v-line(
-          v-for="line ,index in lines"
-          :key="index"
-          :config="{stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
+          v-for="line in lines"
+          :key="line.id"
+          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
           )
         v-text(
           v-for="text in texts"
