@@ -16,9 +16,5 @@ div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
         img(v-if='canvas.image' :src="canvas.image" class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
         img(v-else class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
     div(class="flex mt-2")  
-      div
-        img(:src="authStore.icon" class="mini-avatar ring-2 ring-gray-700 ")
       a(href="" class="text-midnightBlue pl-2") {{ canvas.name }}
 </template>
-
-<style scoped></style>
