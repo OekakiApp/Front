@@ -140,7 +140,7 @@ onMounted(() => {
         console.log('fonts is loaded!')
       },
     })
-
+  }
   // 初期化
   lines.value = []
   texts.value = []
