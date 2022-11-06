@@ -1,229 +1,274 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { db, storage } from '@/firebase/index'
-import { doc, collection, addDoc, updateDoc } from 'firebase/firestore'
+import { storeToRefs } from "pinia";
+import { onMounted, onUnmounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import { db, storage } from "@/firebase/index";
+import { doc, collection, addDoc, updateDoc } from "firebase/firestore";
 import {
   ref as storageRef,
   uploadBytesResumable,
   getDownloadURL,
   updateMetadata,
-} from 'firebase/storage'
-import ToolBar from '@/components/ToolBar.vue'
-import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
-import useStoreLine from '@/stores/konva/line'
-import useStoreText from '@/stores/konva/text'
-import useAuthStore from '@/stores/auth'
+} from "firebase/storage";
+import ToolBar from "@/components/ToolBar.vue";
+import UserCursor from "@/components/UserCursor.vue";
+import useStoreMode from "@/stores/mode";
+import useStoreStage from "@/stores/konva/stage";
+import useStoreLine from "@/stores/konva/line";
+import useStoreText from "@/stores/konva/text";
+import useAuthStore from "@/stores/auth";
+import useStoreImage from "@/stores/konva/image";
+import useStorePointer from "@/stores/konva/pointer";
+import useStoreTransformer from "@/stores/konva/transformer";
+import Konva from "konva";
 
-const { mode } = storeToRefs(useStoreMode())
-const { configKonva } = storeToRefs(useStoreStage())
-const { lines } = storeToRefs(useStoreLine())
-const { texts, configTransformer } = storeToRefs(useStoreText())
-const { canvases } = storeToRefs(useAuthStore())
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+type KonvaEventObject<T> = Konva.KonvaEventObject<T>;
 
-const { setMode } = useStoreMode()
-const { fitStageIntoParentContainer } = useStoreStage()
+const { mode } = storeToRefs(useStoreMode());
+const { configKonva } = storeToRefs(useStoreStage());
+const { lines } = storeToRefs(useStoreLine());
+const { canvases } = storeToRefs(useAuthStore());
+const { texts, isEditing } = storeToRefs(useStoreText());
+const { konvaImages } = storeToRefs(useStoreImage());
+const { configShapeTransformer } = storeToRefs(useStoreTransformer());
+
+const { setMode } = useStoreMode();
+const { fitStageIntoParentContainer } = useStoreStage();
 const {
-  handleMouseDown,
-  handleMouseMove,
-  handleMouseUp,
+  handleLineMouseDown,
+  handleLineMouseMove,
+  handleLineMouseUp,
+  handleLineMouseLeave,
   setGlobalCompositeOperation,
-} = useStoreLine()
+} = useStoreLine();
+
+const { createNewTextNode, toggleEdit, handleTextDragEnd } = useStoreText();
 
 const {
-  createNewTextNode,
-  handleStageMouseDown,
+  handleMouseDownTransformer,
   handleTransform,
   handleTransformEnd,
-  toggleEdit,
-} = useStoreText()
+  handleKeyDownSelectedNodeDelete,
+} = useStoreTransformer();
 
-const { setCanvas } = useAuthStore()
+const {
+  handlePointerMouseEnter,
+  handlePointerMouseMove,
+  handlePointerStageMouseLeave,
+  handlePointerMouseLeave,
+  handlePointerMouseOver,
+  handlePointerMouseDown,
+  handlePointerMouseUp,
+} = useStorePointer();
 
-const stageParentDiv = ref()
-const stage = ref()
-const transformer = ref()
-const usersId = localStorage.getItem('usersId')
-const canvasId = ref(useRoute().params.canvas_id)
+const { setImages } = useStoreImage();
+
+const { setCanvas } = useAuthStore();
+
+const stageParentDiv = ref();
+const stage = ref();
+const transformer = ref();
+const usersId = localStorage.getItem("usersId");
+const canvasId = ref(useRoute().params.canvas_id);
+// const selectionRectangle = ref()
 
 // ショートカット
 const changeModeByShortCut = (e: KeyboardEvent) => {
-  if (e.key === 'h') setMode('hand')
-  else if (e.key === 'v') setMode('select')
-  else if (e.key === 'p' || e.key === 'm') {
-    setMode('pen')
-    setGlobalCompositeOperation('pen')
-  } else if (e.shiftKey && e.key === 'Delete') {
-    setMode('eraser')
-    setGlobalCompositeOperation('eraser')
-  } else if (e.key === 't') setMode('text')
-  else if (e.key === 's') setMode('sticky')
-  // open image file
+  // テキスト編集中はショートカット無効
+  if (isEditing.value) return;
+  if (e.key === "h") setMode("hand");
+  else if (e.key === "v") setMode("select");
+  else if (e.key === "p" || e.key === "m") {
+    setMode("pen");
+    setGlobalCompositeOperation();
+  } else if (e.shiftKey && e.key === "Delete") {
+    setMode("eraser");
+    setGlobalCompositeOperation();
+  } else if (e.key === "t") setMode("text");
+  else if (e.key === "s") setMode("sticky");
+  else if (e.key === "i") setMode("image");
   // undo
   // redo
-}
+};
 
 onMounted(() => {
-  fitStageIntoParentContainer(stageParentDiv.value)
-  window.addEventListener('resize', () =>
-    fitStageIntoParentContainer(stageParentDiv.value),
-  )
-  window.addEventListener('keydown', changeModeByShortCut)
+  fitStageIntoParentContainer(stageParentDiv.value);
+  window.addEventListener("resize", () =>
+    fitStageIntoParentContainer(stageParentDiv.value)
+  );
+  window.addEventListener("keydown", (e) => {
+    changeModeByShortCut(e);
+    handleKeyDownSelectedNodeDelete(e);
+  });
 
   // 初期化
-  lines.value = []
-  texts.value = []
+  lines.value = [];
+  texts.value = [];
 
-  const canvasVal = canvasId.value
+  const canvasVal = canvasId.value;
   // 途中からの場合
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
-    const canvas = canvases.value[canvasVal]
-    lines.value = canvas.lines
-    texts.value = canvas.texts
+  if (typeof canvasVal === "string" && canvases.value[canvasVal] !== undefined) {
+    const canvas = canvases.value[canvasVal];
+    lines.value = canvas.lines;
+    texts.value = canvas.texts;
   }
-})
+});
 
 onUnmounted(() => {
-  window.removeEventListener('resize', () =>
-    fitStageIntoParentContainer(stageParentDiv.value),
-  )
-  window.removeEventListener('keydown', changeModeByShortCut)
-})
+  window.removeEventListener("resize", () =>
+    fitStageIntoParentContainer(stageParentDiv.value)
+  );
+  window.removeEventListener("keydown", (e) => {
+    changeModeByShortCut(e);
+    handleKeyDownSelectedNodeDelete(e);
+  });
+});
 
 async function saveCanvas(): Promise<void> {
   // 途中からの場合
-  let canvasVal = canvasId.value
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
-    await updateDoc(doc(db, 'canvas', canvasVal), {
+  let canvasVal = canvasId.value;
+  if (typeof canvasVal === "string" && canvases.value[canvasVal] !== undefined) {
+    await updateDoc(doc(db, "canvas", canvasVal), {
       name: `test ${canvasVal}`,
       lines: lines.value,
       texts: texts.value,
-    })
+    });
   }
   // 新規の場合
   else {
-    const canvasRef = await addDoc(collection(db, 'canvas'), {
+    const canvasRef = await addDoc(collection(db, "canvas"), {
       name: `test ${canvasVal}`,
       lines: lines.value,
       texts: texts.value,
       uid: usersId,
-    })
-    canvasId.value = canvasRef.id
-    canvasVal = canvasId.value
+    });
+    canvasId.value = canvasRef.id;
+    canvasVal = canvasId.value;
   }
 
-  saveImage()
+  saveImage();
 }
 
 const saveImage = () => {
-  const canvasVal = canvasId.value
+  const canvasVal = canvasId.value;
   const file = stage.value.getStage().toDataURL({
     quality: 1,
     pixelRatio: 2,
-    mimeType: 'image/png',
-  })
+    mimeType: "image/png",
+  });
 
-  uploadURI(file, `${canvasVal}.png`)
-}
+  uploadURI(file, `${canvasVal}.png`);
+};
 
 const uploadURI = async (uri: string, name: string) => {
-  const blob = await (await fetch(uri)).blob()
-  const file = new File([blob], name)
+  const blob = await (await fetch(uri)).blob();
+  const file = new File([blob], name);
 
-  const fileRef = storageRef(storage, `canvas-image/${name}`)
-  const uploadTask = uploadBytesResumable(fileRef, file)
+  const fileRef = storageRef(storage, `canvas-image/${name}`);
+  const uploadTask = uploadBytesResumable(fileRef, file);
 
   uploadTask.on(
-    'state_changed',
+    "state_changed",
     (snapshot) => {
-      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-      console.log(`Upload is ${progress}% done`)
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      console.log(`Upload is ${progress}% done`);
       switch (snapshot.state) {
-        case 'paused':
-          console.log('Upload is paused')
-          break
-        case 'running':
-          console.log('Upload is running')
-          break
+        case "paused":
+          console.log("Upload is paused");
+          break;
+        case "running":
+          console.log("Upload is running");
+          break;
         // no default
       }
     },
     (error) => {
-      console.log(error)
+      console.log(error);
     },
     () => {
-      const canvasVal = canvasId.value
+      const canvasVal = canvasId.value;
       getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-        if (typeof canvasVal === 'string') {
-          await updateDoc(doc(db, 'canvas', canvasVal), {
+        if (typeof canvasVal === "string") {
+          await updateDoc(doc(db, "canvas", canvasVal), {
             image: downloadURL,
-          })
-          await updateImageMetadata(fileRef)
+          });
+          await updateImageMetadata(fileRef);
 
           // store 更新
-          if (typeof canvasVal === 'string') {
-            await setCanvas(canvasVal)
+          if (typeof canvasVal === "string") {
+            await setCanvas(canvasVal);
           }
         }
-      })
-    },
-  )
-}
+      });
+    }
+  );
+};
 
 const updateImageMetadata = async (fileRef: any) => {
   const newMetadata = {
-    contentType: 'image/png',
-  }
+    contentType: "image/png",
+  };
 
   await updateMetadata(fileRef, newMetadata)
     .then((metadata) => {
-      console.log(metadata)
+      console.log(metadata);
     })
     .catch((error) => {
-      console.log(error)
-    })
-}
+      console.log(error);
+    });
+};
 </script>
 
 <template lang="pug">
 div(class="flex justify-center items-center")
   button(type="btn" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 py-2.5" @click='saveCanvas()') 保存
 div(class="m-auto border-4 max-w-screen-xl relative my-8")
-  div(ref="stageParentDiv" class="bg-white w-full")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
       ref="stage"
       :draggable="mode === 'hand'"
       :config="configKonva"
-      @mousedown="(e) => {handleMouseDown(e, mode);handleStageMouseDown(e, transformer.getNode())}"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @dblclick="(e) => createNewTextNode(e, mode)")
-      //- @touchstart="(e:Konva.KonvaEventObject<TouchEvent>) => handleStageMouseDown(e, transformer)"
-
+      @mouseenter="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseEnter(e);}"
+      @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
+      @mousedown="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
+      @mousemove="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
+      @mouseup="() => {handleLineMouseUp();}"
+      @dblclick="(e: KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
+      )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
+        v-image(
+          v-for="image in konvaImages"
+          :key="image.id"
+          :draggable="true"
+          :config="{image:image.imageElement, x: image.x-image.imageElement.width/2, y: image.y-image.imageElement.height/2}"
+        )
         v-line(
           v-for="line ,index in lines"
           :key="index"
           :config="{stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
           )
         v-text(
-          v-for="text, index in texts"
-          :key="index"
+          v-for="text in texts"
+          :key="text.id"
           :config="text"
+          @dragend="(e: KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
           @transformend="handleTransformEnd"
-          @transform="() => handleTransform(transformer.getNode())"
-          @dblclick="() => toggleEdit(transformer.getNode(), stageParentDiv)"
+          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
+          @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
           )
-        v-transformer(ref="transformer" :config="configTransformer")
+        //- pen eraser時のcursor
+        UserCursor
+        //- v-rect(
+        //- ref="selectionRectangle"
+        //- :config="configSelectionRectangle"
+        //- )
+        v-transformer(ref="transformer" :config="configShapeTransformer")
 
 ToolBar(:stage="stage")
 </template>

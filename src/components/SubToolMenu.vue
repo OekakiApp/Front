@@ -10,20 +10,23 @@ import TextAlignmentSelect from '@/components/ToolBar/TextAlignmentSelect.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
+import useStoreImage from '@/stores/konva/image'
 
-export type Color = {
+interface Color {
   name: string
   type: 'color-button' | 'color-picker'
   color: string
   style?: {
     'background-color': string
   }
-  onClick?: () => void
+  onClick: () => void
 }
 
 const { mode } = storeToRefs(useStoreMode())
+const { uploadedImages } = storeToRefs(useStoreImage())
 const { setLineColor } = useStoreLine()
 const { setTextOptionValue, setTextColor } = useStoreText()
+const { addImageList, removeImage, setDragUrl } = useStoreImage()
 
 const activeLineColorIndex = ref<number>(0)
 const activeTextColorIndex = ref<number>(0)
@@ -89,6 +92,8 @@ const lineColors: Color[] = [
     name: 'Custom',
     type: 'color-picker',
     color: 'rainbow',
+    // 便宜上何も設定しない関数を挿入する
+    onClick: () => setLineColor(''),
   },
 ]
 
@@ -177,6 +182,8 @@ const textColors: Color[] = [
     name: 'Custom',
     type: 'color-picker',
     color: 'rainbow',
+    // 便宜上何も設定しない関数を挿入する
+    onClick: () => setLineColor(''),
   },
 ]
 </script>
@@ -201,7 +208,7 @@ div(
 //- text
 div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12 h-16")
   FontSizeSelect
-  FontFamilySelect 
+  FontFamilySelect
   TextAlignmentSelect
   ColorButton(
     v-for="(color, index) in textColors"
@@ -209,4 +216,15 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
     :index="index" :active-index="activeTextColorIndex"
     @toggle-button-active="(index:number) => activeTextColorIndex = index"
     @toggle-picker-active="(index:number, color:string) =>{activeTextColorIndex = index;setTextColor(color);setTextOptionValue('textFillColor', color)}")
+//- image
+div(v-else-if="mode === 'image'" class="flex justify-between bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 -mb-2 w-11/12 max-h-80")
+  div(class="flex items-end w-full h-full")
+    div(class="mr-2")
+      input(type="file" class="bg-white file-input file-input-bordered file-input-sm max-w-xs rounded-lg" accept=".png, .jpeg, .jpg" @change="addImageList")
+    div(class="bg-slate-50 flex-1 grid grid-cols-3 h-full max-h-72 overflow-y-scroll rounded-lg")
+      //- image list
+      div(v-for="image of uploadedImages" :key="image.id" class="relative")
+        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="() => {removeImage(image.id);}")
+          span(class="font-bold") ✕
+        img(:src="image.imgSrc" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="(e) => {setDragUrl(e);}")
 </template>

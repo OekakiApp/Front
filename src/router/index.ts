@@ -6,12 +6,13 @@ import {
   RouteLocationNormalized,
 } from 'vue-router'
 import useAuthStore from '@/stores/auth'
-import HomeView from '@/views/HomePage.vue'
+import TopView from '@/views/TopPage.vue'
 import LoginView from '@/views/LoginPage.vue'
 import SignUpView from '@/views/SignUpPage.vue'
 import CreatePage from '@/views/CreatePage.vue'
 import UserView from '@/views/UsersPage.vue'
 import profileSettingsView from '@/views/ProfileSettingsPage.vue'
+import WorkListView from '@/views/WorkList.vue'
 /* eslint-enable */
 
 const router = createRouter({
@@ -20,7 +21,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'Home',
-      component: HomeView,
+      component: TopView,
     },
     {
       path: '/login',
@@ -39,6 +40,11 @@ const router = createRouter({
       name: 'Create',
       component: CreatePage,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/works',
+      name: 'Works',
+      component: WorkListView,
     },
     {
       path: '/users',

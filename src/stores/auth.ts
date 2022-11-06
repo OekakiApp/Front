@@ -90,7 +90,6 @@ const useAuthStore = defineStore('auth', {
         collection(db, 'users'),
         where('uid', '==', user.uid),
       )
-
       await getDocs(userQuery)
         .then((querySnapshot) => {
           querySnapshot.forEach((document) => {
