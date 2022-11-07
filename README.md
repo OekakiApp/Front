@@ -8,6 +8,7 @@
 ## 技術スタック
 
 ### フロントエンド
+
 - Vue3
 - TypeScript
 - tailwindCSS
@@ -16,27 +17,34 @@
 - Vue konva
 
 ### 各種Linterなど
+
 - ESLint
 - Prettier
 - Commit Lint
 - husky
 
 ### バックエンド、データベース
+
 - FireBase
 
 ### テストツール
+
 - Jest
 
 ### ビルドツール
+
 - Vite
 
 ### CI/CD
+
 - Github Actions
 
 ### ホスティングサービス
+
 - Github Pages
 
-
 ## URL
+
 下記からお試しください↓
+
 https://oekakiapp.github.io/Front/
