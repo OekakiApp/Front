@@ -183,6 +183,9 @@ onUnmounted(() => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
   })
+  // 選択を解除
+  selectedShapeId.value = ''
+  configShapeTransformer.value.nodes = []
 })
 
 async function saveCanvas(): Promise<void> {
