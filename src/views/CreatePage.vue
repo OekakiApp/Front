@@ -22,13 +22,14 @@ import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import Konva from 'konva'
 import WebFont from 'webfontloader'
+import _ from 'lodash'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 const StorageReference = storageRef(storage, '')
 
 const { mode } = storeToRefs(useStoreMode())
-const { configKonva } = storeToRefs(useStoreStage())
+const { configKonva, historyStep, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
 const { canvases } = storeToRefs(useAuthStore())
@@ -125,6 +126,37 @@ onMounted(() => {
     handleKeyDownSelectedNodeDelete(e)
   })
 
+  // 初期化
+  mode.value = 'none'
+  lines.value = []
+  texts.value = []
+  konvaImages.value = []
+  // 履歴初期化
+  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  historyStep.value = 0
+
+  const canvasVal = canvasId.value
+  // 途中からの場合
+  if (
+    typeof canvasVal === 'string' &&
+    canvases.value[canvasVal] !== undefined
+  ) {
+    const canvas = canvases.value[canvasVal]
+    lines.value = _.cloneDeep(canvas.lines)
+    texts.value = _.cloneDeep(canvas.texts)
+    konvaImages.value = _.cloneDeep(canvas.konvaImages ?? [])
+    inputText.text = canvas.name
+    // 履歴をセット
+    canvasHistory.value = [
+      {
+        lines: _.cloneDeep(canvas.lines),
+        texts: _.cloneDeep(canvas.texts),
+        images: _.cloneDeep(canvas.konvaImages ?? []),
+      },
+    ]
+    historyStep.value = 0
+  }
+
   // Font読み込み
   if (!isFontLoaded.value) {
     WebFont.load({
@@ -141,23 +173,6 @@ onMounted(() => {
       },
     })
   }
-  // 初期化
-  lines.value = []
-  texts.value = []
-  konvaImages.value = []
-
-  const canvasVal = canvasId.value
-  // 途中からの場合
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
-    const canvas = canvases.value[canvasVal]
-    lines.value = canvas.lines
-    texts.value = canvas.texts
-    konvaImages.value = canvas.konvaImages ?? []
-    inputText.text = canvas.name
-  }
 })
 
 onUnmounted(() => {
@@ -171,6 +186,9 @@ onUnmounted(() => {
 })
 
 async function saveCanvas(): Promise<void> {
+  // 選択を解除
+  selectedShapeId.value = ''
+  configShapeTransformer.value.nodes = []
   // 途中からの場合
   const canvasVal = canvasId.value
   if (
@@ -288,7 +306,6 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
       )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
-      v-layer
         v-image(
           v-for="image in konvaImages"
           :key="image.id"
@@ -302,11 +319,6 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
         )
-        v-line(
-          v-for="line in lines"
-          :key="line.id"
-          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
-          )
         v-text(
           v-for="text in texts"
           :key="text.id"
@@ -319,6 +331,12 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
           @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
           @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          )
+      v-layer
+        v-line(
+          v-for="line in lines"
+          :key="line.id"
+          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
           )
         //- pen eraser時のcursor
         UserCursor
