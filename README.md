@@ -16,7 +16,7 @@
 - konva
 - Vue konva
 
-### 各種Linterなど
+### 各種 Linter など
 
 - ESLint
 - Prettier
@@ -45,6 +45,6 @@
 
 ## URL
 
-下記からお試しください↓
+下記からお試しください ↓
 
 https://oekakiapp.github.io/Front/
