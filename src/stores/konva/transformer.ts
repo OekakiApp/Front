@@ -179,7 +179,9 @@ const useStoreTransformer = defineStore({
     // },
 
     // 要素の取得
-    handleMouseDownTransformer(e: Konva.KonvaEventObject<MouseEvent>) {
+    handleMouseDownTransformer(
+      e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+    ) {
       // clicked on stage - clear selection
       if (e.target.attrs.name === 'background-rect') {
         this.selectedShapeId = ''
@@ -247,7 +249,6 @@ const useStoreTransformer = defineStore({
         const image = konvaImages.value.find((i) => i.id === id)
         if (image !== undefined) {
           this.selectedShapeId = id
-          console.log(this.selectedShapeId)
           this.configShapeTransformer.nodes = [e.target]
         } else {
           this.selectedShapeId = ''
@@ -268,7 +269,7 @@ const useStoreTransformer = defineStore({
     },
 
     // 要素の変形
-    handleTransform(e: Konva.KonvaEventObject<MouseEvent>) {
+    handleTransform(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
       const shape = e.target
       // text
       if (shape.name() === 'text') {
@@ -286,7 +287,7 @@ const useStoreTransformer = defineStore({
     },
 
     // 要素の変形終了
-    handleTransformEnd(e: Konva.KonvaEventObject<MouseEvent>) {
+    handleTransformEnd(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
       // shape is transformed, let us save new attrs back to the node
       // find element in our state
       const shape = e.target
@@ -305,7 +306,6 @@ const useStoreTransformer = defineStore({
       }
       // image
       else if (shape.name() === 'image') {
-        console.log('transformend')
         const { konvaImages } = storeToRefs(useStoreImage())
         const image = konvaImages.value.find((i) => i.id === shape.id())
         if (image !== undefined) {

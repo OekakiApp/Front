@@ -282,9 +282,13 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
       @mouseenter="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseEnter(e);}"
       @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
       @mousedown="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
+      @touchstart="(e: KonvaEventObject<TouchEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);}"
       @mousemove="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
+      @touchmove="(e: KonvaEventObject<TouchEvent>) => {handleLineMouseMove(e);}"
       @mouseup="() => {handleLineMouseUp();}"
+      @touchend="() => {handleLineMouseUp();}"
       @dblclick="(e: KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
+      @dbltap="(e: KonvaEventObject<TouchEvent>) => {createNewTextNode(e);}"
       )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
@@ -299,7 +303,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
           @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
+          @transform="(e: KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
         )
         v-line(
@@ -312,13 +316,14 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           :key="text.id"
           :config="text"
           @dragend="(e: KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
-          @transformend="handleTransformEnd"
           @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
           @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
           @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
           @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
+          @transformend="handleTransformEnd"
           @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          @dbltap="(e: KonvaEventObject<TouchEvent>) => toggleEdit(e, transformer, stageParentDiv)"
           )
         //- pen eraser時のcursor
         UserCursor
