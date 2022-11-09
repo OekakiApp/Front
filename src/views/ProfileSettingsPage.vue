@@ -14,6 +14,7 @@ import {
 const authUser = getAuth().currentUser!
 const authStore = useAuthStore()
 const icon = ref(authStore.icon)
+let uploadFile = new File([], '')
 
 const iconRef = ref<HTMLInputElement | null>(null)
 
@@ -46,16 +47,16 @@ const saveProfile = () => {
 
 const onFileUploadToFirebase = () => {
   if (iconRef.value && iconRef.value.files) {
-    const file: File = iconRef.value.files[0]
-    icon.value = URL.createObjectURL(file)
+    // prefer-destructuring
+    uploadFile = iconRef.value.files[0] // eslint-disable-line
+    icon.value = URL.createObjectURL(uploadFile)
   }
 }
 
 const updateFireBase = async () => {
   // profile
   if (authStore.profile !== textArea.text) {
-    const usersId: string = localStorage.getItem('usersId') ?? ''
-    const washingtonRef = doc(db, 'users', usersId)
+    const washingtonRef = doc(db, 'users', authStore.uid)
     await updateDoc(washingtonRef, {
       profile: textArea.text,
     })
@@ -75,10 +76,9 @@ const updateFireBase = async () => {
       })
   }
   // icon
-  if (authStore.icon !== icon.value && iconRef.value && iconRef.value.files) {
-    const file: File = iconRef.value.files[0]
-    const fileRef = storageRef(storage, `user-image/${file.name}`)
-    const uploadTask = uploadBytesResumable(fileRef, file)
+  if (authStore.icon !== icon.value) {
+    const fileRef = storageRef(storage, `user-image/${uploadFile.name}`)
+    const uploadTask = uploadBytesResumable(fileRef, uploadFile)
 
     uploadTask.on(
       'state_changed',
