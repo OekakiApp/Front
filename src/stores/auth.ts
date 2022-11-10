@@ -44,13 +44,12 @@ const useAuthStore = defineStore('auth', {
             displayName: name,
           })
             .then(async () => {
+              // database usersを作成
               await setDoc(doc(db, 'users', user.uid), {
-                profile: user.displayName,
+                profile: 'よろしくお願いします。',
                 uid: user.uid,
               })
-            })
-            .then(async () => {
-              this.name = name
+              await this.setUser(user)
               await forceToWorkPage()
             })
             .catch((error) => {
@@ -64,10 +63,7 @@ const useAuthStore = defineStore('auth', {
     loginEmail(email: string, password: string) {
       const auth = getAuth()
       signInWithEmailAndPassword(auth, email, password)
-        .then(async (userCredential) => {
-          const { user } = userCredential
-          await this.setUser(user)
-          await this.getCanvases()
+        .then(async () => {
           await forceToWorkPage()
         })
         .catch((error) => {
@@ -93,26 +89,17 @@ const useAuthStore = defineStore('auth', {
       this.isLoggedIn = true
       localStorage.setItem('usersId', user.uid)
       // get profile
-      const userQuery = query(
-        collection(db, 'users'),
-        where('uid', '==', user.uid),
-      )
-      await getDocs(userQuery)
-        .then((querySnapshot) => {
-          querySnapshot.forEach((document) => {
-            this.profile = document.data().profile
-          })
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+      const userDocRef = doc(db, 'users', this.uid)
+      const userDocSnap = await getDoc(userDocRef)
+      if (userDocSnap.exists()) {
+        this.profile = userDocSnap.data().profile
+      }
     },
 
     async getCanvases() {
-      const usersId: string = localStorage.getItem('usersId') ?? ''
       const canvasQuery = query(
         collection(db, 'canvas'),
-        where('uid', '==', usersId),
+        where('uid', '==', this.uid),
       )
 
       await getDocs(canvasQuery)
