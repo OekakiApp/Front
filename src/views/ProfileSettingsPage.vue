@@ -14,9 +14,7 @@ import {
 const authUser = getAuth().currentUser!
 const authStore = useAuthStore()
 const icon = ref(authStore.icon)
-let uploadFile = new File([], '')
-
-const iconRef = ref<HTMLInputElement | null>(null)
+const uploadFile = ref(new File([], ''))
 
 const inputText = reactive({
   icon: 'person',
@@ -45,19 +43,22 @@ const saveProfile = () => {
   router.push({ name: 'Users' })
 }
 
-const onFileUploadToFirebase = () => {
-  if (iconRef.value && iconRef.value.files) {
-    // prefer-destructuring
-    uploadFile = iconRef.value.files[0] // eslint-disable-line
-    icon.value = URL.createObjectURL(uploadFile)
-  }
+const uploadIconFile = (e: Event) => {
+  const inputElement = e.target as HTMLInputElement
+  if (inputElement === null) return
+  const { files } = inputElement
+  if (files === null) return
+  const file = files.item(0)
+  if (file === null) return
+  uploadFile.value = file
+  icon.value = URL.createObjectURL(uploadFile.value)
 }
 
 const updateFireBase = async () => {
   // profile
   if (authStore.profile !== textArea.text) {
-    const washingtonRef = doc(db, 'users', authStore.uid)
-    await updateDoc(washingtonRef, {
+    const usersRef = doc(db, 'users', authStore.uid)
+    await updateDoc(usersRef, {
       profile: textArea.text,
     })
     authStore.profile = textArea.text
@@ -77,8 +78,8 @@ const updateFireBase = async () => {
   }
   // icon
   if (authStore.icon !== icon.value) {
-    const fileRef = storageRef(storage, `user-image/${uploadFile.name}`)
-    const uploadTask = uploadBytesResumable(fileRef, uploadFile)
+    const fileRef = storageRef(storage, `user-image/${uploadFile.value.name}`)
+    const uploadTask = uploadBytesResumable(fileRef, uploadFile.value)
 
     uploadTask.on(
       'state_changed',
@@ -134,7 +135,7 @@ div(class="flex max-w-3xl mx-auto mt-8")
     div
       img(:src="icon" class="big-avatar ring-2 ring-gray-700 ")
     label(class="upload-label inline-block cursor-pointer my-4 p-2") ファイルを選択
-      input(id="icon" ref="iconRef" type="file" accept=".png, .jpeg, .jpg" @change="onFileUploadToFirebase()")
+      input(id="icon" type="file" accept=".png, .jpeg, .jpg" @change="uploadIconFile")
 
   //- right
   div(class="mx-auto w-3/5")
