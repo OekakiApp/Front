@@ -1,7 +1,20 @@
 <script setup lang="ts">
 import useAuthStore from '@/stores/auth'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import useStoreUserImage from '@/stores/userImage'
 
 const authStore = useAuthStore()
+const { isLoadingImages } = storeToRefs(useStoreUserImage())
+const { getUserImageList } = useStoreUserImage()
+
+onMounted(() => {
+  // 現在ログインするとWorksに遷移するのでここでユーザー画像をfetchしているが。
+  // 今後ルーティング設定の変更などがあれば、fetchのタイミングも要検討か…
+  if (isLoadingImages) {
+    getUserImageList()
+  }
+})
 </script>
 
 <template lang="pug">

@@ -5,11 +5,6 @@ import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
 
-interface UploadedImage {
-  id: string
-  imgSrc: string
-}
-
 export interface KonvaImage {
   id: string
   name: string
@@ -27,45 +22,10 @@ const useStoreImage = defineStore({
   id: 'image',
   state: () => ({
     dragUrl: '',
-    uploadedImages: [] as UploadedImage[],
     konvaImages: [] as KonvaImage[],
   }),
 
   actions: {
-    addImageList(e: Event) {
-      const inputElement = e.target as HTMLInputElement
-      if (inputElement === null) return
-      const { files } = inputElement
-      if (files === null) return
-      const file = files.item(0)
-      if (file === null) return
-      this.loadImage(file)
-      inputElement.value = ''
-    },
-
-    loadImage(file: File) {
-      // FileRenderオブジェクト
-      const reader = new FileReader()
-      // URLとして読み込まれたときに実行する処理
-      reader.onload = (e) => {
-        const fileReader = e.target
-        if (fileReader === null) return
-        const imgURL = fileReader.result as string
-        const id = nanoid()
-        // imageをstoreにupload
-        this.uploadedImages = [...this.uploadedImages, { id, imgSrc: imgURL }]
-      }
-      // ファイルをURLとして読み込む
-      reader.readAsDataURL(file)
-    },
-
-    // image listから削除
-    removeImage(imageId: string) {
-      this.uploadedImages = this.uploadedImages.filter(
-        (img) => img.id !== imageId,
-      )
-    },
-
     // image drag
     setDragUrl(e: DragEvent) {
       const img = e.target as HTMLImageElement
@@ -84,9 +44,9 @@ const useStoreImage = defineStore({
 
       // リサイズ
       const originalWidth = newImg.width
-      // widthは200pxに縮小するかそのまま
+      // widthは100pxに縮小するかそのまま
       newImg.width = Math.min(originalWidth, 100)
-      // 200pxに縮小したらheightも変更する
+      // 100pxに縮小したらheightも変更する
       if (newImg.width === 100) {
         newImg.height *= 100 / originalWidth
       }
@@ -110,8 +70,7 @@ const useStoreImage = defineStore({
       useStoreStage().handleEventEndSaveHistory()
 
       // モード終了し、サブメニューを閉じる
-      const { setMode } = useStoreMode()
-      setMode('none')
+      useStoreMode().$reset()
     },
 
     deleteImages() {
