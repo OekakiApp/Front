@@ -61,7 +61,7 @@ const useStoreText = defineStore({
   }),
 
   actions: {
-    createNewTextNode(e: Konva.KonvaEventObject<MouseEvent>) {
+    createNewTextNode(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
       const { mode } = storeToRefs(useStoreMode())
       if (mode.value !== 'text') return
       // クリックしているのが、Textならスキップ
@@ -144,7 +144,7 @@ const useStoreText = defineStore({
     },
 
     toggleEdit(
-      e: Konva.KonvaEventObject<MouseEvent>,
+      e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
       transformer: Konva.Transformer,
       stageParentDiv: HTMLDivElement,
     ) {
