@@ -14,7 +14,6 @@ export interface UploadedImage {
   userUid: string
   id: string
   storageURL: string // for access to storage
-  // dataURL: string // for canvas image
   fileName: string // ex) filename.png
   fileType: string // ex) image/jpeg
   fileExtention: string // ex) png
@@ -36,19 +35,10 @@ const useStoreUserImage = defineStore({
       if (files === null) return
       const file = files.item(0)
       if (file === null) return
-      // FileRenderオブジェクト
-      const reader = new FileReader()
-      // URLとして読み込まれたときに実行する処理
-      reader.onload = (evt) => {
-        const fileReader = evt.target
-        if (fileReader === null) return
-        const dataURL = fileReader.result as string
-        this.uploadImageToStorage(file, dataURL)
-      }
-      reader.readAsDataURL(file)
+      this.uploadImageToStorage(file)
     },
 
-    uploadImageToStorage(file: File, dataURL: string) {
+    uploadImageToStorage(file: File) {
       const { uid } = storeToRefs(useAuthStore())
       const imageId = nanoid()
       const fileExtention = file.name.split('.').pop() as string // input accept .jpeg .png .jpg
@@ -109,7 +99,7 @@ const useStoreUserImage = defineStore({
           getDownloadURL(uploadTask.snapshot.ref)
             .then((downloadURL) => {
               // firestoreのimageデータを更新
-              this.uploadImageToFirestore(downloadURL, file, imageId, dataURL)
+              this.uploadImageToFirestore(downloadURL, file, imageId)
             })
             .catch((error) => {
               console.log(error.code)
@@ -118,12 +108,7 @@ const useStoreUserImage = defineStore({
       )
     },
 
-    uploadImageToFirestore(
-      url: string,
-      file: File,
-      imageId: string,
-      dataURL: string,
-    ) {
+    uploadImageToFirestore(url: string, file: File, imageId: string) {
       const { uid } = storeToRefs(useAuthStore())
       const id = imageId
       const fileExtention = file.name.split('.').pop() as string // input accept .jpeg .png .jpg

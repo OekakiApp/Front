@@ -88,6 +88,7 @@ const useStoreImage = defineStore({
     // image urlをimage elementに変換する
     changeURLToImageElement(url: string): HTMLImageElement {
       const imageElement = new Image()
+      imageElement.crossOrigin = 'anonymous'
       imageElement.src = url
 
       // リサイズ
