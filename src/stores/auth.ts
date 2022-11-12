@@ -33,6 +33,8 @@ const useAuthStore = defineStore('auth', {
     isLoggedIn: false,
     canvases: {} as DocumentData, // eslint-disable-line
     //  @typescript-eslint/consistent-type-assertions
+    isAuthError: false,
+    authErrorMessage: ''
   }),
   actions: {
     signupEmail(email: string, password: string, name: string) {
@@ -67,7 +69,8 @@ const useAuthStore = defineStore('auth', {
           await forceToWorkPage()
         })
         .catch((error) => {
-          console.log(error.message)
+          this.isAuthError = true
+          this.authErrorMessage = errorHash[error.code] !== undefined ? errorHash[error.code] : '認証に失敗しました。しばらく時間をおいて再度お試しください'
         })
     },
     logout() {
@@ -133,6 +136,18 @@ async function forceToHomePage() {
   await router.replace({
     name: 'Home',
   })
+}
+
+const errorHash = {
+  // 新規登録
+  'auth/email-already-in-use': 'このメールアドレスは使用されています',
+  'auth/invalid-email': 'メールアドレスの形式が正しくありません',
+  'auth/weak-password': 'パスワードは6文字以上にしてください',
+  // ログイン
+  'auth/user-not-found': 'メールアドレスまたはパスワードが違います',
+  'auth/wrong-password': 'パスワードが違います',
+  'auth/user-disabled': 'サービスの利用が停止されています',
+  'auth/too-many-requests': 'パスワードを忘れましたか？\nパスワードリセットは現在利用できません'
 }
 
 export default useAuthStore
