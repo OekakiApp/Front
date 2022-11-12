@@ -176,9 +176,8 @@ onUnmounted(() => {
 router.beforeEach(() => {
   if (saveState.value === 'loading') {
     return false
-  } else {
-    return true
   }
+  return true
 })
 
 async function saveCanvas(): Promise<void> {
