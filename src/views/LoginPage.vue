@@ -1,41 +1,41 @@
 <script setup lang="ts">
-import { reactive } from "vue";
-import router from "@/router/index";
-import useAuthStore from "@/stores/auth";
+import { reactive } from 'vue'
+import router from '@/router/index'
+import useAuthStore from '@/stores/auth'
 // import { InputTextType } from '@/types/index'
 interface InputTextType {
-  icon: string;
-  inputType: string;
-  placeholder: string;
-  text: string;
+  icon: string
+  inputType: string
+  placeholder: string
+  text: string
 }
-const authStore = useAuthStore();
+const authStore = useAuthStore()
 
 const inputTexts: InputTextType[] = reactive([
   {
-    icon: "mail",
-    inputType: "email",
-    placeholder: "Type Your Email",
-    text: "",
+    icon: 'mail',
+    inputType: 'email',
+    placeholder: 'Type Your Email',
+    text: '',
   },
   {
-    icon: "key",
-    inputType: "password",
-    placeholder: "Type Your Password",
-    text: "",
+    icon: 'key',
+    inputType: 'password',
+    placeholder: 'Type Your Password',
+    text: '',
   },
-]);
+])
 
 const submitLogin = () => {
-  const email = inputTexts[0].text;
-  const password = inputTexts[1].text;
-  authStore.loginEmail(email, password);
-};
+  const email = inputTexts[0].text
+  const password = inputTexts[1].text
+  authStore.loginEmail(email, password)
+}
 
 router.beforeEach(() => {
-  useAuthStore().isAuthError = false;
-  useAuthStore().authErrorMessage = "";
-});
+  useAuthStore().isAuthError = false
+  useAuthStore().authErrorMessage = ''
+})
 </script>
 
 <template lang="pug">
