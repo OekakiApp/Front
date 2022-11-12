@@ -17,7 +17,7 @@ const inputTexts: InputTextType[] = reactive([
   {
     icon: 'person',
     inputType: 'text',
-    placeholder: 'お名前',
+    placeholder: '名前',
     text: '',
     isAlert: false,
     alertText: '名前を入力してください',

@@ -15,13 +15,13 @@ const inputTexts: InputTextType[] = reactive([
   {
     icon: 'mail',
     inputType: 'email',
-    placeholder: 'Type Your Email',
+    placeholder: 'メールアドレス',
     text: '',
   },
   {
     icon: 'key',
     inputType: 'password',
-    placeholder: 'Type Your Password',
+    placeholder: 'パスワード',
     text: '',
   },
 ])

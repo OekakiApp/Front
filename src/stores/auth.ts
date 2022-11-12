@@ -59,12 +59,7 @@ const useAuthStore = defineStore('auth', {
             })
         })
         .catch((error) => {
-          const code: string = error.code
-          this.isAuthError = true
-          this.authErrorMessage =
-            errorMap.get(code) !== undefined
-              ? errorMap.get(code)
-              : '認証に失敗しました。しばらく時間をおいて再度お試しください'
+          this.authError(error)
         })
     },
     loginEmail(email: string, password: string) {
@@ -74,12 +69,7 @@ const useAuthStore = defineStore('auth', {
           await forceToWorkPage()
         })
         .catch((error) => {
-          const code: string = error.code
-          this.isAuthError = true
-          this.authErrorMessage =
-            errorMap.get(code) !== undefined
-              ? errorMap.get(code)
-              : '認証に失敗しました。しばらく時間をおいて再度お試しください'
+          this.authError(error)
         })
     },
     logout() {
@@ -92,6 +82,15 @@ const useAuthStore = defineStore('auth', {
         .catch((error) => {
           console.log(error.message)
         })
+    },
+
+    authError(error: any) {
+      const { code } = error
+      this.isAuthError = true
+      this.authErrorMessage =
+        errorMap.get(code) !== undefined
+          ? errorMap.get(code)
+          : '認証に失敗しました。しばらく時間をおいて再度お試しください'
     },
 
     async setUser(user: User) {
