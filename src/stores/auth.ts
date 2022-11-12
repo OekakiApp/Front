@@ -34,7 +34,7 @@ const useAuthStore = defineStore('auth', {
     canvases: {} as DocumentData, // eslint-disable-line
     //  @typescript-eslint/consistent-type-assertions
     isAuthError: false,
-    authErrorMessage: '',
+    authErrorMessage: '' as string | undefined,
   }),
   actions: {
     signupEmail(email: string, password: string, name: string) {
@@ -59,7 +59,12 @@ const useAuthStore = defineStore('auth', {
             })
         })
         .catch((error) => {
-          console.log(error.message)
+          const code: string = error.code
+          this.isAuthError = true
+          this.authErrorMessage =
+            errorMap.get(code) !== undefined
+              ? errorMap.get(code)
+              : '認証に失敗しました。しばらく時間をおいて再度お試しください'
         })
     },
     loginEmail(email: string, password: string) {
@@ -69,10 +74,11 @@ const useAuthStore = defineStore('auth', {
           await forceToWorkPage()
         })
         .catch((error) => {
+          const code: string = error.code
           this.isAuthError = true
           this.authErrorMessage =
-            errorHash[error.code] !== undefined
-              ? errorHash[error.code]
+            errorMap.get(code) !== undefined
+              ? errorMap.get(code)
               : '認証に失敗しました。しばらく時間をおいて再度お試しください'
         })
     },
@@ -141,17 +147,19 @@ async function forceToHomePage() {
   })
 }
 
-const errorHash = {
+const errorMap = new Map([
   // 新規登録
-  'auth/email-already-in-use': 'このメールアドレスは既に使用されています',
-  'auth/invalid-email': 'メールアドレスの形式が正しくありません',
-  'auth/weak-password': 'パスワードは6文字以上 入力してください',
+  ['auth/email-already-in-use', 'このメールアドレスは既に使用されています'],
+  ['auth/invalid-email', 'メールアドレスの形式が正しくありません'],
+  ['auth/weak-password', 'パスワードは6文字以上 入力してください'],
   // ログイン
-  'auth/user-not-found': 'メールアドレスまたはパスワードが正しくありません',
-  'auth/wrong-password': '正しいパスワードを入力してください',
-  'auth/user-disabled': 'サービスの利用が停止されています',
-  'auth/too-many-requests':
+  ['auth/user-not-found', 'メールアドレスまたはパスワードが正しくありません'],
+  ['auth/wrong-password', '正しいパスワードを入力してください'],
+  ['auth/user-disabled', 'サービスの利用が停止されています'],
+  [
+    'auth/too-many-requests',
     'パスワードを忘れましたか？\nパスワードリセットは現在利用できません',
-}
+  ],
+])
 
 export default useAuthStore
