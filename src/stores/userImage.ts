@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { defineStore, storeToRefs } from 'pinia'
-import { doc, setDoc, Timestamp, getDoc } from 'firebase/firestore'
+import { doc, Timestamp, getDoc, setDoc } from 'firebase/firestore'
 import {
   ref,
   uploadBytesResumable,
@@ -14,7 +14,7 @@ export interface UploadedImage {
   userUid: string
   id: string
   storageURL: string // for access to storage
-  dataURL: string // for canvas image
+  // dataURL: string // for canvas image
   fileName: string // ex) filename.png
   fileType: string // ex) image/jpeg
   fileExtention: string // ex) png
@@ -131,7 +131,7 @@ const useStoreUserImage = defineStore({
         userUid: uid.value,
         id,
         storageURL: url,
-        dataURL,
+        // dataURL,
         fileName: file.name,
         fileType: file.type,
         fileExtention,
@@ -154,11 +154,10 @@ const useStoreUserImage = defineStore({
         const docSnap = await getDoc(docRef)
         if (docSnap.exists()) {
           // set image data
-          const { images } = docSnap.data()
-          if (images === undefined) return
+          const userImages = docSnap.data().images as UploadedImage[]
 
           // アップロード順に並び替える
-          const sortedImages = images.sort(
+          const sortedImages = userImages.sort(
             (a: UploadedImage, b: UploadedImage) => {
               if (a.createdAt < b.createdAt) {
                 return -1
