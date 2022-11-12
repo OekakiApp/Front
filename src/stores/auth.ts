@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   User,
+  AuthError,
 } from 'firebase/auth'
 import {
   query,
@@ -84,7 +85,7 @@ const useAuthStore = defineStore('auth', {
         })
     },
 
-    authError(error: any) {
+    authError(error: AuthError) {
       const { code } = error
       this.isAuthError = true
       this.authErrorMessage =
