@@ -18,6 +18,20 @@ export interface KonvaImage {
   scaleY: number
 }
 
+// firestoreにはimage elementを保存できないのでurlだけ保存
+export interface FirestoreCanvasImage {
+  id: string
+  name: string
+  image: string //
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation: number
+  scaleX: number
+  scaleY: number
+}
+
 const useStoreImage = defineStore({
   id: 'image',
   state: () => ({
@@ -26,6 +40,67 @@ const useStoreImage = defineStore({
   }),
 
   actions: {
+    changeFirestoreCanvasImagesToKonvaImages(
+      firestoreCanvasImages: FirestoreCanvasImage[],
+    ) {
+      console.log('changeFirestoreCanvasImagesToKonvaImages')
+      const konvaImageArray = [] as KonvaImage[]
+      firestoreCanvasImages?.forEach(
+        (firestoreCanvasImage: FirestoreCanvasImage) => {
+          konvaImageArray.push({
+            id: firestoreCanvasImage.id,
+            name: firestoreCanvasImage.name,
+            image: this.changeURLToImageElement(firestoreCanvasImage.image),
+            x: firestoreCanvasImage.x,
+            y: firestoreCanvasImage.y,
+            width: firestoreCanvasImage.width,
+            height: firestoreCanvasImage.height,
+            rotation: firestoreCanvasImage.rotation,
+            scaleX: firestoreCanvasImage.scaleX,
+            scaleY: firestoreCanvasImage.scaleY,
+          })
+        },
+      )
+      return konvaImageArray
+    },
+
+    // KonvaImageをFirestoreCanvasImageに変換
+    changeKonvaImagesToFirestoreCanvasImages(konvaImages: KonvaImage[]) {
+      console.log('changeKonvaImagesToFirestoreCanvasImages')
+      const firestoreCanvasImagesArray = [] as FirestoreCanvasImage[]
+      konvaImages?.forEach((konvaImage: KonvaImage) => {
+        firestoreCanvasImagesArray.push({
+          id: konvaImage.id,
+          name: konvaImage.name,
+          image: konvaImage.image.src,
+          x: konvaImage.x,
+          y: konvaImage.y,
+          width: konvaImage.width,
+          height: konvaImage.height,
+          rotation: konvaImage.rotation,
+          scaleX: konvaImage.scaleX,
+          scaleY: konvaImage.scaleY,
+        })
+      })
+      return firestoreCanvasImagesArray
+    },
+
+    // image urlをimage elementに変換する
+    changeURLToImageElement(url: string): HTMLImageElement {
+      const imageElement = new Image()
+      imageElement.src = url
+
+      // リサイズ
+      const originalWidth = imageElement.width
+      // widthは100pxに縮小するかそのまま
+      imageElement.width = Math.min(originalWidth, 100)
+      // 100pxに縮小したらheightも変更する
+      if (imageElement.width === 100) {
+        imageElement.height *= 100 / originalWidth
+      }
+      return imageElement
+    },
+
     // image drag
     setDragUrl(e: DragEvent) {
       const img = e.target as HTMLImageElement
@@ -38,18 +113,9 @@ const useStoreImage = defineStore({
       // register event position
       const stage = stageRef.getStage()
       stage.setPointersPositions(e)
-      // add image
-      const newImg = new Image()
-      newImg.src = this.dragUrl
 
-      // リサイズ
-      const originalWidth = newImg.width
-      // widthは100pxに縮小するかそのまま
-      newImg.width = Math.min(originalWidth, 100)
-      // 100pxに縮小したらheightも変更する
-      if (newImg.width === 100) {
-        newImg.height *= 100 / originalWidth
-      }
+      const newImg = this.changeURLToImageElement(this.dragUrl)
+
       const id = nanoid()
       const relativePointerPosition = stage.getRelativePointerPosition()
       this.konvaImages = this.konvaImages.concat([

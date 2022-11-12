@@ -66,7 +66,12 @@ const {
   handlePointerMouseUp,
 } = useStorePointer()
 
-const { setImages, handleImageDragEnd } = useStoreImage()
+const {
+  changeKonvaImagesToFirestoreCanvasImages,
+  changeFirestoreCanvasImagesToKonvaImages,
+  setImages,
+  handleImageDragEnd,
+} = useStoreImage()
 
 const { setCanvas } = useAuthStore()
 
@@ -155,7 +160,9 @@ onMounted(() => {
     const canvas = canvases.value[canvasVal]
     lines.value = canvas.lines
     texts.value = canvas.texts
-    konvaImages.value = canvas.konvaImages ?? []
+    konvaImages.value = changeFirestoreCanvasImagesToKonvaImages(
+      canvas.konvaImages,
+    )
     inputText.text = canvas.name
   }
 })
@@ -181,7 +188,7 @@ async function saveCanvas(): Promise<void> {
       name: inputText.text === '' ? 'タイトル' : inputText.text,
       lines: lines.value,
       texts: texts.value,
-      // konvaImages: konvaImages.value,
+      konvaImages: changeKonvaImagesToFirestoreCanvasImages(konvaImages.value),
     })
   }
   // 新規の場合
@@ -190,7 +197,7 @@ async function saveCanvas(): Promise<void> {
       name: inputText.text === '' ? 'タイトル' : inputText.text,
       lines: lines.value,
       texts: texts.value,
-      // konvaImages: konvaImages.value,
+      konvaImages: changeKonvaImagesToFirestoreCanvasImages(konvaImages.value),
       uid: usersId,
     })
     canvasId.value = canvasRef.id
