@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import router from '@/router/index'
 import useAuthStore from '@/stores/auth'
 // import { InputTextType } from '@/types/index'
 interface InputTextType {
@@ -7,8 +8,6 @@ interface InputTextType {
   inputType: string
   placeholder: string
   text: string
-  isAlert: boolean
-  alertText: string
 }
 const authStore = useAuthStore()
 
@@ -16,50 +15,37 @@ const inputTexts: InputTextType[] = reactive([
   {
     icon: 'mail',
     inputType: 'email',
-    placeholder: 'Type Your Email',
+    placeholder: 'メールアドレス',
     text: '',
-    isAlert: false,
-    alertText: 'メールアドレスを入力してください',
   },
   {
     icon: 'key',
     inputType: 'password',
-    placeholder: 'Type Your Password',
+    placeholder: 'パスワード',
     text: '',
-    isAlert: false,
-    alertText: 'パスワードを入力してください',
   },
 ])
 
 const submitLogin = () => {
   const email = inputTexts[0].text
   const password = inputTexts[1].text
-  validate()
   authStore.loginEmail(email, password)
 }
 
-const validate = () => {
-  inputTexts.map((_inputText) => {
-    const inputText: InputTextType = _inputText
-    if (inputText.text === '') {
-      inputText.isAlert = true
-    } else {
-      inputText.isAlert = false
-    }
-    return inputText
-  })
-}
+router.beforeEach(() => {
+  useAuthStore().isAuthError = false
+  useAuthStore().authErrorMessage = ''
+})
 </script>
 
 <template lang="pug">
 div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
   h2(class="sm:text-4xl text-2xl font-bold text-midnightBlue text-center md:mb-20 mb-12") ログイン
   form(class="mx-auto" @submit.prevent="submitLogin")
+    //- alert
+    div(v-show='authStore.isAuthError' class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
+      span(class="font-medium whitespace-pre-wrap") {{authStore.authErrorMessage}}
     div(v-for="(inputText, index) in inputTexts" :key="index" class="mb-8")
-      //- alert
-      div(v-show="inputText.isAlert" class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
-        span(class="font-medium") {{inputText.alertText}}
-
       div(class="flex items-center justify-center w-full")
         span(class="material-symbols-outlined mr-2") {{inputText.icon}}
         div(class="w-full flex-fill mb-0")

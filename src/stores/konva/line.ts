@@ -68,7 +68,7 @@ const useStoreLine = defineStore({
       this.lines = []
     },
 
-    handleLineMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
+    handleLineMouseDown(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
       const { mode } = useStoreMode()
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return
@@ -93,7 +93,7 @@ const useStoreLine = defineStore({
       }
     },
 
-    handleLineMouseMove(e: Konva.KonvaEventObject<MouseEvent>) {
+    handleLineMouseMove(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
       // no drawing - skipping
       if (!this.isDrawing) {
         return
