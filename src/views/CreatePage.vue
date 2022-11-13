@@ -77,7 +77,9 @@ const usersId = localStorage.getItem('usersId')
 const canvasId = ref(useRoute().params.canvas_id)
 const router = useRouter()
 
-const saveState = ref('normal')
+type SaveState = 'normal' | 'loading' | 'done'
+
+const saveState = ref<SaveState>('normal')
 // const selectionRectangle = ref()
 
 const inputText = reactive({
@@ -256,13 +258,13 @@ const uploadURI = async (uri: string, name: string) => {
           })
           await updateImageMetadata(fileRef)
 
-          // firebaseの更新終了
-          showDoneBtn()
-
           // store 更新
           if (typeof canvasVal === 'string') {
             await setCanvas(canvasVal)
           }
+
+          // firebase,storeの更新終了
+          showDoneBtn()
         }
       })
     },
