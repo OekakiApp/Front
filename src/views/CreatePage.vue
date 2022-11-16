@@ -185,7 +185,7 @@ const saveCanvas = async (): Promise<void> => {
     canvases.value[canvasVal] !== undefined
   ) {
     // createdAtがある場合
-    if (canvases.value[canvasVal].createdAt !== null) {
+    if (canvases.value[canvasVal].createdAt !== undefined) {
       await updateDoc(doc(db, 'canvas', canvasVal), {
         name: inputText.text === '' ? 'タイトル' : inputText.text,
         lines: lines.value,
