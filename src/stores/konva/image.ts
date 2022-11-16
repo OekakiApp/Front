@@ -43,7 +43,6 @@ const useStoreImage = defineStore({
     changeFirestoreCanvasImagesToKonvaImages(
       firestoreCanvasImages: FirestoreCanvasImage[],
     ) {
-      console.log('changeFirestoreCanvasImagesToKonvaImages')
       const konvaImageArray = [] as KonvaImage[]
       firestoreCanvasImages?.forEach(
         (firestoreCanvasImage: FirestoreCanvasImage) => {
@@ -87,17 +86,22 @@ const useStoreImage = defineStore({
 
     // image urlをimage elementに変換する
     changeURLToImageElement(url: string): HTMLImageElement {
+      // corsエラー回避のためanonymousにするとなぜかwidthとheightが0になるため
+      // originを生成し、widthとheightを取得しています。
+      const origin = new Image()
+      origin.src = url
+      // キャンバスに乗せる方のimage element
       const imageElement = new Image()
       imageElement.crossOrigin = 'anonymous'
       imageElement.src = url
 
       // リサイズ
-      const originalWidth = imageElement.width
+      const originalWidth = origin.width
       // widthは100pxに縮小するかそのまま
       imageElement.width = Math.min(originalWidth, 100)
       // 100pxに縮小したらheightも変更する
       if (imageElement.width === 100) {
-        imageElement.height *= 100 / originalWidth
+        imageElement.height = (origin.height * 100) / originalWidth
       }
       return imageElement
     },

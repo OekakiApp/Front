@@ -139,7 +139,11 @@ const useStoreUserImage = defineStore({
         const docSnap = await getDoc(docRef)
         if (docSnap.exists()) {
           // set image data
-          const userImages = docSnap.data().images as UploadedImage[]
+          const userImages = docSnap.data().images
+          if (userImages === undefined) {
+            this.isLoadingImages = false
+            return
+          }
 
           // アップロード順に並び替える
           const sortedImages = userImages.sort(

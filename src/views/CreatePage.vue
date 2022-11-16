@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import { db, storage } from '@/firebase/index'
-import { doc, collection, addDoc, updateDoc } from 'firebase/firestore'
+import { doc, Timestamp, updateDoc, setDoc } from 'firebase/firestore'
 import {
   ref as storageRef,
   uploadBytesResumable,
@@ -31,7 +31,7 @@ const { mode } = storeToRefs(useStoreMode())
 const { configKonva } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
-const { canvases } = storeToRefs(useAuthStore())
+const { canvases, uid } = storeToRefs(useAuthStore())
 const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
@@ -78,7 +78,6 @@ const { setCanvas } = useAuthStore()
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
-const usersId = localStorage.getItem('usersId')
 const canvasId = ref(useRoute().params.canvas_id)
 // const selectionRectangle = ref()
 
@@ -177,30 +176,54 @@ onUnmounted(() => {
   })
 })
 
-async function saveCanvas(): Promise<void> {
+const saveCanvas = async (): Promise<void> => {
   // 途中からの場合
   const canvasVal = canvasId.value
+  console.log(canvasVal)
   if (
     typeof canvasVal === 'string' &&
     canvases.value[canvasVal] !== undefined
   ) {
-    await updateDoc(doc(db, 'canvas', canvasVal), {
-      name: inputText.text === '' ? 'タイトル' : inputText.text,
-      lines: lines.value,
-      texts: texts.value,
-      konvaImages: changeKonvaImagesToFirestoreCanvasImages(konvaImages.value),
-    })
+    // createdAtがある場合
+    if (canvases.value[canvasVal].createdAt !== null) {
+      await updateDoc(doc(db, 'canvas', canvasVal), {
+        name: inputText.text === '' ? 'タイトル' : inputText.text,
+        lines: lines.value,
+        texts: texts.value,
+        konvaImages: changeKonvaImagesToFirestoreCanvasImages(
+          konvaImages.value,
+        ),
+        updatedAt: Timestamp.now(),
+      })
+    }
+    // createdAtがない場合
+    else {
+      await updateDoc(doc(db, 'canvas', canvasVal), {
+        name: inputText.text === '' ? 'タイトル' : inputText.text,
+        lines: lines.value,
+        texts: texts.value,
+        konvaImages: changeKonvaImagesToFirestoreCanvasImages(
+          konvaImages.value,
+        ),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      })
+    }
   }
   // 新規の場合
-  else {
-    const canvasRef = await addDoc(collection(db, 'canvas'), {
+  else if (
+    typeof canvasVal === 'string' &&
+    canvases.value[canvasVal] === undefined
+  ) {
+    await setDoc(doc(db, 'canvas', canvasVal), {
       name: inputText.text === '' ? 'タイトル' : inputText.text,
       lines: lines.value,
       texts: texts.value,
       konvaImages: changeKonvaImagesToFirestoreCanvasImages(konvaImages.value),
-      uid: usersId,
+      uid: uid.value,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     })
-    canvasId.value = canvasRef.id
   }
 
   saveImage()
@@ -279,7 +302,7 @@ const updateImageMetadata = async (fileRef: typeof StorageReference) => {
 <template lang="pug">
 div(class="flex justify-center items-center my-4")
   input( v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-1/3 p-1 mr-8" @focus='focusInput()' @blur='blurInput()')
-  button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-2 py-1" @click='saveCanvas()') 保存
+  button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-2 py-1" @click="saveCanvas" ) 保存
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
