@@ -35,13 +35,13 @@ nav(class="bg-bleachWhite px-2 sm:px-4 py-2.5 rounded")
       h1(class="text-midnightBlue text-xl font-bold") Graimer
     div
       div(v-if="isLoggedIn")
-        router-link(to="/users" v-if='windowSize >= 640')  
+        router-link(v-if='windowSize >= 640' to="/users")  
           img(:src="icon" class="mini-avatar ring-2 ring-gray-700")
         div(v-else class="relative")
-          button(@click="isOpen = !isOpen" class="relative z-10 block")
+          button(class="relative z-10 block" @click="isOpen = !isOpen")
             img(:src="icon" class="mini-avatar ring-2 ring-gray-700")
-          button(v-show="isOpen" @click="isOpen = false" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default")
-          div(v-show="isOpen"  @click="isOpen = false" class="absolute right-0 z-10 mt-2 py-2 w-48 bg-white rounded-lg shadow-xl")
+          button(v-show="isOpen" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default" @click="isOpen = false")
+          div(v-show="isOpen"  class="absolute right-0 z-10 mt-2 py-2 w-48 bg-white rounded-lg shadow-xl" @click="isOpen = false")
             router-link(to="users" class="block px-4 py-2 text-gray-800 hover:bg-gray-100") ユーザー情報
             a(class="block cursor-pointer px-4 py-2 text-gray-800 hover:bg-gray-100" @click="authStore.logout()") ログアウト
             
