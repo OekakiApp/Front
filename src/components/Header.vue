@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia'
 import useAuthStore from '@/stores/auth'
 import { useRoute, useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +14,18 @@ router.afterEach(() => {
 })
 const authStore = useAuthStore()
 const { isLoggedIn, icon } = storeToRefs(authStore)
+
+const isOpen = ref(false)
+
+const windowSize = ref(window.innerWidth)
+
+onMounted(() => {
+  window.addEventListener('resize', calculateWindowWidth)
+})
+
+const calculateWindowWidth = () => {
+  windowSize.value = window.innerWidth
+}
 </script>
 
 <template lang="pug">
@@ -23,8 +35,16 @@ nav(class="bg-bleachWhite px-2 sm:px-4 py-2.5 rounded")
       h1(class="text-midnightBlue text-xl font-bold") Graimer
     div
       div(v-if="isLoggedIn")
-        router-link(to="/users")
-          img(:src="icon" class="mini-avatar ring-2 ring-gray-700 ")
+        router-link(to="/users" v-if='windowSize >= 640')  
+          img(:src="icon" class="mini-avatar ring-2 ring-gray-700")
+        div(v-else class="relative")
+          button(@click="isOpen = !isOpen" class="relative z-10 block")
+            img(:src="icon" class="mini-avatar ring-2 ring-gray-700")
+          button(v-show="isOpen" @click="isOpen = false" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default")
+          div(v-show="isOpen"  @click="isOpen = false" class="absolute right-0 z-10 mt-2 py-2 w-48 bg-white rounded-lg shadow-xl")
+            router-link(to="users" class="block px-4 py-2 text-gray-800 hover:bg-gray-100") ユーザー情報
+            a(class="block cursor-pointer px-4 py-2 text-gray-800 hover:bg-gray-100" @click="authStore.logout()") ログアウト
+            
       ul(v-else class="flex text-sm p-2 space-x-2 rounded-lg sm:space-x-8 sm:text-lg sm:font-medium")
         li
           router-link(to="/sign_up" class=" text-midnightBlue hover:text-dustyOrange" :class='{"text-dustyOrange": isSignUpPage}') 新規登録
