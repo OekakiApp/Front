@@ -46,7 +46,7 @@ div
     div(class="card-body p-0")
       h2(class="card-title sm:text-5xl text-4xl") How to Use
       p(class="sm:text-2xl sm:mb-6 mb-4") 〜Graimerの使い方〜
-      div(class="card-actions pb-12")
+      div(class="card-actions")
         ul(class="steps steps-vertical")
           li(class="step") 登録する
           li(class="step") プロフィールを作成する
