@@ -129,7 +129,7 @@ const validate = (): boolean => {
 }
 </script>
 <template lang="pug">
-div(class="sm:flex max-w-3xl mx-auto mt-4 sm:mt-8 ")
+div(class="sm:flex max-w-3xl mx-auto mt-4 sm:mt-8")
   //- left
   div(class="flex sm:flex-col items-center mb-4 sm:mb-0")
     div
