@@ -196,7 +196,7 @@ div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 ro
   LineStyleSelect
   //- Not use Hand
   div(class="px-2")
-    button(v-if="isTouchActive" type="button" data-tip="Not use touch" class="tooltip flex justify-center items-center w-8 h-8 hover:bg-slate-300 rounded-full" @click="toggleIsTouchActive")
+    button(v-if="isTouchActive" type="button" data-tip="Not use touch" class="tooltip flex justify-center items-center w-8 h-8 hover:bg-slate-300 rounded-full " @click="toggleIsTouchActive")
       span(class="material-symbols-outlined") do_not_touch
     button(v-else type="button" data-tip="Not use touch" class="tooltip flex justify-center items-center w-8 h-8 bg-slate-300 rounded-full" @click="toggleIsTouchActive")
       span(class="material-symbols-outlined") do_not_touch
