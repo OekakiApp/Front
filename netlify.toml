@@ -2,7 +2,6 @@
   for = "/*" 
   [headers.values] 
     Content-Security-Policy = '''
-    default-src 'self';
-    connect-src 'self';
+    default-src *;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self';'''
+    img-src 'self' data: https://firebasestorage.googleapis.com;'''
