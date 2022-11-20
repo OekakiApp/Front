@@ -75,13 +75,14 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
   }
 })
 
-function autoLogin(to: RouteLocationNormalized) {
+async function autoLogin(to: RouteLocationNormalized) {
   const auth = getAuth()
   const authStore = useAuthStore()
   const { isLoggedIn } = authStore
-  return new Promise<void>((resolve) => {// eslint-disable-line
-    onAuthStateChanged(auth, async (user) => { // eslint-disable-line
-      if (user) {
+  /* eslint-disable */
+  return new Promise<void>((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (user != null) {
         await authStore.setUser(user)
         await authStore.getCanvases()
         await forceToWorksPage()
@@ -96,6 +97,7 @@ function autoLogin(to: RouteLocationNormalized) {
       resolve()
     })
   })
+  /* eslint-enable */
 }
 
 export async function forceToHomePage() {
