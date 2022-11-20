@@ -6,3 +6,5 @@ docs/
 **/*.min.js
 *.config.js
 .*lintrc.js
+*.config.cjs
+.env

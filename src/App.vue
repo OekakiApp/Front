@@ -1,30 +1,40 @@
 <script setup lang="ts">
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import HelloWorld from './components/HelloWorld.vue'
+import { ref } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+import Header from '@/components/Header.vue'
+import Footer from '@/components/Footer.vue'
+import router from '@/router'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import useAuthStore from '@/stores/auth'
+
+const authStore = useAuthStore()
+const auth = getAuth()
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    authStore.setUser(user)
+    authStore.getCanvases()
+    console.log('ログイン成功')
+  } else {
+    console.log('ログイン失敗')
+  }
+})
+
+const path = ref('')
+const route = useRoute()
+
+const isFooterDisplayed = ref(true)
+router.afterEach((to) => {
+  path.value = to.path
+  isFooterDisplayed.value = route.path === '/'
+})
 </script>
 
 <template lang="pug">
-div
-  a(href="https://vitejs.dev" target="_blank")
-    img(src="/vite.svg" class="logo" alt="Vite logo")
-
-  a(href="https://vuejs.org/" target="_blank")
-    img(src="./assets/vue.svg" class="logo vue" alt="Vue logo")
-
-HelloWorld(msg="Vite + Vue")
+Header
+main(class="container mx-auto px-2 sm:px-4")
+  RouterView
+Footer(v-if="isFooterDisplayed")
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
