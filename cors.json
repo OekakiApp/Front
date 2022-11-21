@@ -1,9 +1,6 @@
 [
   {
-    "origin": [
-      "https://oekakiapp.github.io/Front/*",
-      "http://127.0.0.1:5173/Front/*"
-    ],
+    "origin": ["*"],
     "method": ["GET"],
     "maxAgeSeconds": 3600
   }
