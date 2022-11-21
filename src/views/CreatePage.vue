@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { db, storage } from '@/firebase/index'
 import { doc, collection, addDoc, updateDoc } from 'firebase/firestore'
 import {
@@ -22,13 +22,14 @@ import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import Konva from 'konva'
 import WebFont from 'webfontloader'
+import _ from 'lodash'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 const StorageReference = storageRef(storage, '')
 
 const { mode } = storeToRefs(useStoreMode())
-const { configKonva } = storeToRefs(useStoreStage())
+const { configKonva, historyStep, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
 const { canvases } = storeToRefs(useAuthStore())
@@ -75,6 +76,11 @@ const stage = ref()
 const transformer = ref()
 const usersId = localStorage.getItem('usersId')
 const canvasId = ref(useRoute().params.canvas_id)
+const router = useRouter()
+
+type SaveState = 'normal' | 'loading' | 'done'
+
+const saveState = ref<SaveState>('normal')
 // const selectionRectangle = ref()
 
 const inputText = reactive({
@@ -125,6 +131,37 @@ onMounted(() => {
     handleKeyDownSelectedNodeDelete(e)
   })
 
+  // 初期化
+  mode.value = 'none'
+  lines.value = []
+  texts.value = []
+  konvaImages.value = []
+  // 履歴初期化
+  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  historyStep.value = 0
+
+  const canvasVal = canvasId.value
+  // 途中からの場合
+  if (
+    typeof canvasVal === 'string' &&
+    canvases.value[canvasVal] !== undefined
+  ) {
+    const canvas = canvases.value[canvasVal]
+    lines.value = _.cloneDeep(canvas.lines)
+    texts.value = _.cloneDeep(canvas.texts)
+    konvaImages.value = _.cloneDeep(canvas.konvaImages ?? [])
+    inputText.text = canvas.name
+    // 履歴をセット
+    canvasHistory.value = [
+      {
+        lines: _.cloneDeep(canvas.lines),
+        texts: _.cloneDeep(canvas.texts),
+        images: _.cloneDeep(canvas.konvaImages ?? []),
+      },
+    ]
+    historyStep.value = 0
+  }
+
   // Font読み込み
   if (!isFontLoaded.value) {
     WebFont.load({
@@ -141,23 +178,6 @@ onMounted(() => {
       },
     })
   }
-  // 初期化
-  lines.value = []
-  texts.value = []
-  konvaImages.value = []
-
-  const canvasVal = canvasId.value
-  // 途中からの場合
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
-    const canvas = canvases.value[canvasVal]
-    lines.value = canvas.lines
-    texts.value = canvas.texts
-    konvaImages.value = canvas.konvaImages ?? []
-    inputText.text = canvas.name
-  }
 })
 
 onUnmounted(() => {
@@ -168,9 +188,26 @@ onUnmounted(() => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
   })
+  // 選択を解除
+  selectedShapeId.value = ''
+  configShapeTransformer.value.nodes = []
+})
+
+router.beforeEach(() => {
+  if (saveState.value === 'loading') {
+    return false
+  }
+  return true
 })
 
 async function saveCanvas(): Promise<void> {
+  // 選択を解除
+  selectedShapeId.value = ''
+  configShapeTransformer.value.nodes = []
+
+  // btn loadingに変更
+  saveState.value = 'loading'
+
   // 途中からの場合
   const canvasVal = canvasId.value
   if (
@@ -248,10 +285,20 @@ const uploadURI = async (uri: string, name: string) => {
           if (typeof canvasVal === 'string') {
             await setCanvas(canvasVal)
           }
+
+          // firebase,storeの更新終了
+          showDoneBtn()
         }
       })
     },
   )
+}
+
+const showDoneBtn = () => {
+  saveState.value = 'done'
+  setTimeout(() => {
+    saveState.value = 'normal'
+  }, 3000)
 }
 
 const updateImageMetadata = async (fileRef: typeof StorageReference) => {
@@ -272,7 +319,18 @@ const updateImageMetadata = async (fileRef: typeof StorageReference) => {
 <template lang="pug">
 div(class="flex justify-center items-center my-4")
   input( v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-1/3 p-1 mr-8" @focus='focusInput()' @blur='blurInput()')
-  button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-2 py-1" @click='saveCanvas()') 保存
+  //- normal
+  button(v-show="saveState === 'normal'" type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-2 py-1" @click='saveCanvas()') 保存
+  //- loading
+  button(v-show="saveState === 'loading'" type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-4 py-1")
+    svg(role="status" class="inline w-4 h-4 text-white animate-spin" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg")
+      path(d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="#E5E7EB")
+      path(d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentColor")
+  //- done
+  button(v-show="saveState === 'done'" type="button" class="flex items-center focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-4 py-1.5")
+    span(class="material-symbols-outlined") done
+
+
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
@@ -290,7 +348,6 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
       )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
-      v-layer
         v-image(
           v-for="image in konvaImages"
           :key="image.id"
@@ -304,11 +361,6 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @transform="(e: KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
         )
-        v-line(
-          v-for="line in lines"
-          :key="line.id"
-          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
-          )
         v-text(
           v-for="text in texts"
           :key="text.id"
@@ -322,6 +374,12 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @transformend="handleTransformEnd"
           @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
           @dbltap="(e: KonvaEventObject<TouchEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          )
+      v-layer
+        v-line(
+          v-for="line in lines"
+          :key="line.id"
+          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
           )
         //- pen eraser時のcursor
         UserCursor
