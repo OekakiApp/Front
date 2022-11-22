@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
-import useAuthStore from "@/stores/auth";
-import { useRoute, useRouter } from "vue-router";
-import { ref, onMounted } from "vue";
+import { storeToRefs } from 'pinia'
+import useAuthStore from '@/stores/auth'
+import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
 
-const route = useRoute();
-const router = useRouter();
-const isLoginPage = ref(route.path === "/login");
-const isSignUpPage = ref(route.path === "/sign_up");
+const route = useRoute()
+const router = useRouter()
+const isLoginPage = ref(route.path === '/login')
+const isSignUpPage = ref(route.path === '/sign_up')
 router.afterEach(() => {
-  isLoginPage.value = route.path === "/login";
-  isSignUpPage.value = route.path === "/sign_up";
-});
-const authStore = useAuthStore();
-const { isLoggedIn, icon } = storeToRefs(authStore);
+  isLoginPage.value = route.path === '/login'
+  isSignUpPage.value = route.path === '/sign_up'
+})
+const authStore = useAuthStore()
+const { isLoggedIn, icon } = storeToRefs(authStore)
 
-const isOpen = ref(false);
+const isOpen = ref(false)
 
-const windowSize = ref(window.innerWidth);
+const windowSize = ref(window.innerWidth)
 
 onMounted(() => {
-  window.addEventListener("resize", calculateWindowWidth);
-});
+  window.addEventListener('resize', calculateWindowWidth)
+})
 
 const calculateWindowWidth = () => {
-  windowSize.value = window.innerWidth;
-};
+  windowSize.value = window.innerWidth
+}
 </script>
 
 <template lang="pug">
