@@ -23,8 +23,10 @@ interface Color {
 }
 
 const { mode } = storeToRefs(useStoreMode())
+const { isTouchActive } = storeToRefs(useStoreLine())
+
 const { uploadedImages } = storeToRefs(useStoreImage())
-const { setLineColor } = useStoreLine()
+const { setLineColor, toggleIsTouchActive } = useStoreLine()
 const { setTextOptionValue, setTextColor } = useStoreText()
 const { addImageList, removeImage, setDragUrl } = useStoreImage()
 
@@ -192,6 +194,12 @@ const textColors: Color[] = [
 //- pen
 div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
   LineStyleSelect
+  //- Not use Hand
+  div(class="px-2")
+    button(v-if="isTouchActive" type="button" data-tip="Not use touch" class="tooltip flex justify-center items-center w-8 h-8 hover:bg-slate-300 rounded-full" @click="toggleIsTouchActive")
+      span(class="material-symbols-outlined") do_not_touch
+    button(v-else type="button" data-tip="Not use touch" class="tooltip flex justify-center items-center w-8 h-8 bg-slate-300 rounded-full" @click="toggleIsTouchActive")
+      span(class="material-symbols-outlined") do_not_touch
   ColorButton(
     v-for="(color, index) in lineColors"
     :key="color.color" :color="color" :index="index"
