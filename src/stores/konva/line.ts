@@ -39,6 +39,7 @@ const useStoreLine = defineStore({
     dashEnabled: false,
     globalCompositeOperation: 'source-over',
     lines: [] as Points[],
+    isTouchActive: true,
   }),
 
   actions: {
@@ -68,7 +69,14 @@ const useStoreLine = defineStore({
       this.lines = []
     },
 
-    handleLineMouseDown(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
+    toggleIsTouchActive() {
+      this.isTouchActive = !this.isTouchActive
+    },
+
+    handleLineMouseDown(e: Konva.KonvaEventObject<PointerEvent>) {
+      // pencilを使うときはtouchを無効か
+      if (!this.isTouchActive && e.evt.pointerType === 'touch') return
+
       const { mode } = useStoreMode()
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return
@@ -93,11 +101,14 @@ const useStoreLine = defineStore({
       }
     },
 
-    handleLineMouseMove(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
+    handleLineMouseMove(e: Konva.KonvaEventObject<PointerEvent>) {
       // no drawing - skipping
       if (!this.isDrawing) {
         return
       }
+      // pencilを使うときはtouchを無効か
+      if (!this.isTouchActive && e.evt.pointerType === 'touch') return
+
       // ステージを取得
       const stage = e.target.getStage()
       // ステージのx,yを取得
@@ -111,7 +122,10 @@ const useStoreLine = defineStore({
       }
     },
 
-    handleLineMouseUp() {
+    handleLineMouseUp(e: Konva.KonvaEventObject<PointerEvent>) {
+      // pencilを使うときはtouchを無効か
+      if (!this.isTouchActive && e.evt.pointerType === 'touch') return
+
       const { mode } = useStoreMode()
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return

@@ -34,7 +34,7 @@ router.afterEach((to) => {
 
 <template lang="pug">
 Header
-main(class="container mx-auto px-2 sm:px-4")
+main(class="container mx-auto px-2 sm:px-4 touch-manipulation")
   RouterView
 Footer(v-if="isFooterDisplayed")
 </template>
