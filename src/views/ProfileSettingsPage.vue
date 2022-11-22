@@ -129,16 +129,16 @@ const validate = (): boolean => {
 }
 </script>
 <template lang="pug">
-div(class="flex max-w-3xl mx-auto mt-8")
+div(class="sm:flex max-w-3xl mx-auto mt-4 sm:mt-8")
   //- left
-  div(class="flex flex-col items-center")
+  div(class="flex sm:flex-col items-center mb-4 sm:mb-0")
     div
       img(:src="icon" class="big-avatar ring-2 ring-gray-700 ")
     label(class="upload-label inline-block cursor-pointer my-4 p-2") ファイルを選択
       input(id="icon" type="file" accept=".png, .jpeg, .jpg" @change="uploadIconFile")
 
   //- right
-  div(class="mx-auto w-3/5")
+  div(class="mx-auto sm:w-3/5")
     form(method="post" enctype="multipart/form-data" @submit.prevent="saveProfile")
       div(class="mb-4")
         div(v-show="inputText.isAlert" class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
@@ -166,6 +166,13 @@ div(class="flex max-w-3xl mx-auto mt-8")
   width: 150px;
   height: 150px;
   border-radius: 50%;
+}
+
+@media screen and (max-width: 639px) {
+  .big-avatar {
+    width: 60px;
+    height: 60px;
+  }
 }
 /* inputは隠す */
 .upload-label input {
