@@ -326,7 +326,7 @@ function hasLangLevel(): void {
 hasLangLevel()
 
 MetaTag.setTitle('New Title')
-MetaTag.createMeta('twitter:description', 'desc for twitter')
+MetaTag.createMeta('twitter:description', 'desc  for  twitter')
 </script>
 
 <template lang="pug">
