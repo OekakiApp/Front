@@ -318,7 +318,7 @@ const updateImageMetadata = async (fileRef: typeof StorageReference) => {
 
 const twitterShare = ref('')
 function hasLangLevel(): void {
-  twitterShare.value = `http://twitter.com/share?url=${window.location.href}`
+  twitterShare.value = `http://twitter.com/intent/tweet?url=${window.location.href}`
 }
 hasLangLevel()
 
