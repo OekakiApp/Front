@@ -4,6 +4,7 @@ class MetaTag {
     // document.title = title;
     this.setMeta('og:title', title)
     this.setMeta('twitter:title', title)
+    this.setMeta('og:site_name', title)
   }
   static setDescription(description: string) {
     this.setMeta('description', description)
@@ -20,6 +21,7 @@ class MetaTag {
   }
   static setCard() {
     this.setMeta('twitter:card', 'summary')
+    this.setMeta('og:type', 'website')
   }
 
   //createMeta is create meta

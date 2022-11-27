@@ -318,14 +318,10 @@ const updateImageMetadata = async (fileRef: typeof StorageReference) => {
 
 const twitterShare = ref('')
 function hasLangLevel(): void {
-  twitterShare.value =
-    'http://twitter.com/share?url=' +
-    'http://localhost:5173/create/LkY3NGemTcBi4WfpChFN' +
-    '%0A%20%23RecursionCS%0a'
+  twitterShare.value = 'http://twitter.com/share?url=' + window.location.href
 }
 hasLangLevel()
-console.log(useRoute())
-console.log(window.location.href)
+
 const canvasVal = canvasId.value
 if (typeof canvasVal === 'string' && canvases.value[canvasVal] !== undefined) {
   const canvas = canvases.value[canvasVal]
