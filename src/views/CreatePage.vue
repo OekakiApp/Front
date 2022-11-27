@@ -23,6 +23,7 @@ import useStoreTransformer from '@/stores/konva/transformer'
 import Konva from 'konva'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
+import MetaTag from '@/function/createTwitterCard'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 type KonvaEventObject<T> = Konva.KonvaEventObject<T>
@@ -314,6 +315,18 @@ const updateImageMetadata = async (fileRef: typeof StorageReference) => {
       console.log(error)
     })
 }
+
+const twitterShare = ref('')
+function hasLangLevel(): void {
+  twitterShare.value =
+    'http://twitter.com/share?url=' +
+    'http://localhost:5173/create/LkY3NGemTcBi4WfpChFN' +
+    '%0A%20%23RecursionCS%0a'
+}
+hasLangLevel()
+
+MetaTag.setTitle('New Title')
+MetaTag.createMeta('twitter:description', 'desc for twitter')
 </script>
 
 <template lang="pug">
@@ -330,6 +343,8 @@ div(class="flex justify-center items-center my-4")
   button(v-show="saveState === 'done'" type="button" class="flex items-center focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-4 py-1.5")
     span(class="material-symbols-outlined") done
 
+  div(class="flex justify-center items-center mt-5")
+    a(:href="twitterShare" class="flex items-center hover:bg-sky-200 px-8 py-2 rounded-lg shadow-lg bg-white text-sky-600 justify-center text-2xl text-center") トゥイッター Share
 
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
