@@ -36,21 +36,37 @@ class MetaTag {
   static setMeta(name: string, content: string, isCreate = true) {
     const metas = document.head.getElementsByTagName('meta')
     let isRewrited = false
-    for (let meta of metas) {
+    for (let i = 0; i < metas.length; i++) {
       let _name = null
       if (name.startsWith('og:')) {
-        _name = meta.getAttribute('property') //ogp
+        _name = metas[i].getAttribute('property') //ogp
       } else {
-        _name = meta.getAttribute('name') //other
+        _name = metas[i].getAttribute('name') //other
       }
       if (_name !== null && _name === name) {
         isRewrited = true
-        meta.setAttribute('content', content)
+        metas[i].setAttribute('content', content)
       }
     }
     if (isCreate && !isRewrited) {
       this.createMeta(name, content)
     }
+
+    // for (const meta of metas) {
+    //   let _name = null
+    //   if (name.startsWith('og:')) {
+    //     _name = meta.getAttribute('property') //ogp
+    //   } else {
+    //     _name = meta.getAttribute('name') //other
+    //   }
+    //   if (_name !== null && _name === name) {
+    //     isRewrited = true
+    //     meta.setAttribute('content', content)
+    //   }
+    // }
+    // if (isCreate && !isRewrited) {
+    //   this.createMeta(name, content)
+    // }
   }
 }
 
