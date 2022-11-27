@@ -18,6 +18,9 @@ class MetaTag {
     this.setMeta('og:image', img)
     this.setMeta('twitter:image', img)
   }
+  static setCard() {
+    this.setMeta('twitter:card', 'summary')
+  }
 
   //createMeta is create meta
   static createMeta(name: string, content: string) {

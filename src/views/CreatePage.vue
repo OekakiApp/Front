@@ -324,9 +324,17 @@ function hasLangLevel(): void {
     '%0A%20%23RecursionCS%0a'
 }
 hasLangLevel()
-
+console.log(useRoute())
+console.log(window.location.href)
+const canvasVal = canvasId.value
+if (typeof canvasVal === 'string' && canvases.value[canvasVal] !== undefined) {
+  const canvas = canvases.value[canvasVal]
+  MetaTag.setImage(canvas.image)
+}
 MetaTag.setTitle('New Title')
-MetaTag.createMeta('twitter:description', 'desc  for  twitter')
+MetaTag.setUrl(window.location.href)
+MetaTag.setCard()
+MetaTag.setMeta('twitter:description', 'desc for twitter')
 </script>
 
 <template lang="pug">
