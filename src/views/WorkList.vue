@@ -7,13 +7,17 @@ import { nanoid } from 'nanoid'
 
 const authStore = useAuthStore()
 const { isLoadingImages } = storeToRefs(useStoreUserImage())
-const { getUserImageList } = useStoreUserImage()
+const { setUserImageToToolbar, deleteImageFromStorageWithLogin } =
+  useStoreUserImage()
 
 onMounted(() => {
   // 現在ログインするとWorksに遷移するのでここでユーザー画像をfetchしているが。
-  // 今後ルーティング設定の変更などがあれば、fetchのタイミングも要検討か…
-  if (isLoadingImages) {
-    getUserImageList()
+  // 今後ルーティング設定の変更などがあれば、fetchのタイミングも要検討か
+  if (isLoadingImages.value) {
+    // ツールバーに画像をセット
+    setUserImageToToolbar()
+    // 使用されていない画像をStorageとFirestoreから削除
+    deleteImageFromStorageWithLogin()
   }
 })
 </script>

@@ -322,7 +322,10 @@ const useStoreTransformer = defineStore({
     },
 
     // keydownで選択中の要素を削除
-    handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
+    handleKeyDownSelectedNodeDelete(
+      e: KeyboardEvent,
+      canvasId: string | string[],
+    ) {
       if (e.key === 'Delete') {
         if (this.configShapeTransformer.nodes.length === 0) return
         const selectedNode = this.configShapeTransformer.nodes[0]
@@ -341,6 +344,22 @@ const useStoreTransformer = defineStore({
         // image
         else if (selectedNode.name() === 'image') {
           const { konvaImages } = storeToRefs(useStoreImage())
+          const { deleteUploadedImageCanvases } = useStoreImage()
+          // firestoreで画像の使用状況を更新（削除)
+          if (typeof canvasId === 'string') {
+            const selectedImage = konvaImages.value.find(
+              (image) => image.id === selectedNode.id(),
+            )
+            if (selectedImage !== undefined) {
+              deleteUploadedImageCanvases(
+                selectedImage.imageId,
+                canvasId,
+              ).catch((error) => {
+                console.log(error.code)
+              })
+            }
+          }
+          // フロント側のキャンバスを更新
           konvaImages.value = konvaImages.value.filter(
             (image) => image.id !== selectedNode.id(),
           )

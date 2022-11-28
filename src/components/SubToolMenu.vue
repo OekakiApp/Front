@@ -28,7 +28,7 @@ const { setLineColor } = useStoreLine()
 const { setTextOptionValue, setTextColor } = useStoreText()
 const { setDragUrl } = useStoreImage()
 const { isLoadingImages, uploadedImages } = storeToRefs(useStoreUserImage())
-const { addImageList, deleteImage } = useStoreUserImage()
+const { addImageList, deleteImageFromToolbar } = useStoreUserImage()
 
 const activeLineColorIndex = ref<number>(0)
 const activeTextColorIndex = ref<number>(0)
@@ -232,8 +232,8 @@ div(v-else-if="mode === 'image'" class="flex justify-center items-center bg-gray
     div(v-else class="bg-slate-50 flex-1 grid grid-cols-3 h-52 w-full overflow-y-scroll rounded-lg ml-2")
       //- image list
       div(v-for="image of uploadedImages" :key="image.id" class="relative flex justify-center items-center")
-        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="() => {deleteImage(image);}") ✕
-        img(:src="image.storageURL" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="(e) => {setDragUrl(e);}")
+        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="async () => {await deleteImageFromToolbar(image);}") ✕
+        img(:id="image.id" :src="image.storageURL" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="(e) => {setDragUrl(e);}")
 </template>
 
 <style scoped>

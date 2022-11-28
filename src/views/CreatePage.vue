@@ -126,7 +126,7 @@ onMounted(() => {
   )
   window.addEventListener('keydown', (e) => {
     changeModeByShortCut(e)
-    handleKeyDownSelectedNodeDelete(e)
+    handleKeyDownSelectedNodeDelete(e, canvasId.value)
   })
 
   // Font読み込み
@@ -172,7 +172,7 @@ onUnmounted(() => {
   )
   window.removeEventListener('keydown', (e) => {
     changeModeByShortCut(e)
-    handleKeyDownSelectedNodeDelete(e)
+    handleKeyDownSelectedNodeDelete(e, canvasId.value)
   })
 })
 
@@ -304,7 +304,7 @@ div(class="flex justify-center items-center my-4")
   input( v-model="inputText.text" :type="inputText.inputType" :placeholder="inputText.placeholder" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg block w-1/3 p-1 mr-8" @focus='focusInput()' @blur='blurInput()')
   button(type="button" class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-2 py-1" @click="saveCanvas" ) 保存
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
-  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
       ref="stage"
       :draggable="mode === 'hand'"

@@ -1,6 +1,14 @@
 import { nanoid } from 'nanoid'
 import { defineStore, storeToRefs } from 'pinia'
-import { doc, Timestamp, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import {
+  doc,
+  Timestamp,
+  getDoc,
+  setDoc,
+  updateDoc,
+  DocumentReference,
+  DocumentData,
+} from 'firebase/firestore'
 import {
   ref,
   uploadBytesResumable,
@@ -19,8 +27,10 @@ export interface UploadedImage {
   fileExtention: string // ex) png
   createdAt: Timestamp
   show: boolean // Toolbarに表示・非表示
-  canvases: Record<string, string>
+  canvases: Record<string, number>
 }
+
+export type UserImageStorage = Record<string, UploadedImage>
 
 const useStoreUserImage = defineStore({
   id: 'user-image',
@@ -119,7 +129,7 @@ const useStoreUserImage = defineStore({
       const id = imageId
       const fileExtention = file.name.split('.').pop() as string // input accept .jpeg .png .jpg
 
-      const newImage = {
+      const newImage: UploadedImage = {
         userUid: uid.value,
         id, // imageId
         storageURL: url, // StorageのURL
@@ -159,29 +169,22 @@ const useStoreUserImage = defineStore({
       }
     },
 
-    async getUserImageList() {
+    async setUserImageToToolbar() {
       const { uid } = storeToRefs(useAuthStore())
       const docRef = doc(db, 'userImageStorage', uid.value)
-      try {
-        const docSnap = await getDoc(docRef)
 
-        if (!docSnap.exists()) {
-          // doc.data() will be undefined in this case
-          console.log('No such document!')
-          // ロード完了
-          this.isLoadingImages = false
-          return
-        }
-
-        // set image data
-        const userImages: UploadedImage[] = Object.values(docSnap.data().images)
-        if (userImages.length === 0) {
-          this.isLoadingImages = false
-          return
-        }
+      const userImages = await this.getImageDocSnap(docRef)
+      // ツールバーに画像をセット if(show === true)
+      if (userImages !== undefined) {
+        Object.keys(userImages).forEach((imageId) => {
+          const userImage: UploadedImage = userImages[imageId]
+          if (userImage.show) {
+            this.uploadedImages.push(userImage)
+          }
+        })
 
         // アップロード順に並び替える
-        const sortedImages = userImages.sort(
+        const sortedImages = this.uploadedImages.sort(
           (a: UploadedImage, b: UploadedImage) => {
             if (a.createdAt < b.createdAt) {
               return -1
@@ -193,37 +196,81 @@ const useStoreUserImage = defineStore({
           },
         )
         this.uploadedImages = sortedImages
-        // ロード完了
         this.isLoadingImages = false
-      } catch (e) {
+      } else {
         this.isLoadingImages = false
-        console.log('Error getting cached document:', e)
       }
     },
 
-    async deleteImage(image: UploadedImage) {
-      const imageId = image.id
-      // フロント側で削除
-      this.uploadedImages = this.uploadedImages.filter((i) => i.id !== imageId)
-      // firestore上で削除
+    // ツールバーから画像を削除
+    async deleteImageFromToolbar(image: UploadedImage) {
+      // // フロント側で削除
+      this.uploadedImages = this.uploadedImages.filter((i) => i.id !== image.id)
+      // firestore上でshowをfalseにする
       const docRef = doc(db, 'userImageStorage', image.userUid)
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        const updatedImages = docSnap.data().images
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete updatedImages[imageId]
+
+      const userImages = await this.getImageDocSnap(docRef)
+
+      if (userImages !== undefined) {
+        const userImage = userImages[image.id]
+        userImage.show = false
+        await setDoc(docRef, {
+          images: userImages,
+        })
+      }
+    },
+
+    // Storage削除判定
+    canDeleteImageFromStorage(uploadedImage: UploadedImage) {
+      // 条件canvasで使用されていないかつToolbarで非表示
+      return (
+        Object.keys(uploadedImage.canvases).length === 0 && !uploadedImage.show
+      )
+    },
+
+    async deleteImageFromStorageWithLogin() {
+      const { uid } = storeToRefs(useAuthStore())
+      const docRef = doc(db, 'userImageStorage', uid.value)
+      const userImages = await this.getImageDocSnap(docRef)
+      if (userImages !== undefined) {
+        Object.keys(userImages).forEach((imageId) => {
+          const userImage: UploadedImage = userImages[imageId]
+          if (this.canDeleteImageFromStorage(userImage)) {
+            // Storageから削除
+            this.deleteImageFromStorage(userImage)
+            // firestoreから削除
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete userImages[imageId]
+          }
+        })
         setDoc(docRef, {
-          images: updatedImages,
+          images: userImages,
         }).catch((error) => {
           console.log(error.code)
         })
       }
-      // Storage上で削除
+    },
+
+    //
+    async getImageDocSnap(
+      docRef: DocumentReference<DocumentData>,
+    ): Promise<UserImageStorage | undefined> {
+      // firestore上で削除
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        const userImages: UserImageStorage = docSnap.data().images
+        if (userImages !== undefined) return userImages
+      }
+      return undefined
+    },
+
+    // Storageからユーザーがアップロードした画像を削除する
+    deleteImageFromStorage(userImage: UploadedImage) {
       const deletedRef = ref(
         storage,
-        `user-image/${image.userUid}/user-upload/${image.id}.${image.fileExtention}`,
+        `user-image/${userImage.userUid}/user-upload/${userImage.id}.${userImage.fileExtention}`,
       )
-      await deleteObject(deletedRef)
+      deleteObject(deletedRef)
         .then(() => {
           console.log('image deleted')
         })
