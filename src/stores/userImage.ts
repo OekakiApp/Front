@@ -278,6 +278,28 @@ const useStoreUserImage = defineStore({
           console.log(error.code)
         })
     },
+
+    // canvasIdに一致するcanvasesのcanvasIdプロパティを削除する
+    async deleteAllImagesOnCanvas(canvasId: string) {
+      const { uid } = storeToRefs(useAuthStore())
+      const docRef = doc(db, 'userImageStorage', uid.value)
+      const userImages = await this.getImageDocSnap(docRef)
+      if (userImages !== undefined) {
+        Object.keys(userImages).forEach((imageId) => {
+          const userImage: UploadedImage = userImages[imageId]
+          // canvasIdの画像があればプロパティを削除
+          if (userImage.canvases[canvasId] !== undefined) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete userImage.canvases[canvasId]
+          }
+        })
+        setDoc(docRef, {
+          images: userImages,
+        }).catch((error) => {
+          console.log(error.code)
+        })
+      }
+    },
   },
 })
 
