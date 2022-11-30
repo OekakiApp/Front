@@ -127,7 +127,7 @@ const useStoreImage = defineStore({
     },
 
     // image drop
-    setImages(
+    async setImages(
       e: DragEvent,
       stageRef: Konva.Stage,
       canvasId: string | string[],
@@ -161,9 +161,7 @@ const useStoreImage = defineStore({
       ])
       // string[]だったらどうする？
       if (typeof canvasId === 'string') {
-        this.addUploadedImageCanvases(newImg.id, canvasId).catch((error) => {
-          console.log(error.code)
-        })
+        await this.addUploadedImageCanvases(newImg.id, canvasId)
       }
       useStoreStage().handleEventEndSaveHistory()
 
@@ -190,10 +188,8 @@ const useStoreImage = defineStore({
         } else {
           userImage.canvases[canvasId] += 1
         }
-        setDoc(docRef, {
+        await setDoc(docRef, {
           images: userImages,
-        }).catch((error) => {
-          console.log(error.code)
         })
       }
     },
@@ -217,10 +213,8 @@ const useStoreImage = defineStore({
             delete userImage.canvases[canvasId]
           }
         }
-        setDoc(docRef, {
+        await setDoc(docRef, {
           images: userImages,
-        }).catch((error) => {
-          console.log(error.code)
         })
       }
     },

@@ -37,6 +37,8 @@ const useStoreUserImage = defineStore({
   state: () => ({
     isLoadingImages: true, // true=読み込み中
     uploadedImages: [] as UploadedImage[],
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    userImageStorage: {} as Record<string, UploadedImage>,
   }),
 
   actions: {

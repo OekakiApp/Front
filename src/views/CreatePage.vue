@@ -3,7 +3,13 @@ import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import { db, storage } from '@/firebase/index'
-import { doc, Timestamp, updateDoc, setDoc } from 'firebase/firestore'
+import {
+  doc,
+  Timestamp,
+  updateDoc,
+  setDoc,
+  onSnapshot,
+} from 'firebase/firestore'
 import {
   ref as storageRef,
   uploadBytesResumable,
@@ -22,13 +28,16 @@ import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import Konva from 'konva'
 import WebFont from 'webfontloader'
+import useStoreUserImage from '@/stores/userImage'
+import _ from 'lodash'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 const StorageReference = storageRef(storage, '')
 
 const { mode } = storeToRefs(useStoreMode())
-const { configKonva } = storeToRefs(useStoreStage())
+const { configKonva, canvasHistory, canvasStorageHistory, historyStep } =
+  storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
 const { canvases, uid } = storeToRefs(useAuthStore())
@@ -36,6 +45,8 @@ const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
 )
+const { userImageStorage } = storeToRefs(useStoreUserImage())
+const { getImageDocSnap } = useStoreUserImage()
 
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
@@ -119,7 +130,7 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   // redo
 }
 
-onMounted(() => {
+onMounted(async () => {
   fitStageIntoParentContainer(stageParentDiv.value)
   window.addEventListener('resize', () =>
     fitStageIntoParentContainer(stageParentDiv.value),
@@ -149,6 +160,9 @@ onMounted(() => {
   lines.value = []
   texts.value = []
   konvaImages.value = []
+  // 履歴初期化
+  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  historyStep.value = 0
 
   const canvasVal = canvasId.value
   // 途中からの場合
@@ -163,7 +177,31 @@ onMounted(() => {
       canvas.konvaImages,
     )
     inputText.text = canvas.name
+    // 履歴をセット
+    canvasHistory.value = [
+      {
+        lines: _.cloneDeep(canvas.lines),
+        texts: _.cloneDeep(canvas.texts),
+        images: _.cloneDeep(konvaImages.value),
+      },
+    ]
   }
+  const docRef = doc(db, 'userImageStorage', uid.value)
+  const images = await getImageDocSnap(docRef)
+  if (images !== undefined) {
+    userImageStorage.value = images
+  }
+
+  // onsnapshotでローカルのuserImageStorageを更新する
+  onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const userImages = docSnap.data().images
+      userImageStorage.value = userImages
+    } else {
+      userImageStorage.value = {}
+    }
+  })
+  canvasStorageHistory.value = [userImageStorage.value]
 })
 
 onUnmounted(() => {
@@ -174,6 +212,10 @@ onUnmounted(() => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e, canvasId.value)
   })
+  // canvasHistoryのリセット
+  historyStep.value = 0
+  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  canvasStorageHistory.value = [userImageStorage.value]
 })
 
 const saveCanvas = async (): Promise<void> => {

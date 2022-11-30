@@ -322,7 +322,7 @@ const useStoreTransformer = defineStore({
     },
 
     // keydownで選択中の要素を削除
-    handleKeyDownSelectedNodeDelete(
+    async handleKeyDownSelectedNodeDelete(
       e: KeyboardEvent,
       canvasId: string | string[],
     ) {
@@ -351,12 +351,7 @@ const useStoreTransformer = defineStore({
               (image) => image.id === selectedNode.id(),
             )
             if (selectedImage !== undefined) {
-              deleteUploadedImageCanvases(
-                selectedImage.imageId,
-                canvasId,
-              ).catch((error) => {
-                console.log(error.code)
-              })
+              await deleteUploadedImageCanvases(selectedImage.imageId, canvasId)
             }
           }
           // フロント側のキャンバスを更新

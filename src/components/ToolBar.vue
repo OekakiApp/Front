@@ -28,7 +28,10 @@ const { deleteImages } = useStoreImage()
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
 )
-const { historyStep, canvasHistory } = storeToRefs(useStoreStage())
+const { historyStep, canvasHistory, canvasStorageHistory } = storeToRefs(
+  useStoreStage(),
+)
+const { userImageStorage } = storeToRefs(useStoreUserImage())
 const { deleteAllImagesOnCanvas } = useStoreUserImage()
 
 const canvasId = ref(useRoute().params.canvas_id)
@@ -51,6 +54,7 @@ const deleteCanvas = async () => {
   // reset history
   historyStep.value = 0
   canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  canvasStorageHistory.value = [userImageStorage.value]
 }
 
 const toolArray: {
