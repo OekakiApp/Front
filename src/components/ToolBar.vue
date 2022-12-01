@@ -146,6 +146,10 @@ const downloadURI = (uri: string, name: string) => {
 }
 
 const saveImage = () => {
+  // 選択解除
+  selectedShapeId.value = ''
+  configShapeTransformer.value.nodes = []
+  // なぜか出力した画像上では選択が解除されない…（props.stageが非リアクティブ?）
   const dataURL = props.stage.getStage().toDataURL({
     quality: 1,
     pixelRatio: 2,
@@ -180,7 +184,6 @@ input(id="my-modal" type="checkbox" className="modal-toggle")
 div(className="modal")
   div(className="modal-box")
     h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
-    p(className="py-4 text-red-600") ※ この操作は取り消せません。
     div(class="flex justify-end")
       div(className="modal-action mr-3")
         label(htmlFor="my-modal" className="btn w-36") Cancel

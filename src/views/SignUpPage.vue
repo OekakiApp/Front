@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import router from '@/router/index'
 import useAuthStore from '@/stores/auth'
 // import { InputTextType } from '@/types/index'
 interface InputTextType {
@@ -16,7 +17,7 @@ const inputTexts: InputTextType[] = reactive([
   {
     icon: 'person',
     inputType: 'text',
-    placeholder: 'Type Your Name',
+    placeholder: '名前',
     text: '',
     isAlert: false,
     alertText: '名前を入力してください',
@@ -24,7 +25,7 @@ const inputTexts: InputTextType[] = reactive([
   {
     icon: 'mail',
     inputType: 'email',
-    placeholder: 'Type Your Email',
+    placeholder: 'メールアドレス',
     text: '',
     isAlert: false,
     alertText: 'メールアドレスを入力してください',
@@ -32,59 +33,61 @@ const inputTexts: InputTextType[] = reactive([
   {
     icon: 'lock',
     inputType: 'password',
-    placeholder: 'Type Your Password',
+    placeholder: 'パスワード6文字以上',
     text: '',
     isAlert: false,
-    alertText: 'パスワードを入力してください',
+    alertText: 'パスワードは6文字以上 入力してください',
   },
   {
     icon: 'key',
     inputType: 'password',
-    placeholder: 'Repeat Your Password',
+    placeholder: 'パスワード再入力',
     text: '',
     isAlert: false,
     alertText: 'パスワードが一致しません',
   },
 ])
 
-// TODO: 関数書き換え(map中 他textとの条件複雑になる) && 条件の見直し
 const submitSignup = () => {
   const name = inputTexts[0].text
   const email = inputTexts[1].text
   const password = inputTexts[2].text
   validate()
-  if (
-    !inputTexts[0].isAlert &&
-    !inputTexts[1].isAlert &&
-    !inputTexts[2].isAlert &&
-    !inputTexts[3].isAlert
-  ) {
+  if (!inputTexts[2].isAlert && !inputTexts[3].isAlert) {
     authStore.signupEmail(email, password, name)
+  } else {
+    authStore.isAuthError = true
+    // パスワードのエラー優先
+    if (inputTexts[2].isAlert) {
+      authStore.authErrorMessage = inputTexts[2].alertText
+    } else if (inputTexts[3].isAlert) {
+      authStore.authErrorMessage = inputTexts[3].alertText
+    }
   }
 }
 
 const validate = () => {
-  const name = inputTexts[0].text
-  const email = inputTexts[1].text
   const password = inputTexts[2].text
   const rePassword = inputTexts[3].text
 
-  inputTexts[0].isAlert = name === ''
-  inputTexts[1].isAlert = email === ''
-  inputTexts[2].isAlert = password === ''
+  inputTexts[2].isAlert = password.length < 6
   inputTexts[3].isAlert = rePassword !== password
 }
+
+router.beforeEach(() => {
+  useAuthStore().isAuthError = false
+  useAuthStore().authErrorMessage = ''
+})
 </script>
 
 <template lang="pug">
 div(class="mt-16 my-8 lg:w-1/2 w-4/5 m-auto")
   h2(class="sm:text-4xl text-2xl font-bold text-midnightBlue text-center md:mb-20 mb-12") 新規登録
   form(class="mx-auto" @submit.prevent="submitSignup")
+    //- alert
+    div(v-show='authStore.isAuthError' class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
+      span(class="font-medium whitespace-pre-wrap") {{authStore.authErrorMessage}}
     div(v-for="(inputText, index) in inputTexts" :key="index" class="mb-8")
-      //- alert
-      div(v-show="inputText.isAlert" class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
-        span(class="font-medium") {{inputText.alertText}}
-
       div(class="flex items-center justify-center w-full")
         span(class="material-symbols-outlined mr-2") {{inputText.icon}}
         div(class="w-full flex-fill mb-0")
