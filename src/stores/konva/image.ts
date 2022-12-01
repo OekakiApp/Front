@@ -1,13 +1,10 @@
 import Konva from 'konva'
 import { nanoid } from 'nanoid'
-import { defineStore, storeToRefs } from 'pinia'
+import { defineStore } from 'pinia'
 import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '@/firebase'
-import useAuthStore from '@/stores/auth'
-import type { UploadedImage } from '@/stores/userImage'
+import useStoreUserImage from '@/stores/userImage'
 
 export interface KonvaImage {
   id: string
@@ -47,6 +44,7 @@ const useStoreImage = defineStore({
   }),
 
   actions: {
+    // FirestoreCanvasImageをKonvaImageに変換
     changeFirestoreCanvasImagesToKonvaImages(
       firestoreCanvasImages: FirestoreCanvasImage[],
     ) {
@@ -120,7 +118,7 @@ const useStoreImage = defineStore({
     },
 
     // image drag
-    setDragUrl(e: DragEvent) {
+    setDragImageUrlAndId(e: DragEvent) {
       const img = e.target as HTMLImageElement
       this.dragUrl = img.src
       this.dragUploadedImageId = img.id
@@ -161,62 +159,12 @@ const useStoreImage = defineStore({
       ])
       // string[]だったらどうする？
       if (typeof canvasId === 'string') {
-        await this.addUploadedImageCanvases(newImg.id, canvasId)
+        await useStoreUserImage().addUploadedImageCanvases(newImg.id, canvasId)
       }
       useStoreStage().handleEventEndSaveHistory()
 
       // モード終了し、サブメニューを閉じる
       useStoreMode().$reset()
-    },
-
-    // canvasに画像追加 firestoreで使用枚数を更新（追加）
-    async addUploadedImageCanvases(imageId: string, canvasId: string) {
-      const { uid } = storeToRefs(useAuthStore())
-      const docRef = doc(db, 'userImageStorage', uid.value)
-      const docSnap = await getDoc(docRef)
-
-      if (docSnap.exists()) {
-        const userImages = docSnap.data().images
-        if (userImages === undefined) return
-        const userImage: UploadedImage = userImages[imageId]
-        // canvasesになければ「canvasId: 1」にする
-        if (
-          userImage.canvases === undefined ||
-          userImage.canvases[canvasId] === undefined
-        ) {
-          userImage.canvases[canvasId] = 1
-        } else {
-          userImage.canvases[canvasId] += 1
-        }
-        await setDoc(docRef, {
-          images: userImages,
-        })
-      }
-    },
-
-    // canvasから画像削除 firestoreで使用枚数を更新（削除）
-    async deleteUploadedImageCanvases(imageId: string, canvasId: string) {
-      const { uid } = storeToRefs(useAuthStore())
-      const docRef = doc(db, 'userImageStorage', uid.value)
-      const docSnap = await getDoc(docRef)
-
-      if (docSnap.exists()) {
-        const userImages = docSnap.data().images
-        if (userImages === undefined) return
-        const userImage: UploadedImage = userImages[imageId]
-        // canvasesになければcanvasIdを-1するcanvasIdが0になったらkeyを削除
-        if (userImage.canvases[canvasId] !== undefined) {
-          if (userImage.canvases[canvasId] > 1)
-            userImage.canvases[canvasId] -= 1
-          else if (userImage.canvases[canvasId] <= 1) {
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            delete userImage.canvases[canvasId]
-          }
-        }
-        await setDoc(docRef, {
-          images: userImages,
-        })
-      }
     },
 
     deleteImages() {

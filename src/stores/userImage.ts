@@ -42,6 +42,20 @@ const useStoreUserImage = defineStore({
   }),
 
   actions: {
+    // userImageStorageのオブジェクトを取得 Record<string, UploadedImage>
+    async getImageDocSnap(
+      docRef: DocumentReference<DocumentData>,
+    ): Promise<UserImageStorage | undefined> {
+      // firestore上で削除
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        const userImages: UserImageStorage = docSnap.data().images
+        if (userImages !== undefined) return userImages
+      }
+      return undefined
+    },
+
+    // Toolbarのリストに画像を追加する
     addImageList(e: Event) {
       const inputElement = e.target as HTMLInputElement
       if (inputElement === null) return
@@ -52,6 +66,7 @@ const useStoreUserImage = defineStore({
       this.uploadImageToStorage(file)
     },
 
+    // Storageに画像をアップロードする。
     uploadImageToStorage(file: File) {
       const { uid } = storeToRefs(useAuthStore())
       const imageId = nanoid()
@@ -126,6 +141,7 @@ const useStoreUserImage = defineStore({
       )
     },
 
+    // Storageで作成したurlを受け取り、firestoreに保存する
     async uploadImageToFirestore(url: string, file: File, imageId: string) {
       const { uid } = storeToRefs(useAuthStore())
       const id = imageId
@@ -146,24 +162,19 @@ const useStoreUserImage = defineStore({
       this.uploadedImages = [...this.uploadedImages, newImage]
       try {
         const docRef = doc(db, 'userImageStorage', uid.value)
-        const docSnap = await getDoc(docRef)
+        const userImages = await this.getImageDocSnap(docRef)
 
-        if (!docSnap.exists()) {
+        if (userImages === undefined) {
           const newUserImages = {
             [id]: newImage,
           }
-          setDoc(docRef, {
+          await setDoc(docRef, {
             images: newUserImages,
-          }).catch((error) => {
-            console.log(error.code)
           })
         } else {
-          const userImages = docSnap.data().images
           userImages[id] = newImage
-          updateDoc(docRef, {
+          await updateDoc(docRef, {
             images: userImages,
-          }).catch((error) => {
-            console.log(error.code)
           })
         }
       } catch (e) {
@@ -206,7 +217,7 @@ const useStoreUserImage = defineStore({
 
     // ツールバーから画像を削除
     async deleteImageFromToolbar(image: UploadedImage) {
-      // // フロント側で削除
+      // フロント側で削除
       this.uploadedImages = this.uploadedImages.filter((i) => i.id !== image.id)
       // firestore上でshowをfalseにする
       const docRef = doc(db, 'userImageStorage', image.userUid)
@@ -216,7 +227,7 @@ const useStoreUserImage = defineStore({
       if (userImages !== undefined) {
         const userImage = userImages[image.id]
         userImage.show = false
-        await setDoc(docRef, {
+        await updateDoc(docRef, {
           images: userImages,
         })
       }
@@ -230,6 +241,7 @@ const useStoreUserImage = defineStore({
       )
     },
 
+    // ログイン時に呼び出し、削除判定をして画像削除
     async deleteImageFromStorageWithLogin() {
       const { uid } = storeToRefs(useAuthStore())
       const docRef = doc(db, 'userImageStorage', uid.value)
@@ -245,25 +257,12 @@ const useStoreUserImage = defineStore({
             delete userImages[imageId]
           }
         })
-        setDoc(docRef, {
+        await updateDoc(docRef, {
           images: userImages,
         }).catch((error) => {
           console.log(error.code)
         })
       }
-    },
-
-    //
-    async getImageDocSnap(
-      docRef: DocumentReference<DocumentData>,
-    ): Promise<UserImageStorage | undefined> {
-      // firestore上で削除
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        const userImages: UserImageStorage = docSnap.data().images
-        if (userImages !== undefined) return userImages
-      }
-      return undefined
     },
 
     // Storageからユーザーがアップロードした画像を削除する
@@ -282,6 +281,7 @@ const useStoreUserImage = defineStore({
     },
 
     // canvasIdに一致するcanvasesのcanvasIdプロパティを削除する
+    // キャンバスリセット時に使用
     async deleteAllImagesOnCanvas(canvasId: string) {
       const { uid } = storeToRefs(useAuthStore())
       const docRef = doc(db, 'userImageStorage', uid.value)
@@ -295,10 +295,56 @@ const useStoreUserImage = defineStore({
             delete userImage.canvases[canvasId]
           }
         })
-        setDoc(docRef, {
+        await setDoc(docRef, {
           images: userImages,
         }).catch((error) => {
           console.log(error.code)
+        })
+      }
+    },
+
+    // canvasに画像追加 firestoreで使用枚数を更新（追加）
+    async addUploadedImageCanvases(imageId: string, canvasId: string) {
+      const { uid } = storeToRefs(useAuthStore())
+      const docRef = doc(db, 'userImageStorage', uid.value)
+      const userImages = await this.getImageDocSnap(docRef)
+
+      if (userImages !== undefined) {
+        const userImage: UploadedImage = userImages[imageId]
+        // canvasesになければ「canvasId: 1」にする
+        if (
+          userImage.canvases === undefined ||
+          userImage.canvases[canvasId] === undefined
+        ) {
+          userImage.canvases[canvasId] = 1
+        } else {
+          userImage.canvases[canvasId] += 1
+        }
+        await setDoc(docRef, {
+          images: userImages,
+        })
+      }
+    },
+
+    // canvasから画像削除 firestoreで使用枚数を更新（削除）
+    async deleteUploadedImageCanvases(imageId: string, canvasId: string) {
+      const { uid } = storeToRefs(useAuthStore())
+      const docRef = doc(db, 'userImageStorage', uid.value)
+      const userImages = await this.getImageDocSnap(docRef)
+
+      if (userImages !== undefined) {
+        const userImage: UploadedImage = userImages[imageId]
+        // canvasesになければcanvasIdを-1するcanvasIdが0になったらkeyを削除
+        if (userImage.canvases[canvasId] !== undefined) {
+          if (userImage.canvases[canvasId] > 1)
+            userImage.canvases[canvasId] -= 1
+          else if (userImage.canvases[canvasId] <= 1) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete userImage.canvases[canvasId]
+          }
+        }
+        await setDoc(docRef, {
+          images: userImages,
         })
       }
     },
