@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import Konva from 'konva'
 import useStoreMode, { type Mode } from '@/stores/mode'
@@ -10,6 +11,7 @@ import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreStage from '@/stores/konva/stage'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
+import useStoreUserImage from '@/stores/userImage'
 
 interface Props {
   stage: Konva.Stage
@@ -26,13 +28,24 @@ const { deleteImages } = useStoreImage()
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
 )
-const { historyStep, canvasHistory } = storeToRefs(useStoreStage())
+const { historyStep, canvasHistory, canvasStorageHistory } = storeToRefs(
+  useStoreStage(),
+)
+const { userImageStorage } = storeToRefs(useStoreUserImage())
+const { deleteAllImagesOnCanvas } = useStoreUserImage()
 
-const deleteCanvas = () => {
+const canvasId = ref(useRoute().params.canvas_id)
+
+const deleteCanvas = async () => {
   // delete
   deleteLines()
   deleteTexts()
   deleteImages()
+
+  // canvasの画像使用状況の更新
+  if (typeof canvasId.value === 'string') {
+    deleteAllImagesOnCanvas(canvasId.value)
+  }
 
   // reset transformer
   configShapeTransformer.value.nodes = []
@@ -41,6 +54,7 @@ const deleteCanvas = () => {
   // reset history
   historyStep.value = 0
   canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  canvasStorageHistory.value = [userImageStorage.value]
 }
 
 const toolArray: {

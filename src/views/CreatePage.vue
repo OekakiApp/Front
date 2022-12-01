@@ -3,7 +3,13 @@ import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, storage } from '@/firebase/index'
-import { doc, collection, addDoc, updateDoc } from 'firebase/firestore'
+import {
+  doc,
+  Timestamp,
+  updateDoc,
+  setDoc,
+  onSnapshot,
+} from 'firebase/firestore'
 import {
   ref as storageRef,
   uploadBytesResumable,
@@ -20,6 +26,7 @@ import useAuthStore from '@/stores/auth'
 import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
+import useStoreUserImage from '@/stores/userImage'
 import Konva from 'konva'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
@@ -29,14 +36,17 @@ type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 const StorageReference = storageRef(storage, '')
 
 const { mode } = storeToRefs(useStoreMode())
-const { configKonva, historyStep, canvasHistory } = storeToRefs(useStoreStage())
+const { configKonva, canvasHistory, canvasStorageHistory, historyStep } =
+  storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
-const { canvases } = storeToRefs(useAuthStore())
+const { canvases, uid } = storeToRefs(useAuthStore())
 const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
 )
+const { userImageStorage } = storeToRefs(useStoreUserImage())
+const { getImageDocSnap } = useStoreUserImage()
 
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
@@ -67,14 +77,18 @@ const {
   handlePointerMouseUp,
 } = useStorePointer()
 
-const { setImages, handleImageDragEnd } = useStoreImage()
+const {
+  changeKonvaImagesToFirestoreCanvasImages,
+  changeFirestoreCanvasImagesToKonvaImages,
+  setImages,
+  handleImageDragEnd,
+} = useStoreImage()
 
 const { setCanvas } = useAuthStore()
 
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
-const usersId = localStorage.getItem('usersId')
 const canvasId = ref(useRoute().params.canvas_id)
 const router = useRouter()
 
@@ -121,46 +135,15 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   // redo
 }
 
-onMounted(() => {
+onMounted(async () => {
   fitStageIntoParentContainer(stageParentDiv.value)
   window.addEventListener('resize', () =>
     fitStageIntoParentContainer(stageParentDiv.value),
   )
   window.addEventListener('keydown', (e) => {
     changeModeByShortCut(e)
-    handleKeyDownSelectedNodeDelete(e)
+    handleKeyDownSelectedNodeDelete(e, canvasId.value)
   })
-
-  // 初期化
-  mode.value = 'none'
-  lines.value = []
-  texts.value = []
-  konvaImages.value = []
-  // 履歴初期化
-  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
-  historyStep.value = 0
-
-  const canvasVal = canvasId.value
-  // 途中からの場合
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
-    const canvas = canvases.value[canvasVal]
-    lines.value = _.cloneDeep(canvas.lines)
-    texts.value = _.cloneDeep(canvas.texts)
-    konvaImages.value = _.cloneDeep(canvas.konvaImages ?? [])
-    inputText.text = canvas.name
-    // 履歴をセット
-    canvasHistory.value = [
-      {
-        lines: _.cloneDeep(canvas.lines),
-        texts: _.cloneDeep(canvas.texts),
-        images: _.cloneDeep(canvas.konvaImages ?? []),
-      },
-    ]
-    historyStep.value = 0
-  }
 
   // Font読み込み
   if (!isFontLoaded.value) {
@@ -178,6 +161,54 @@ onMounted(() => {
       },
     })
   }
+
+  // 初期化
+  mode.value = 'none'
+  lines.value = []
+  texts.value = []
+  konvaImages.value = []
+  // 履歴初期化
+  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  historyStep.value = 0
+
+  const canvasVal = canvasId.value
+  // 途中からの場合
+  if (
+    typeof canvasVal === 'string' &&
+    canvases.value[canvasVal] !== undefined
+  ) {
+    const canvas = canvases.value[canvasVal]
+    lines.value = canvas.lines
+    texts.value = canvas.texts
+    konvaImages.value = changeFirestoreCanvasImagesToKonvaImages(
+      canvas.konvaImages,
+    )
+    inputText.text = canvas.name
+    // 履歴をセット
+    canvasHistory.value = [
+      {
+        lines: _.cloneDeep(canvas.lines),
+        texts: _.cloneDeep(canvas.texts),
+        images: _.cloneDeep(konvaImages.value),
+      },
+    ]
+  }
+  const docRef = doc(db, 'userImageStorage', uid.value)
+  const images = await getImageDocSnap(docRef)
+  if (images !== undefined) {
+    userImageStorage.value = images
+  }
+
+  // onsnapshotでローカルのuserImageStorageを更新する
+  onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const userImages = docSnap.data().images
+      userImageStorage.value = userImages
+    } else {
+      userImageStorage.value = {}
+    }
+  })
+  canvasStorageHistory.value = [userImageStorage.value]
 })
 
 onUnmounted(() => {
@@ -186,11 +217,13 @@ onUnmounted(() => {
   )
   window.removeEventListener('keydown', (e) => {
     changeModeByShortCut(e)
-    handleKeyDownSelectedNodeDelete(e)
+    handleKeyDownSelectedNodeDelete(e, canvasId.value)
   })
-  // 選択を解除
-  selectedShapeId.value = ''
-  configShapeTransformer.value.nodes = []
+
+  // canvasHistoryのリセット
+  historyStep.value = 0
+  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  canvasStorageHistory.value = [userImageStorage.value]
 })
 
 router.beforeEach(() => {
@@ -210,27 +243,51 @@ async function saveCanvas(): Promise<void> {
 
   // 途中からの場合
   const canvasVal = canvasId.value
+  console.log(canvasVal)
   if (
     typeof canvasVal === 'string' &&
     canvases.value[canvasVal] !== undefined
   ) {
-    await updateDoc(doc(db, 'canvas', canvasVal), {
-      name: inputText.text === '' ? 'タイトル' : inputText.text,
-      lines: lines.value,
-      texts: texts.value,
-      // konvaImages: konvaImages.value,
-    })
+    // createdAtがある場合
+    if (canvases.value[canvasVal].createdAt !== undefined) {
+      await updateDoc(doc(db, 'canvas', canvasVal), {
+        name: inputText.text === '' ? 'タイトル' : inputText.text,
+        lines: lines.value,
+        texts: texts.value,
+        konvaImages: changeKonvaImagesToFirestoreCanvasImages(
+          konvaImages.value,
+        ),
+        updatedAt: Timestamp.now(),
+      })
+    }
+    // createdAtがない場合
+    else {
+      await updateDoc(doc(db, 'canvas', canvasVal), {
+        name: inputText.text === '' ? 'タイトル' : inputText.text,
+        lines: lines.value,
+        texts: texts.value,
+        konvaImages: changeKonvaImagesToFirestoreCanvasImages(
+          konvaImages.value,
+        ),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      })
+    }
   }
   // 新規の場合
-  else {
-    const canvasRef = await addDoc(collection(db, 'canvas'), {
+  else if (
+    typeof canvasVal === 'string' &&
+    canvases.value[canvasVal] === undefined
+  ) {
+    await setDoc(doc(db, 'canvas', canvasVal), {
       name: inputText.text === '' ? 'タイトル' : inputText.text,
       lines: lines.value,
       texts: texts.value,
-      // konvaImages: konvaImages.value,
-      uid: usersId,
+      konvaImages: changeKonvaImagesToFirestoreCanvasImages(konvaImages.value),
+      uid: uid.value,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     })
-    canvasId.value = canvasRef.id
   }
 
   saveImage()
@@ -330,9 +387,8 @@ div(class="flex justify-center items-center my-4")
   button(v-show="saveState === 'done'" type="button" class="flex items-center focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-4 py-1.5")
     span(class="material-symbols-outlined") done
 
-
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
-  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
       ref="stage"
       :draggable="mode === 'hand'"
