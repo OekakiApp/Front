@@ -47,9 +47,7 @@ const galleries = reactive([
   },
 ])
 
-const likeColor = (isLike: boolean) => {
-  return isLike ? 'fill: red' : 'fill: #fff'
-}
+const likeColor = (isLike: boolean) => (isLike ? 'fill: red' : 'fill: #fff')
 </script>
 
 <template lang="pug">
@@ -57,7 +55,7 @@ div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
   div(v-for="(gallery, index) of galleries" :key="index" class="picture m-auto")
     div(class="flex items-center relative")
       label(for="modal" class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px" @click="resizeModal()")
-      svg(@click="gallery.isLike = !gallery.isLike" class="heart absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(gallery.isLike)" style="right: 10px; bottom: 10px")
+      svg(class="heart absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(gallery.isLike)" style="right: 10px; bottom: 10px" @click="gallery.isLike = !gallery.isLike")
         path(d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z")
     div(class="flex flex-col mt-1 ml-2")  
       div(class="text-midnightBlue") {{ gallery.title }}
