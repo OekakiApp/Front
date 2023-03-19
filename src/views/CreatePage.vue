@@ -32,7 +32,7 @@ const { mode } = storeToRefs(useStoreMode())
 const { configKonva, historyStep, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
-const { canvases } = storeToRefs(useAuthStore())
+const { uid, canvases } = storeToRefs(useAuthStore())
 const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
@@ -74,7 +74,6 @@ const { setCanvas } = useAuthStore()
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
-const usersId = localStorage.getItem('usersId')
 const canvasId = ref(useRoute().params.canvas_id)
 const router = useRouter()
 
@@ -228,7 +227,7 @@ async function saveCanvas(): Promise<void> {
       lines: lines.value,
       texts: texts.value,
       // konvaImages: konvaImages.value,
-      uid: usersId,
+      uid: uid.value,
     })
     canvasId.value = canvasRef.id
   }
