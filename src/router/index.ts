@@ -13,6 +13,7 @@ import CreatePage from '@/views/CreatePage.vue'
 import UserView from '@/views/UsersPage.vue'
 import profileSettingsView from '@/views/ProfileSettingsPage.vue'
 import WorkListView from '@/views/WorkList.vue'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 /* eslint-enable */
 
 const router = createRouter({
@@ -68,22 +69,46 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to: RouteLocationNormalized) => {
-  const authStore = useAuthStore()
-  const { isLoggedIn } = authStore
-  // ログイン状態、且つ未ログイン画面に遷移しようとした場合
-  if (isLoggedIn && to.meta.requiresAuth === false) {
-    await forceToHomePage()
-  }
-  // 未ログイン状態、且つログインが必要な画面に遷移しようとした場合
-  else if (!isLoggedIn && to.meta.requiresAuth === true) {
-    // ユーザー情報を再取得
-    await forceToLoginPage()
+  const { isLoggedIn } = useAuthStore()
+  if (!isLoggedIn) {
+    await autoLogin(to)
   }
 })
 
-async function forceToHomePage() {
+async function autoLogin(to: RouteLocationNormalized) {
+  const auth = getAuth()
+  const authStore = useAuthStore()
+  const { isLoggedIn } = authStore
+  /* eslint-disable */
+  return new Promise<void>((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (user != null) {
+        await authStore.setUser(user)
+        await authStore.getCanvases()
+        await forceToWorksPage()
+        console.log('ログイン成功')
+      } else {
+        console.log('ログイン失敗')
+        if (!isLoggedIn && to.meta.requiresAuth === true) {
+          // ユーザー情報を再取得
+          await forceToLoginPage()
+        }
+      }
+      resolve()
+    })
+  })
+  /* eslint-enable */
+}
+
+export async function forceToHomePage() {
   await router.replace({
     name: 'Home',
+  })
+}
+
+export async function forceToWorksPage() {
+  await router.replace({
+    name: 'Works',
   })
 }
 
