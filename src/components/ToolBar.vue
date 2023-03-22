@@ -173,7 +173,7 @@ div(class="flex flex-col items-center relative")
       UndoRedoButton
       //- Reset
       li.flex.mx-2
-        label(htmlFor="my-modal" data-tip="Reset" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+        label(htmlFor="my-modal" data-tip="Reset" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded flex")
           span(class="material-symbols-outlined") delete
       //- Download
       li.flex.mx-2

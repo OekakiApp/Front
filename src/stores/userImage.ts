@@ -17,6 +17,8 @@ import {
 } from 'firebase/storage'
 import useAuthStore from '@/stores/auth'
 import { db, storage } from '@/firebase/index'
+// eslint-disable-next-line import/no-cycle
+import sortImagesByCreatedAt from '@/utils/sort'
 
 export interface UploadedImage {
   userUid: string
@@ -24,7 +26,7 @@ export interface UploadedImage {
   storageURL: string // for access to storage
   fileName: string // ex) filename.png
   fileType: string // ex) image/jpeg
-  fileExtention: string // ex) png
+  fileExtension: string // ex) png
   createdAt: Timestamp
   show: boolean // Toolbarに表示・非表示
   canvases: Record<string, number>
@@ -70,10 +72,10 @@ const useStoreUserImage = defineStore({
     uploadImageToStorage(file: File) {
       const { uid } = storeToRefs(useAuthStore())
       const imageId = nanoid()
-      const fileExtention = file.name.split('.').pop() as string // input accept .jpeg .png .jpg
+      const fileExtension = file.name.split('.').pop() as string // input accept .jpeg .png .jpg
       const imageRef = ref(
         storage,
-        `user-image/${uid.value}/user-upload/${imageId}.${fileExtention}`,
+        `user-image/${uid.value}/user-upload/${imageId}.${fileExtension}`,
       )
       const metadata = {
         contentType: file.type, // ex) image/png
@@ -145,7 +147,7 @@ const useStoreUserImage = defineStore({
     async uploadImageToFirestore(url: string, file: File, imageId: string) {
       const { uid } = storeToRefs(useAuthStore())
       const id = imageId
-      const fileExtention = file.name.split('.').pop() as string // input accept .jpeg .png .jpg
+      const fileExtension = file.name.split('.').pop() as string // input accept .jpeg .png .jpg
 
       const newImage: UploadedImage = {
         userUid: uid.value,
@@ -153,7 +155,7 @@ const useStoreUserImage = defineStore({
         storageURL: url, // StorageのURL
         fileName: file.name,
         fileType: file.type,
-        fileExtention,
+        fileExtension,
         createdAt: Timestamp.now(),
         show: true, // Toolbarに表示・非表示
         canvases: {}, // key: canvasId, value: 使用数 valueが0になったらkeyを削除
@@ -197,18 +199,7 @@ const useStoreUserImage = defineStore({
         })
 
         // アップロード順に並び替える
-        const sortedImages = this.uploadedImages.sort(
-          (a: UploadedImage, b: UploadedImage) => {
-            if (a.createdAt < b.createdAt) {
-              return -1
-            }
-            if (a.createdAt > b.createdAt) {
-              return 1
-            }
-            return 0
-          },
-        )
-        this.uploadedImages = sortedImages
+        this.uploadedImages = sortImagesByCreatedAt(this.uploadedImages)
         this.isLoadingImages = false
       } else {
         this.isLoadingImages = false
@@ -234,7 +225,7 @@ const useStoreUserImage = defineStore({
     },
 
     // Storage削除判定
-    canDeleteImageFromStorage(uploadedImage: UploadedImage) {
+    isDeleteImageFromStorage(uploadedImage: UploadedImage) {
       // 条件canvasで使用されていないかつToolbarで非表示
       return (
         Object.keys(uploadedImage.canvases).length === 0 && !uploadedImage.show
@@ -249,7 +240,7 @@ const useStoreUserImage = defineStore({
       if (userImages !== undefined) {
         Object.keys(userImages).forEach((imageId) => {
           const userImage: UploadedImage = userImages[imageId]
-          if (this.canDeleteImageFromStorage(userImage)) {
+          if (this.isDeleteImageFromStorage(userImage)) {
             // Storageから削除
             this.deleteImageFromStorage(userImage)
             // firestoreから削除
@@ -269,7 +260,7 @@ const useStoreUserImage = defineStore({
     deleteImageFromStorage(userImage: UploadedImage) {
       const deletedRef = ref(
         storage,
-        `user-image/${userImage.userUid}/user-upload/${userImage.id}.${userImage.fileExtention}`,
+        `user-image/${userImage.userUid}/user-upload/${userImage.id}.${userImage.fileExtension}`,
       )
       deleteObject(deletedRef)
         .then(() => {

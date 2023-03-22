@@ -11,6 +11,7 @@ import {
   getDownloadURL,
 } from 'firebase/storage'
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const authUser = getAuth().currentUser!
 const authStore = useAuthStore()
 const icon = ref(authStore.icon)

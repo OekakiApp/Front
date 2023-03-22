@@ -250,18 +250,34 @@ async function saveCanvas(): Promise<void> {
   ) {
     // createdAtがある場合
     if (canvases.value[canvasVal].createdAt !== undefined) {
-      await updateDoc(doc(db, 'canvas', canvasVal), {
-        name: inputText.text === '' ? 'タイトル' : inputText.text,
-        lines: lines.value,
-        texts: texts.value,
-        konvaImages: changeKonvaImagesToFirestoreCanvasImages(
-          konvaImages.value,
-        ),
-        updatedAt: Timestamp.now(),
-      })
+      // isShareがある場合
+      if (canvases.value[canvasVal].isShare !== undefined) {
+        await updateDoc(doc(db, 'canvas', canvasVal), {
+          name: inputText.text === '' ? 'タイトル' : inputText.text,
+          lines: lines.value,
+          texts: texts.value,
+          konvaImages: changeKonvaImagesToFirestoreCanvasImages(
+            konvaImages.value,
+          ),
+          updatedAt: Timestamp.now(),
+        })
+        // isShareがない場合
+      } else {
+        await updateDoc(doc(db, 'canvas', canvasVal), {
+          name: inputText.text === '' ? 'タイトル' : inputText.text,
+          lines: lines.value,
+          texts: texts.value,
+          konvaImages: changeKonvaImagesToFirestoreCanvasImages(
+            konvaImages.value,
+          ),
+          updatedAt: Timestamp.now(),
+          isShare: false,
+        })
+      }
     }
     // createdAtがない場合
-    else {
+    // isShareがある場合
+    else if (canvases.value[canvasVal].isShare !== undefined) {
       await updateDoc(doc(db, 'canvas', canvasVal), {
         name: inputText.text === '' ? 'タイトル' : inputText.text,
         lines: lines.value,
@@ -271,6 +287,19 @@ async function saveCanvas(): Promise<void> {
         ),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
+      })
+      // isShareがない場合
+    } else {
+      await updateDoc(doc(db, 'canvas', canvasVal), {
+        name: inputText.text === '' ? 'タイトル' : inputText.text,
+        lines: lines.value,
+        texts: texts.value,
+        konvaImages: changeKonvaImagesToFirestoreCanvasImages(
+          konvaImages.value,
+        ),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        isShare: false,
       })
     }
   }
@@ -287,6 +316,7 @@ async function saveCanvas(): Promise<void> {
       uid: uid.value,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      isShare: false,
     })
   }
 

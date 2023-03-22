@@ -24,7 +24,7 @@ The map you made can be downloaded for PNG.
 
 ### FrontEnd
 
-- Vue v3
+- Vue3
 - TypeScript
 - Vue konva v3
 - tailwindCSS
