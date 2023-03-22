@@ -85,7 +85,9 @@ async function autoLogin(to: RouteLocationNormalized) {
       if (user != null) {
         await authStore.setUser(user)
         await authStore.getCanvases()
-        await forceToWorksPage()
+        if (to.name === 'Home') {
+          await forceToWorksPage()
+        }
         console.log('ログイン成功')
       } else {
         console.log('ログイン失敗')
