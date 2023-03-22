@@ -40,7 +40,7 @@ const { configKonva, canvasHistory, canvasStorageHistory, historyStep } =
   storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
-const { canvases, uid } = storeToRefs(useAuthStore())
+const { uid, canvases } = storeToRefs(useAuthStore())
 const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
