@@ -85,7 +85,7 @@ async function autoLogin(to: RouteLocationNormalized) {
       if (user != null) {
         await authStore.setUser(user)
         await authStore.getCanvases()
-        if (to.name === 'Home') {
+        if (to.name === 'Home' || to.meta.requiresAuth === false) {
           await forceToWorksPage()
         }
         console.log('ログイン成功')
