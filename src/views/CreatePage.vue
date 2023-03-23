@@ -32,7 +32,7 @@ const { mode } = storeToRefs(useStoreMode())
 const { configKonva, historyStep, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
-const { canvases } = storeToRefs(useAuthStore())
+const { uid, canvases } = storeToRefs(useAuthStore())
 const { konvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
@@ -74,7 +74,6 @@ const { setCanvas } = useAuthStore()
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
-const usersId = localStorage.getItem('usersId')
 const canvasId = ref(useRoute().params.canvas_id)
 const router = useRouter()
 
@@ -228,7 +227,7 @@ async function saveCanvas(): Promise<void> {
       lines: lines.value,
       texts: texts.value,
       // konvaImages: konvaImages.value,
-      uid: usersId,
+      uid: uid.value,
     })
     canvasId.value = canvasRef.id
   }
@@ -337,14 +336,12 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
       ref="stage"
       :draggable="mode === 'hand'"
       :config="configKonva"
-      @mouseenter="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseEnter(e);}"
+      @mouseenter="(e: KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
       @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
-      @mousedown="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
-      @touchstart="(e: KonvaEventObject<TouchEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);}"
-      @mousemove="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
-      @touchmove="(e: KonvaEventObject<TouchEvent>) => {handleLineMouseMove(e);}"
-      @mouseup="() => {handleLineMouseUp();}"
-      @touchend="() => {handleLineMouseUp();}"
+      @mousedown="(e: KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
+      @pointerdown="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e)}"
+      @pointermove="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
+      @pointerup="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseUp(e);}"
       @dblclick="(e: KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
       @dbltap="(e: KonvaEventObject<TouchEvent>) => {createNewTextNode(e);}"
       )

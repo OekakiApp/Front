@@ -1,7 +1,7 @@
 /* eslint-disable */
 // import/no-cycle
 import { defineStore } from 'pinia'
-import router from '@/router/index'
+import { forceToHomePage, forceToWorksPage } from '@/router/index'
 import { db } from '@/firebase/index'
 import {
   getAuth,
@@ -53,7 +53,7 @@ const useAuthStore = defineStore('auth', {
                 uid: user.uid,
               })
               await this.setUser(user)
-              await forceToWorkPage()
+              await forceToWorksPage()
             })
             .catch((error) => {
               console.log(error.message)
@@ -67,7 +67,7 @@ const useAuthStore = defineStore('auth', {
       const auth = getAuth()
       signInWithEmailAndPassword(auth, email, password)
         .then(async () => {
-          await forceToWorkPage()
+          await forceToWorksPage()
         })
         .catch((error) => {
           this.authError(error)
@@ -99,7 +99,6 @@ const useAuthStore = defineStore('auth', {
       this.name = user.displayName ?? ''
       this.icon = user.photoURL ?? Icon
       this.isLoggedIn = true
-      localStorage.setItem('usersId', user.uid)
       // get profile
       const userDocRef = doc(db, 'users', this.uid)
       const userDocSnap = await getDoc(userDocRef)
@@ -107,7 +106,7 @@ const useAuthStore = defineStore('auth', {
         this.profile = userDocSnap.data().profile
       }
     },
-
+    // TODO canvas store作成
     async getCanvases() {
       const canvasQuery = query(
         collection(db, 'canvas'),
@@ -135,17 +134,6 @@ const useAuthStore = defineStore('auth', {
     },
   },
 })
-
-async function forceToWorkPage() {
-  await router.replace({
-    name: 'Works',
-  })
-}
-async function forceToHomePage() {
-  await router.replace({
-    name: 'Home',
-  })
-}
 
 const errorMap = new Map([
   // 新規登録

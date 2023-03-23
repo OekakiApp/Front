@@ -43,7 +43,18 @@ const saveProfile = () => {
   router.push({ name: 'Users' })
 }
 
-const uploadIconFile = (e: Event) => {
+const validate = (): boolean => {
+  // inputText
+  inputText.isAlert = inputText.text === ''
+  textArea.isAlert = textArea.text.length > 100
+
+  if (inputText.isAlert === false && textArea.isAlert === false) {
+    return true
+  }
+  return false
+}
+
+const previewIconFile = (e: Event) => {
   const inputElement = e.target as HTMLInputElement
   if (inputElement === null) return
   const { files } = inputElement
@@ -57,88 +68,87 @@ const uploadIconFile = (e: Event) => {
 const updateFireBase = async () => {
   // profile
   if (authStore.profile !== textArea.text) {
-    const usersRef = doc(db, 'users', authStore.uid)
-    await updateDoc(usersRef, {
-      profile: textArea.text,
-    })
-    authStore.profile = textArea.text
+    await updateProfileText()
   }
-
   // Name
   if (authStore.name !== inputText.text) {
-    updateProfile(authUser, {
-      displayName: inputText.text,
-    })
-      .then(() => {
-        authStore.name = inputText.text
-      })
-      .catch((error) => {
-        console.log(error)
-      })
+    updateName()
   }
   // icon
   if (authStore.icon !== icon.value) {
-    const fileRef = storageRef(storage, `user-image/${uploadFile.value.name}`)
-    const uploadTask = uploadBytesResumable(fileRef, uploadFile.value)
-
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        console.log(`Upload is ${progress}% done`)
-        switch (snapshot.state) {
-          case 'paused':
-            console.log('Upload is paused')
-            break
-          case 'running':
-            console.log('Upload is running')
-            break
-
-          // no default
-        }
-      },
-      (error) => {
-        console.log(error)
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          updateProfile(authUser, {
-            photoURL: downloadURL,
-          })
-            .then(() => {
-              authStore.icon = downloadURL
-            })
-            .catch((error) => {
-              console.log(error)
-            })
-        })
-      },
-    )
+    updateIcon()
   }
 }
 
-const validate = (): boolean => {
-  // inputText
-  inputText.isAlert = inputText.text === ''
-  textArea.isAlert = textArea.text.length > 100
+const updateProfileText = async () => {
+  const usersRef = doc(db, 'users', authStore.uid)
+  await updateDoc(usersRef, {
+    profile: textArea.text,
+  })
+  authStore.profile = textArea.text
+}
 
-  if (inputText.isAlert === false && textArea.isAlert === false) {
-    return true
-  }
-  return false
+const updateName = () => {
+  updateProfile(authUser, {
+    displayName: inputText.text,
+  })
+    .then(() => {
+      authStore.name = inputText.text
+    })
+    .catch((error) => {
+      console.log(error)
+    })
+}
+
+const updateIcon = () => {
+  const fileRef = storageRef(storage, `user-image/${uploadFile.value.name}`)
+  const uploadTask = uploadBytesResumable(fileRef, uploadFile.value)
+
+  uploadTask.on(
+    'state_changed',
+    (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+      console.log(`Upload is ${progress}% done`)
+      switch (snapshot.state) {
+        case 'paused':
+          console.log('Upload is paused')
+          break
+        case 'running':
+          console.log('Upload is running')
+          break
+        // no default
+      }
+    },
+    (error) => {
+      console.log(error)
+    },
+    () => {
+      getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+        updateProfile(authUser, {
+          photoURL: downloadURL,
+        })
+          .then(() => {
+            authStore.icon = downloadURL
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      })
+    },
+  )
 }
 </script>
 <template lang="pug">
-div(class="flex max-w-3xl mx-auto mt-8")
+div(class="sm:flex max-w-3xl mx-auto mt-4 sm:mt-8")
   //- left
-  div(class="flex flex-col items-center")
+  div(class="flex sm:flex-col items-center mb-4 sm:mb-0")
     div
       img(:src="icon" class="big-avatar ring-2 ring-gray-700 ")
     label(class="upload-label inline-block cursor-pointer my-4 p-2") ファイルを選択
-      input(id="icon" type="file" accept=".png, .jpeg, .jpg" @change="uploadIconFile")
+      input(id="icon" type="file" accept=".png, .jpeg, .jpg" @change="previewIconFile")
 
   //- right
-  div(class="mx-auto w-3/5")
+  div(class="mx-auto sm:w-3/5")
     form(method="post" enctype="multipart/form-data" @submit.prevent="saveProfile")
       div(class="mb-4")
         div(v-show="inputText.isAlert" class="w-full p-2 my-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert")
@@ -166,6 +176,13 @@ div(class="flex max-w-3xl mx-auto mt-8")
   width: 150px;
   height: 150px;
   border-radius: 50%;
+}
+
+@media screen and (max-width: 639px) {
+  .big-avatar {
+    width: 60px;
+    height: 60px;
+  }
 }
 /* inputは隠す */
 .upload-label input {

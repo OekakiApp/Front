@@ -6,26 +6,11 @@ import { RouterView, useRoute } from 'vue-router'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import router from '@/router'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import useAuthStore from '@/stores/auth'
-
-const authStore = useAuthStore()
-const auth = getAuth()
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    authStore.setUser(user)
-    authStore.getCanvases()
-    console.log('ログイン成功')
-  } else {
-    console.log('ログイン失敗')
-  }
-})
 
 const path = ref('')
 const route = useRoute()
 
-const isFooterDisplayed = ref(true)
+const isFooterDisplayed = ref(false)
 router.afterEach((to) => {
   path.value = to.path
   isFooterDisplayed.value = route.path === '/'
@@ -34,7 +19,7 @@ router.afterEach((to) => {
 
 <template lang="pug">
 Header
-main(class="container mx-auto px-2 sm:px-4")
+main(class="container mx-auto px-2 sm:px-4 touch-manipulation")
   RouterView
 Footer(v-if="isFooterDisplayed")
 </template>
