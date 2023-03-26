@@ -15,6 +15,7 @@ const authUser = getAuth().currentUser!
 const authStore = useAuthStore()
 const icon = ref(authStore.icon)
 const uploadFile = ref(new File([], ''))
+const usersRef = doc(db, 'users', authStore.uid)
 
 const inputText = reactive({
   icon: 'person',
@@ -40,7 +41,7 @@ const saveProfile = () => {
   if (!alertFlag) return
 
   updateFireBase()
-  router.push({ name: 'Users' })
+  router.push({ name: 'Users', params: { user_id: authStore.uid } })
 }
 
 const validate = (): boolean => {
@@ -81,7 +82,6 @@ const updateFireBase = async () => {
 }
 
 const updateProfileText = async () => {
-  const usersRef = doc(db, 'users', authStore.uid)
   await updateDoc(usersRef, {
     profile: textArea.text,
   })
@@ -92,7 +92,10 @@ const updateName = () => {
   updateProfile(authUser, {
     displayName: inputText.text,
   })
-    .then(() => {
+    .then(async () => {
+      await updateDoc(usersRef, {
+        name: inputText.text,
+      })
       authStore.name = inputText.text
     })
     .catch((error) => {
@@ -127,7 +130,10 @@ const updateIcon = () => {
         updateProfile(authUser, {
           photoURL: downloadURL,
         })
-          .then(() => {
+          .then(async () => {
+            await updateDoc(usersRef, {
+              icon: downloadURL,
+            })
             authStore.icon = downloadURL
           })
           .catch((error) => {

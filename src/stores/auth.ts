@@ -21,6 +21,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
 } from 'firebase/firestore'
 import Icon from '../assets/user_icon.png'
 /* eslint-enable */
@@ -50,6 +51,8 @@ const useAuthStore = defineStore('auth', {
               // database usersを作成
               await setDoc(doc(db, 'users', user.uid), {
                 profile: 'よろしくお願いします。',
+                name: name,
+                icon: '',
                 uid: user.uid,
               })
               await this.setUser(user)
@@ -104,6 +107,13 @@ const useAuthStore = defineStore('auth', {
       const userDocSnap = await getDoc(userDocRef)
       if (userDocSnap.exists()) {
         this.profile = userDocSnap.data().profile
+        // usersDB追加更新
+        if (userDocSnap.data().name === undefined) {
+          await updateDoc(userDocRef, {
+            name: this.name,
+            icon: this.icon,
+          })
+        }
       }
     },
     // TODO canvas store作成
