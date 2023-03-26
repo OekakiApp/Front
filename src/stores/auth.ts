@@ -51,7 +51,7 @@ const useAuthStore = defineStore('auth', {
               // database usersを作成
               await setDoc(doc(db, 'users', user.uid), {
                 profile: 'よろしくお願いします。',
-                name: name,
+                name,
                 icon: '',
                 uid: user.uid,
               })
