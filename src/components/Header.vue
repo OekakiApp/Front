@@ -8,9 +8,11 @@ const route = useRoute()
 const router = useRouter()
 const isLoginPage = ref(route.path === '/login')
 const isSignUpPage = ref(route.path === '/sign_up')
+const isGalleryPage = ref(route.path === '/gallery')
 router.afterEach(() => {
   isLoginPage.value = route.path === '/login'
   isSignUpPage.value = route.path === '/sign_up'
+  isGalleryPage.value = route.path === '/gallery'
 })
 const authStore = useAuthStore()
 const { isLoggedIn, icon } = storeToRefs(authStore)
@@ -31,8 +33,13 @@ const calculateWindowWidth = () => {
 <template lang="pug">
 nav(class="bg-bleachWhite px-2 sm:px-4 py-2.5 rounded")
   div(class="container flex flex-wrap justify-between items-center mx-auto")
-    router-link(:to="isLoggedIn ? '/works' : '/'")
-      h1(class="text-midnightBlue text-xl font-bold") Graimer
+    div(class="flex")
+      router-link(:to="isLoggedIn ? '/works' : '/'" class="flex justify-between items-center")
+        h1(class="text-midnightBlue text-xl font-bold") Graimer
+      div(v-if="isLoggedIn" class='ml-8')
+        ul(class="flex flex-col p-2 rounded-lg border border-gray-100 md:flex-row md:space-x-8 md:mt-0 md:text-sm md:font-medium md:border-0")
+          li
+            router-link(to="/gallery" class="text-lg text-midnightBlue hover:text-dustyOrange" :class='{"text-dustyOrange": isGalleryPage}') ギャラリー
     div
       div(v-if="isLoggedIn")
         router-link(v-if='windowSize >= 640' to="/users")  

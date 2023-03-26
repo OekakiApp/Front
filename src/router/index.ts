@@ -13,6 +13,7 @@ import CreatePage from '@/views/CreatePage.vue'
 import UserView from '@/views/UsersPage.vue'
 import profileSettingsView from '@/views/ProfileSettingsPage.vue'
 import WorkListView from '@/views/WorkList.vue'
+import GalleryView from '@/views/GalleryPage.vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 /* eslint-enable */
 
@@ -46,6 +47,12 @@ const router = createRouter({
       path: '/works',
       name: 'Works',
       component: WorkListView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/gallery',
+      name: 'Gallery',
+      component: GalleryView,
       meta: { requiresAuth: true },
     },
     {
