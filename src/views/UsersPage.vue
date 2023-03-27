@@ -13,11 +13,11 @@ import {
 } from 'firebase/firestore'
 import Icon from '../assets/user_icon.png'
 
-const route = useRoute(),
-  authStore = useAuthStore(),
-  name = ref(''),
-  icon = ref(''),
-  profile = ref('')
+const route = useRoute()
+const authStore = useAuthStore()
+const name = ref('')
+const icon = ref('')
+const profile = ref('')
 
 type Canvas = typeof authStore.canvases
 let canvases: Canvas
