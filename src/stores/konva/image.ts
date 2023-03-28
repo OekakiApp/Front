@@ -4,7 +4,6 @@ import { defineStore } from 'pinia'
 import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
-import useStoreUserImage from '@/stores/userImage'
 
 export interface KonvaImage {
   id: string
@@ -40,7 +39,8 @@ const useStoreImage = defineStore({
   state: () => ({
     dragUrl: '',
     dragUploadedImageId: '',
-    konvaImages: [] as KonvaImage[],
+    konvaImages: [] as KonvaImage[], // canvasの画像の状態（リアルタイム）
+    firstKonvaImages: [] as KonvaImage[], // canvas保存前の画像の状態
   }),
 
   actions: {
@@ -157,10 +157,7 @@ const useStoreImage = defineStore({
           scaleY: 1,
         },
       ])
-      // string[]だったらどうする？
-      if (typeof canvasId === 'string') {
-        await useStoreUserImage().addUploadedImageCanvases(newImg.id, canvasId)
-      }
+
       useStoreStage().handleEventEndSaveHistory()
 
       // モード終了し、サブメニューを閉じる

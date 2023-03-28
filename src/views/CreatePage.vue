@@ -3,13 +3,7 @@ import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, storage } from '@/firebase/index'
-import {
-  doc,
-  Timestamp,
-  updateDoc,
-  setDoc,
-  onSnapshot,
-} from 'firebase/firestore'
+import { doc, Timestamp, updateDoc, setDoc } from 'firebase/firestore'
 import {
   ref as storageRef,
   uploadBytesResumable,
@@ -36,17 +30,15 @@ type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 const StorageReference = storageRef(storage, '')
 
 const { mode } = storeToRefs(useStoreMode())
-const { configKonva, canvasHistory, canvasStorageHistory, historyStep } =
-  storeToRefs(useStoreStage())
+const { configKonva, canvasHistory, historyStep } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
 const { uid, canvases } = storeToRefs(useAuthStore())
-const { konvaImages } = storeToRefs(useStoreImage())
+const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
 )
-const { userImageStorage } = storeToRefs(useStoreUserImage())
-const { getImageDocSnap } = useStoreUserImage()
+const { saveImageCountToFirebase } = useStoreUserImage()
 
 const { setMode } = useStoreMode()
 const { fitStageIntoParentContainer } = useStoreStage()
@@ -142,7 +134,7 @@ onMounted(async () => {
   )
   window.addEventListener('keydown', (e) => {
     changeModeByShortCut(e)
-    handleKeyDownSelectedNodeDelete(e, canvasId.value)
+    handleKeyDownSelectedNodeDelete(e)
   })
 
   // Font読み込み
@@ -193,22 +185,8 @@ onMounted(async () => {
       },
     ]
   }
-  const docRef = doc(db, 'userImageStorage', uid.value)
-  const images = await getImageDocSnap(docRef)
-  if (images !== undefined) {
-    userImageStorage.value = images
-  }
-
-  // onsnapshotでローカルのuserImageStorageを更新する
-  onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const userImages = docSnap.data().images
-      userImageStorage.value = userImages
-    } else {
-      userImageStorage.value = {}
-    }
-  })
-  canvasStorageHistory.value = [userImageStorage.value]
+  // 初期状態のkonvaImagesを保存
+  firstKonvaImages.value = _.cloneDeep(konvaImages.value)
 })
 
 onUnmounted(() => {
@@ -217,13 +195,12 @@ onUnmounted(() => {
   )
   window.removeEventListener('keydown', (e) => {
     changeModeByShortCut(e)
-    handleKeyDownSelectedNodeDelete(e, canvasId.value)
+    handleKeyDownSelectedNodeDelete(e)
   })
 
   // canvasHistoryのリセット
   historyStep.value = 0
   canvasHistory.value = [{ lines: [], texts: [], images: [] }]
-  canvasStorageHistory.value = [userImageStorage.value]
 })
 
 router.beforeEach(() => {
@@ -233,7 +210,7 @@ router.beforeEach(() => {
   return true
 })
 
-async function saveCanvas(): Promise<void> {
+const saveCanvas = async (): Promise<void> => {
   // 選択を解除
   selectedShapeId.value = ''
   configShapeTransformer.value.nodes = []
@@ -319,6 +296,11 @@ async function saveCanvas(): Promise<void> {
       isShare: false,
     })
   }
+
+  // 画像の使用枚数の更新
+  saveImageCountToFirebase(firstKonvaImages.value, konvaImages.value)
+  // firstKonvaImagesの状態を更新
+  firstKonvaImages.value = _.cloneDeep(konvaImages.value)
 
   saveImage()
 }
@@ -475,5 +457,5 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
-  ToolBar(:stage="stage")
+  ToolBar(:stage="stage" :save-canvas="saveCanvas")
 </template>

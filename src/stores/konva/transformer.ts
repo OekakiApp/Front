@@ -7,7 +7,6 @@ import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 // eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
-import useStoreUserImage from '@/stores/userImage'
 
 const useStoreTransformer = defineStore({
   id: 'transformer',
@@ -323,10 +322,7 @@ const useStoreTransformer = defineStore({
     },
 
     // keydownで選択中の要素を削除
-    async handleKeyDownSelectedNodeDelete(
-      e: KeyboardEvent,
-      canvasId: string | string[],
-    ) {
+    async handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
       if (e.key === 'Delete') {
         if (this.configShapeTransformer.nodes.length === 0) return
         const selectedNode = this.configShapeTransformer.nodes[0]
@@ -345,16 +341,6 @@ const useStoreTransformer = defineStore({
         // image
         else if (selectedNode.name() === 'image') {
           const { konvaImages } = storeToRefs(useStoreImage())
-          const { deleteUploadedImageCanvases } = useStoreUserImage()
-          // firestoreで画像の使用状況を更新（削除)
-          if (typeof canvasId === 'string') {
-            const selectedImage = konvaImages.value.find(
-              (image) => image.id === selectedNode.id(),
-            )
-            if (selectedImage !== undefined) {
-              await deleteUploadedImageCanvases(selectedImage.imageId, canvasId)
-            }
-          }
           // フロント側のキャンバスを更新
           konvaImages.value = konvaImages.value.filter(
             (image) => image.id !== selectedNode.id(),

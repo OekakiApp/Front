@@ -8,10 +8,6 @@ import useStoreImage, { KonvaImage } from '@/stores/konva/image'
 // eslint-disable-next-line import/no-cycle
 import useStoreTransformer from '@/stores/konva/transformer'
 import _ from 'lodash'
-import useStoreUserImage, { UserImageStorage } from '@/stores/userImage'
-import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '@/firebase'
-import useAuthStore from '../auth'
 
 interface History {
   lines: Points[]
@@ -34,7 +30,6 @@ const useStoreStage = defineStore({
     },
     historyStep: 0,
     canvasHistory: [{ lines: [], texts: [], images: [] }] as History[],
-    canvasStorageHistory: [{}] as UserImageStorage[],
   }),
 
   actions: {
@@ -87,23 +82,7 @@ const useStoreStage = defineStore({
         images: copyImages,
       }
       this.canvasHistory = this.canvasHistory.concat([history])
-      // StorageHistoryの更新
-      this.saveCanvasStorageHistory()
       this.historyStep += 1
-    },
-
-    // Storageの履歴を保存していく
-    saveCanvasStorageHistory() {
-      this.canvasStorageHistory = this.canvasStorageHistory.slice(
-        0,
-        this.historyStep + 1,
-      )
-      const { userImageStorage } = storeToRefs(useStoreUserImage())
-      // 参照切る
-      const copyUserImageStorage = _.cloneDeep(userImageStorage.value)
-      this.canvasStorageHistory = this.canvasStorageHistory.concat([
-        copyUserImageStorage,
-      ])
     },
 
     async handleUndo() {
@@ -111,7 +90,6 @@ const useStoreStage = defineStore({
       if (this.historyStep === 0) return
       this.historyStep -= 1
       this.canvasUndo(this.historyStep)
-      await this.storageUndo(this.historyStep)
       // transformer 解除
       const { configShapeTransformer, selectedShapeId } = storeToRefs(
         useStoreTransformer(),
@@ -133,39 +111,11 @@ const useStoreStage = defineStore({
       konvaImages.value = previous.images
     },
 
-    // storage状況のUndo
-    async storageUndo(historyStep: number) {
-      // 参照切る
-      const previous = _.cloneDeep(this.canvasStorageHistory[historyStep])
-      const { userImageStorage } = storeToRefs(useStoreUserImage())
-
-      // firestore更新
-      // ただstoragehistoryをsetするのではなく最新のstorageにhistoryをマージする必要がある。
-      // imageのshowの切り替えや画像のアップロードや削除の情報はhistoryに含まれないため
-      const { uid } = storeToRefs(useAuthStore())
-      const docRef = doc(db, 'userImageStorage', uid.value)
-      let currUserImageStorage = _.cloneDeep(userImageStorage.value)
-      Object.keys(previous).forEach((imageId) => {
-        currUserImageStorage = {
-          ...currUserImageStorage,
-          [imageId]: {
-            ...currUserImageStorage[imageId],
-            show: currUserImageStorage[imageId].show,
-            canvases: previous[imageId].canvases,
-          },
-        }
-      })
-
-      await updateDoc(docRef, { images: currUserImageStorage })
-    },
-
     async handleRedo() {
       // 履歴の上限の場合何もしない
       if (this.historyStep === this.canvasHistory.length - 1) return
       this.historyStep += 1
       this.canvasRedo(this.historyStep)
-      await this.storageRedo(this.historyStep)
-
       // transformer 解除
       const { configShapeTransformer, selectedShapeId } = storeToRefs(
         useStoreTransformer(),
@@ -185,29 +135,6 @@ const useStoreStage = defineStore({
       lines.value = next.lines
       texts.value = next.texts
       konvaImages.value = next.images
-    },
-
-    // storage状況のRedo
-    async storageRedo(historyStep: number) {
-      // 参照切る
-      const next = _.cloneDeep(this.canvasStorageHistory[historyStep])
-      const { userImageStorage } = storeToRefs(useStoreUserImage())
-
-      // firestore更新
-      const { uid } = storeToRefs(useAuthStore())
-      const docRef = doc(db, 'userImageStorage', uid.value)
-      let currUserImageStorage = _.cloneDeep(userImageStorage.value)
-      Object.keys(next).forEach((imageId) => {
-        currUserImageStorage = {
-          ...currUserImageStorage,
-          [imageId]: {
-            ...currUserImageStorage[imageId],
-            show: currUserImageStorage[imageId].show,
-            canvases: next[imageId].canvases,
-          },
-        }
-      })
-      await updateDoc(docRef, { images: currUserImageStorage })
     },
   },
 })
