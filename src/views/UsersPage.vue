@@ -15,10 +15,13 @@ import Icon from '../assets/user_icon.png'
 
 const route = useRoute()
 const authStore = useAuthStore()
+
+type Canvases = typeof authStore.canvases
+
 const name = ref('')
 const icon = ref('')
 const profile = ref('')
-const canvases = ref({})
+const canvases: Canvases = ref({})
 const isValidUser = ref()
 
 onMounted(() => {
