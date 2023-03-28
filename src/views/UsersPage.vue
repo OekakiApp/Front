@@ -18,15 +18,15 @@ const authStore = useAuthStore()
 const name = ref('')
 const icon = ref('')
 const profile = ref('')
-
-type Canvas = typeof authStore.canvases
-let canvases: Canvas
+const canvases = ref({})
+const isValidUser = ref()
 
 onMounted(() => {
   setProfile()
 })
 
 watch(route, () => {
+  initializeProfile()
   setProfile()
 })
 
@@ -36,6 +36,7 @@ const setProfile = () => {
     getDoc(doc(db, 'users', otherUserUID))
       .then((userDocSnap) => {
         if (userDocSnap.exists()) {
+          isValidUser.value = true
           name.value = userDocSnap.data().name
           icon.value =
             userDocSnap.data().icon === '' ? Icon : userDocSnap.data().icon
@@ -43,18 +44,19 @@ const setProfile = () => {
           // canvas取得
           setCanvases(otherUserUID)
         } else {
+          isValidUser.value = false
+          canvases.value = {}
           console.log('プロフィール情報が見つかりません')
-          // TODO twitterのように「このアカウントは存在しません」とする
         }
       })
       .catch((error) => {
         console.log('プロフィール情報の取得に失敗しました：', error)
       })
   } else {
-    name.value = authStore.name
+    isValidUser.value = true
     icon.value = authStore.icon
     profile.value = authStore.profile
-    canvases = authStore.canvases
+    canvases.value = authStore.canvases
   }
 }
 
@@ -75,6 +77,19 @@ const setCanvases = (otherUserUID: string) => {
       console.log(error)
     })
 }
+
+const initializeProfile = () => {
+  icon.value = ''
+  profile.value = ''
+  canvases.value = ''
+}
+
+const userCol = () => {
+  if (authStore.uid === route.params.user_id) {
+    return 'col-span-12 sm:col-span-9 sm:ml-8'
+  }
+  return 'sm:mx-8'
+}
 </script>
 
 <template lang="pug">
@@ -92,9 +107,9 @@ div(class="grid grid-cols-12 mt-4 sm:mt-8")
         li(class="pt-2")
           button(class="block" @click="authStore.logout()") ログアウト
   //- right
-  div(class="col-span-12 sm:col-span-9 sm:ml-8")
+  div(:class="userCol()" class="col-span-12")
     //- top
-    div(class="relative sm:static sm:grid sm:grid-cols-12 pb-4 border-b")
+    div(v-if="isValidUser===true" class="relative sm:static sm:grid sm:grid-cols-12 pb-4 border-b")
       div(class="col-span-10 sm:flex")
         div
           img(:src="icon" class="avatar ring-2 ring-gray-700 ")
@@ -104,7 +119,8 @@ div(class="grid grid-cols-12 mt-4 sm:mt-8")
       div(v-if="authStore.uid === route.params.user_id" class="col-span-2 absolute sm:static top-4 right-0 mx-auto")
         router-link(to="/profile/settings") 
           button(class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-3 py-1") 編集
-
+    div(v-else-if="isValidUser===false")
+      h1(class="text-center text-xl font-bold mt-4") このアカウントは存在しません
     //- bottom
     div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")      
       div(v-for="(canvas, index) of canvases" :key="index" class="picture m-auto")
