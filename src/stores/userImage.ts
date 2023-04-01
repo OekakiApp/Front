@@ -1,6 +1,14 @@
+/* eslint-disable import/no-cycle */
 import { nanoid } from 'nanoid'
 import { defineStore, storeToRefs } from 'pinia'
-import { doc, Timestamp, setDoc, updateDoc } from 'firebase/firestore'
+import {
+  doc,
+  getDoc,
+  Timestamp,
+  setDoc,
+  updateDoc,
+  onSnapshot,
+} from 'firebase/firestore'
 import {
   ref,
   uploadBytesResumable,
@@ -10,7 +18,6 @@ import {
 import useAuthStore from '@/stores/auth'
 import { db, storage } from '@/firebase/index'
 import { KonvaImage } from '@/stores/konva/image'
-// eslint-disable-next-line import/no-cycle
 import sortImagesByCreatedAt from '@/utils/sort'
 
 export interface UploadedImage {
@@ -30,7 +37,6 @@ type UserImageStorage = Record<string, UploadedImage>
 const useStoreUserImage = defineStore({
   id: 'user-image',
   state: () => ({
-    isLoadingImages: true, // true=読み込み中
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     userImageStorage: {} as UserImageStorage,
   }),
@@ -62,15 +68,9 @@ const useStoreUserImage = defineStore({
 
       const uploadTask = uploadBytesResumable(imageRef, file, metadata)
 
-      // Register three observers:
-      // 1. 'state_changed' observer, called any time the state changes
-      // 2. Error observer, called on failure
-      // 3. Completion observer, called on successful completion
       uploadTask.on(
         'state_changed',
         (snapshot) => {
-          // Observe state change events such as progress, pause, and resume
-          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100
           console.log(`Upload is ${progress}% done`)
@@ -85,8 +85,6 @@ const useStoreUserImage = defineStore({
           }
         },
         (error) => {
-          // A full list of error codes is available at
-          // https://firebase.google.com/docs/storage/web/handle-errors
           switch (error.code) {
             case 'storage/unauthorized':
               // User doesn't have permission to access the object
@@ -94,9 +92,7 @@ const useStoreUserImage = defineStore({
             case 'storage/canceled':
               // User canceled the upload
               break
-
             // ...
-
             case 'storage/unknown':
               // Unknown error occurred, inspect error.serverResponse
               break
@@ -105,7 +101,6 @@ const useStoreUserImage = defineStore({
         },
         () => {
           // Handle successful uploads on complete
-          // For instance, get the download URL: https://firebasestorage.googleapis.com/...
           getDownloadURL(uploadTask.snapshot.ref)
             .then((downloadURL) => {
               // firestoreのimageデータを更新
@@ -140,15 +135,11 @@ const useStoreUserImage = defineStore({
         countOnCanvas: 0, // key: canvasId, value: 使用数 valueが0になったらkeyを削除
       }
 
-      try {
-        const { userImageStorage } = this
-        userImageStorage[id] = newUploadedImage
+      const { userImageStorage } = this
+      userImageStorage[id] = newUploadedImage
 
-        const docRef = doc(db, 'userImageStorage', uid.value)
-        await updateDoc(docRef, userImageStorage)
-      } catch (e) {
-        console.log('Error getting cached document:', e)
-      }
+      const docRef = doc(db, 'userImageStorage', uid.value)
+      await updateDoc(docRef, userImageStorage)
     },
 
     // ツールバーから画像を削除
@@ -251,13 +242,11 @@ const useStoreUserImage = defineStore({
     ) {
       const { userImageStorage } = this
 
-      const countHashmapDiff = this.diffHashMap(
-        firstCanvasImages,
-        savedCanvasImages,
-      )
-      console.log(countHashmapDiff)
-
       if (userImageStorage !== undefined) {
+        const countHashmapDiff = this.diffHashMap(
+          firstCanvasImages,
+          savedCanvasImages,
+        )
         // eslint-disable-next-line no-restricted-syntax
         for (const [key, value] of countHashmapDiff) {
           const userImage = userImageStorage[key]
@@ -272,6 +261,27 @@ const useStoreUserImage = defineStore({
         const docRef = doc(db, 'userImageStorage', uid.value)
         await updateDoc(docRef, userImageStorage)
       }
+    },
+
+    async loadUserImageStorage() {
+      const { uid } = storeToRefs(useAuthStore())
+      const docRef = doc(db, 'userImageStorage', uid.value)
+      const docSnapshot = await getDoc(docRef)
+      if (docSnapshot.exists()) {
+        this.userImageStorage = docSnapshot.data()
+      }
+
+      // onsnapshotでローカルのuserImageStorageを更新する
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          this.userImageStorage = docSnap.data()
+        } else {
+          this.userImageStorage = {}
+        }
+      })
+
+      // 使用されていない画像をStorageとFirestoreから削除
+      await this.deleteImageFromStorageWithLogin()
     },
   },
 

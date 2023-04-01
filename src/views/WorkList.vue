@@ -1,39 +1,9 @@
 <script setup lang="ts">
 import useAuthStore from '@/stores/auth'
-import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import useStoreUserImage from '@/stores/userImage'
 import { nanoid } from 'nanoid'
-import { db } from '@/firebase/index'
-import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 
-const { uid, canvases } = storeToRefs(useAuthStore())
-const { isLoadingImages, userImageStorage } = storeToRefs(useStoreUserImage())
-const { deleteImageFromStorageWithLogin } = useStoreUserImage()
-
-onMounted(async () => {
-  if (isLoadingImages.value) {
-    // onsnapshotでローカルのuserImageStorageを更新する
-    const docRef = doc(db, 'userImageStorage', uid.value)
-    const docSnapshot = await getDoc(docRef)
-    if (docSnapshot.exists()) {
-      userImageStorage.value = docSnapshot.data()
-    }
-
-    onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        userImageStorage.value = docSnap.data()
-      } else {
-        userImageStorage.value = {}
-      }
-    })
-    // 画像の読み込み完了
-    isLoadingImages.value = false
-
-    // 使用されていない画像をStorageとFirestoreから削除
-    deleteImageFromStorageWithLogin()
-  }
-})
+const { canvases } = storeToRefs(useAuthStore())
 </script>
 
 <template lang="pug">

@@ -220,7 +220,6 @@ const saveCanvas = async (): Promise<void> => {
 
   // 途中からの場合
   const canvasVal = canvasId.value
-  console.log(canvasVal)
   if (
     typeof canvasVal === 'string' &&
     canvases.value[canvasVal] !== undefined

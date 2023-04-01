@@ -29,15 +29,11 @@ const { configShapeTransformer, selectedShapeId } = storeToRefs(
 )
 const { historyStep, canvasHistory } = storeToRefs(useStoreStage())
 
-const deleteCanvas = async () => {
+const resetCanvas = async () => {
   // delete
   deleteLines()
   deleteTexts()
   deleteImages()
-
-  // reset transformer
-  // configShapeTransformer.value.nodes = []
-  // selectedShapeId.value = ''
 
   // キャンバスの状態をfirebaseに保存
   props.saveCanvas()
@@ -177,6 +173,6 @@ div(className="modal")
       div(className="modal-action mr-3")
         label(htmlFor="my-modal" className="btn w-36") Cancel
       div(className="modal-action")
-        label(htmlFor="my-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="deleteCanvas") OK
+        label(htmlFor="my-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="resetCanvas") OK
 
 </template>
