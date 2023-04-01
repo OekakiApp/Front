@@ -48,7 +48,6 @@ const setProfile = () => {
           setCanvases(otherUserUID)
         } else {
           isValidUser.value = false
-          canvases.value = {}
           console.log('プロフィール情報が見つかりません')
         }
       })
@@ -102,7 +101,7 @@ div(class="grid grid-cols-12 mt-4 sm:mt-8")
     div(class="border rounded-lg p-4")
       ul(class="text-midnightBlue")
         li(class="border-b pb-2")
-          router-link(to="users" class="text-dustyOrange block") ユーザー情報
+          router-link(:to="{name: 'Users', params: { user_id: authStore.uid }}" class="text-dustyOrange block") ユーザー情報
         //- li(class="border-b py-2")
         //-   a(href="#" class="block") お気に入り
         //- li(class="border-b py-2")
@@ -112,7 +111,7 @@ div(class="grid grid-cols-12 mt-4 sm:mt-8")
   //- right
   div(:class="userCol()" class="col-span-12")
     //- top
-    div(v-if="isValidUser===true" class="relative sm:static sm:grid sm:grid-cols-12 pb-4 border-b")
+    div(v-if="isValidUser" class="relative sm:static sm:grid sm:grid-cols-12 pb-4 border-b")
       div(class="col-span-10 sm:flex")
         div
           img(:src="icon" class="avatar ring-2 ring-gray-700 ")
