@@ -18,11 +18,15 @@ const authStore = useAuthStore()
 
 type Canvases = typeof authStore.canvases
 
-const name = ref('')
-const icon = ref('')
-const profile = ref('')
+type User = {
+  name: string
+  icon: string
+  profile: string
+}
+
+const user = ref<User | null>(null)
 const canvases: Canvases = ref({})
-const isValidUser = ref()
+const authIsReady = ref(false)
 
 onMounted(() => {
   setProfile()
@@ -37,17 +41,17 @@ const setProfile = () => {
   const otherUserUID = String(route.params.user_id)
   if (authStore.uid !== otherUserUID) {
     getDoc(doc(db, 'users', otherUserUID))
-      .then((userDocSnap) => {
+      .then(async (userDocSnap) => {
+        authIsReady.value = true
         if (userDocSnap.exists()) {
-          isValidUser.value = true
-          name.value = userDocSnap.data().name
-          icon.value =
-            userDocSnap.data().icon === '' ? Icon : userDocSnap.data().icon
-          profile.value = userDocSnap.data().profile
-          // canvas取得
-          setCanvases(otherUserUID)
+          user.value = {
+            name: userDocSnap.data().name,
+            icon:
+              userDocSnap.data().icon === '' ? Icon : userDocSnap.data().icon,
+            profile: userDocSnap.data().profile,
+          }
+          canvases.value = await setCanvases(otherUserUID)
         } else {
-          isValidUser.value = false
           console.log('プロフィール情報が見つかりません')
         }
       })
@@ -55,35 +59,42 @@ const setProfile = () => {
         console.log('プロフィール情報の取得に失敗しました：', error)
       })
   } else {
-    isValidUser.value = true
-    icon.value = authStore.icon
-    profile.value = authStore.profile
+    authIsReady.value = true
+    user.value = {
+      name: authStore.name,
+      icon: authStore.icon,
+      profile: authStore.profile,
+    }
     canvases.value = authStore.canvases
   }
 }
 
-const setCanvases = (otherUserUID: string) => {
+const setCanvases = async (otherUserUID: string) => {
+  const canvasHash: Canvases = {}
   const canvasQuery = query(
     collection(db, 'canvas'),
     where('uid', '==', otherUserUID),
     where('isShare', '==', true),
   )
-  getDocs(canvasQuery)
+  const getCanvases = await getDocs(canvasQuery)
     .then((querySnapshot) => {
       querySnapshot.forEach((document) => {
         const canvasID = document.id
-        canvases[canvasID] = document.data()
+        canvasHash[canvasID] = document.data()
       })
+      return canvasHash
     })
     .catch((error) => {
       console.log(error)
+      return canvasHash
     })
+  return getCanvases
 }
 
 const initializeProfile = () => {
-  icon.value = ''
-  profile.value = ''
-  canvases.value = ''
+  user.value = null
+  canvases.value = {}
+  authIsReady.value = false
 }
 
 const userCol = () => {
@@ -111,17 +122,17 @@ div(class="grid grid-cols-12 mt-4 sm:mt-8")
   //- right
   div(:class="userCol()" class="col-span-12")
     //- top
-    div(v-if="isValidUser" class="relative sm:static sm:grid sm:grid-cols-12 pb-4 border-b")
+    div(v-if="authIsReady && user" class="relative sm:static sm:grid sm:grid-cols-12 pb-4 border-b")
       div(class="col-span-10 sm:flex")
         div
-          img(:src="icon" class="avatar ring-2 ring-gray-700 ")
+          img(:src="user.icon" class="avatar ring-2 ring-gray-700 ")
         div(class="flex flex-col justify-around text-midnightBlue mt-4 sm:mt-0 sm:ml-4")
-          p(class="text-xl lg:text-2xl font-bold") {{ name }}
-          p(class="text-xs sm:text-sm  whitespace-pre-wrap") {{ profile }}
+          p(class="text-xl lg:text-2xl font-bold") {{ user.name }}
+          p(class="text-xs sm:text-sm  whitespace-pre-wrap") {{ user.profile }}
       div(v-if="authStore.uid === route.params.user_id" class="col-span-2 absolute sm:static top-4 right-0 mx-auto")
         router-link(to="/profile/settings") 
           button(class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-3 py-1") 編集
-    div(v-else-if="isValidUser===false")
+    div(v-else-if="authIsReady && user === null")
       h1(class="text-center text-xl font-bold mt-4") このアカウントは存在しません
     //- bottom
     div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")      
