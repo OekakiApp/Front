@@ -60,12 +60,12 @@ const setProfile = () => {
         console.log('プロフィール情報の取得に失敗しました：', error)
       })
   } else {
-    authIsReady.value = true
     user.value = {
       name: authStore.name,
       icon: authStore.icon,
       profile: authStore.profile,
     }
+    authIsReady.value = true
     canvases.value = authStore.canvases
   }
 }
