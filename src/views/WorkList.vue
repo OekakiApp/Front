@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import useAuthStore from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
+import useStoreCanvas from '@/stores/canvas'
 
-const { canvases } = storeToRefs(useAuthStore())
+const { canvases } = storeToRefs(useStoreCanvas())
 </script>
 
 <template lang="pug">

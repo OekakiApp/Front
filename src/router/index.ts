@@ -1,11 +1,12 @@
-/* eslint-disable */
-// import/no-cycle
+/* eslint-disable import/no-cycle */
 import {
   createRouter,
   createWebHistory,
   RouteLocationNormalized,
 } from 'vue-router'
 import useAuthStore from '@/stores/auth'
+import useStoreCanvas from '@/stores/canvas'
+import useStoreUserImage from '@/stores/userImage'
 import TopView from '@/views/TopPage.vue'
 import LoginView from '@/views/LoginPage.vue'
 import SignUpView from '@/views/SignUpPage.vue'
@@ -15,8 +16,6 @@ import profileSettingsView from '@/views/ProfileSettingsPage.vue'
 import WorkListView from '@/views/WorkList.vue'
 import GalleryView from '@/views/GalleryPage.vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import useStoreUserImage from '@/stores/userImage'
-/* eslint-enable */
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -86,13 +85,14 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
 async function autoLogin(to: RouteLocationNormalized) {
   const auth = getAuth()
   const authStore = useAuthStore()
+  const canvasStore = useStoreCanvas()
   const { isLoggedIn } = authStore
   /* eslint-disable */
   return new Promise<void>((resolve) => {
     onAuthStateChanged(auth, async (user) => {
       if (user != null) {
         await authStore.setUser(user)
-        await authStore.getCanvases()
+        await canvasStore.getCanvases(user.uid)
         const { loadUserImageStorage } = useStoreUserImage()
         loadUserImageStorage()
         if (to.name === 'Home' || to.meta.requiresAuth === false) {

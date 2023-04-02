@@ -1,5 +1,4 @@
-/* eslint-disable */
-// import/no-cycle
+/* eslint-disable import/no-cycle */
 import { defineStore } from 'pinia'
 import { forceToHomePage, forceToWorksPage } from '@/router/index'
 import { db } from '@/firebase/index'
@@ -12,19 +11,8 @@ import {
   User,
   AuthError,
 } from 'firebase/auth'
-import {
-  query,
-  getDocs,
-  where,
-  collection,
-  DocumentData,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore'
-import Icon from '../assets/user_icon.png'
-/* eslint-enable */
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import Icon from '@/assets/user_icon.png'
 
 const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -33,8 +21,6 @@ const useAuthStore = defineStore('auth', {
     icon: Icon,
     profile: '',
     isLoggedIn: false,
-    canvases: {} as DocumentData, // eslint-disable-line
-    //  @typescript-eslint/consistent-type-assertions
     isAuthError: false,
     authErrorMessage: '' as string | undefined,
   }),
@@ -114,32 +100,6 @@ const useAuthStore = defineStore('auth', {
             icon: this.icon,
           })
         }
-      }
-    },
-    // TODO canvas store作成
-    async getCanvases() {
-      const canvasQuery = query(
-        collection(db, 'canvas'),
-        where('uid', '==', this.uid),
-      )
-
-      await getDocs(canvasQuery)
-        .then((querySnapshot) => {
-          querySnapshot.forEach((document) => {
-            const canvasID = document.id
-            this.canvases[canvasID] = document.data()
-          })
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    // auth canvas update
-    async setCanvas(canvasID: string) {
-      const docRef = doc(db, 'canvas', canvasID)
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        this.canvases[canvasID] = docSnap.data()
       }
     },
   },

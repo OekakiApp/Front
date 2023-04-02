@@ -17,6 +17,7 @@ import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText, { fontFamilyList } from '@/stores/konva/text'
 import useAuthStore from '@/stores/auth'
+import useStoreCanvas from '@/stores/canvas'
 import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
@@ -33,7 +34,8 @@ const { mode } = storeToRefs(useStoreMode())
 const { configKonva, canvasHistory, historyStep } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
-const { uid, canvases } = storeToRefs(useAuthStore())
+const { uid } = storeToRefs(useAuthStore())
+const { canvases } = storeToRefs(useStoreCanvas())
 const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer, selectedShapeId } = storeToRefs(
   useStoreTransformer(),
@@ -75,8 +77,6 @@ const {
   setImages,
   handleImageDragEnd,
 } = useStoreImage()
-
-const { setCanvas } = useAuthStore()
 
 const stageParentDiv = ref()
 const stage = ref()
@@ -348,11 +348,6 @@ const uploadURI = async (uri: string, name: string) => {
             image: downloadURL,
           })
           await updateImageMetadata(fileRef)
-
-          // store 更新
-          if (typeof canvasVal === 'string') {
-            await setCanvas(canvasVal)
-          }
 
           // firebase,storeの更新終了
           showDoneBtn()
