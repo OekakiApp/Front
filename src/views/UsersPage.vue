@@ -42,7 +42,6 @@ const setProfile = () => {
   if (authStore.uid !== otherUserUID) {
     getDoc(doc(db, 'users', otherUserUID))
       .then(async (userDocSnap) => {
-        authIsReady.value = true
         if (userDocSnap.exists()) {
           user.value = {
             name: userDocSnap.data().name,
@@ -50,8 +49,10 @@ const setProfile = () => {
               userDocSnap.data().icon === '' ? Icon : userDocSnap.data().icon,
             profile: userDocSnap.data().profile,
           }
+          authIsReady.value = true
           canvases.value = await setCanvases(otherUserUID)
         } else {
+          authIsReady.value = true
           console.log('プロフィール情報が見つかりません')
         }
       })
