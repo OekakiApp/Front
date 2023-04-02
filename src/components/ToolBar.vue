@@ -13,6 +13,7 @@ import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
 
 interface Props {
   stage: Konva.Stage
+  saveCanvas: () => Promise<void>
 }
 
 const props = defineProps<Props>()
@@ -28,16 +29,14 @@ const { configShapeTransformer, selectedShapeId } = storeToRefs(
 )
 const { historyStep, canvasHistory } = storeToRefs(useStoreStage())
 
-const deleteCanvas = () => {
+const resetCanvas = async () => {
   // delete
   deleteLines()
   deleteTexts()
   deleteImages()
 
-  // reset transformer
-  configShapeTransformer.value.nodes = []
-  selectedShapeId.value = ''
-
+  // キャンバスの状態をfirebaseに保存
+  props.saveCanvas()
   // reset history
   historyStep.value = 0
   canvasHistory.value = [{ lines: [], texts: [], images: [] }]
@@ -159,7 +158,7 @@ div(class="flex flex-col items-center relative")
       UndoRedoButton
       //- Reset
       li.flex.mx-2
-        label(htmlFor="my-modal" data-tip="Reset" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded")
+        label(htmlFor="my-modal" data-tip="Reset" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded flex")
           span(class="material-symbols-outlined") delete
       //- Download
       li.flex.mx-2
@@ -174,6 +173,6 @@ div(className="modal")
       div(className="modal-action mr-3")
         label(htmlFor="my-modal" className="btn w-36") Cancel
       div(className="modal-action")
-        label(htmlFor="my-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="deleteCanvas") OK
+        label(htmlFor="my-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="resetCanvas") OK
 
 </template>

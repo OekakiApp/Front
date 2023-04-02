@@ -11,6 +11,7 @@ import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
+import useStoreUserImage from '@/stores/userImage'
 
 interface Color {
   name: string
@@ -24,11 +25,11 @@ interface Color {
 
 const { mode } = storeToRefs(useStoreMode())
 const { isTouchActive } = storeToRefs(useStoreLine())
-
-const { uploadedImages } = storeToRefs(useStoreImage())
 const { setLineColor, toggleIsTouchActive } = useStoreLine()
 const { setTextOptionValue, setTextColor } = useStoreText()
-const { addImageList, removeImage, setDragUrl } = useStoreImage()
+const { setDragImageUrlAndId } = useStoreImage()
+const { getToolbarImages } = storeToRefs(useStoreUserImage())
+const { addImageToToolbar, deleteImageFromToolbar } = useStoreUserImage()
 
 const activeLineColorIndex = ref<number>(0)
 const activeTextColorIndex = ref<number>(0)
@@ -225,13 +226,19 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
     @toggle-button-active="(index:number) => activeTextColorIndex = index"
     @toggle-picker-active="(index:number, color:string) =>{activeTextColorIndex = index;setTextColor(color);setTextOptionValue('textFillColor', color)}")
 //- image
-div(v-else-if="mode === 'image'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-md")
-  div(class="flex items-end h-full")
-    input(type="file" class="bg-white file-input file-input-bordered file-input-sm max-w-xs rounded-lg" accept=".png, .jpeg, .jpg" @change="addImageList")
-    div(v-if="uploadedImages.length !== 0" class="bg-slate-50 flex-1 grid grid-cols-3 max-h-72 overflow-y-scroll rounded-lg ml-2")
-      //- image list
-      div(v-for="image of uploadedImages" :key="image.id" class="relative")
-        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="() => {removeImage(image.id);}")
-          span(class="font-bold") ✕
-        img(:src="image.imgSrc" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="(e) => {setDragUrl(e);}")
+div(v-else-if="mode === 'image'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm w-screen")
+  div(class="flex items-end h-52 w-full")
+    label(class="upload-label bg-neutral inline-block cursor-pointer rounded-lg py-2 px-5 text-white text-lg") ファイルを選択
+      input(type="file" class="bg-white file-input file-input-bordered file-input-sm min-w-min rounded-lg" accept=".png, .jpeg, .jpg" @change="addImageToToolbar")
+    //- image list
+    div(class="bg-slate-50 flex-1 grid grid-cols-3 h-52 w-full overflow-y-scroll rounded-lg ml-2")
+      div(v-for="image of getToolbarImages" :key="image.id" class="relative flex justify-center items-center")
+        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="async () => {await deleteImageFromToolbar(image);}") ✕
+        img(:id="image.id" :src="image.storageURL" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="(e) => {setDragImageUrlAndId(e);}")
 </template>
+
+<style scoped>
+.upload-label input {
+  display: none;
+}
+</style>

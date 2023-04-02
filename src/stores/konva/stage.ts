@@ -85,19 +85,11 @@ const useStoreStage = defineStore({
       this.historyStep += 1
     },
 
-    handleUndo() {
+    async handleUndo() {
       // これ以上遡れない場合何もしない
       if (this.historyStep === 0) return
       this.historyStep -= 1
-      // 参照切る
-      const previous = _.cloneDeep(this.canvasHistory[this.historyStep])
-      // line text image 上書き
-      const { lines } = storeToRefs(useStoreLine())
-      const { texts } = storeToRefs(useStoreText())
-      const { konvaImages } = storeToRefs(useStoreImage())
-      lines.value = previous.lines
-      texts.value = previous.texts
-      konvaImages.value = previous.images
+      this.canvasUndo(this.historyStep)
       // transformer 解除
       const { configShapeTransformer, selectedShapeId } = storeToRefs(
         useStoreTransformer(),
@@ -106,12 +98,36 @@ const useStoreStage = defineStore({
       selectedShapeId.value = ''
     },
 
-    handleRedo() {
+    // キャンバス描画のUndo
+    canvasUndo(historyStep: number) {
+      // 参照切る
+      const previous = _.cloneDeep(this.canvasHistory[historyStep])
+      // line text image 上書き
+      const { lines } = storeToRefs(useStoreLine())
+      const { texts } = storeToRefs(useStoreText())
+      const { konvaImages } = storeToRefs(useStoreImage())
+      lines.value = previous.lines
+      texts.value = previous.texts
+      konvaImages.value = previous.images
+    },
+
+    async handleRedo() {
       // 履歴の上限の場合何もしない
       if (this.historyStep === this.canvasHistory.length - 1) return
       this.historyStep += 1
+      this.canvasRedo(this.historyStep)
+      // transformer 解除
+      const { configShapeTransformer, selectedShapeId } = storeToRefs(
+        useStoreTransformer(),
+      )
+      configShapeTransformer.value.nodes = []
+      selectedShapeId.value = ''
+    },
+
+    // キャンバス描画のRedo
+    canvasRedo(historyStep: number) {
       // 参照切る
-      const next = _.cloneDeep(this.canvasHistory[this.historyStep])
+      const next = _.cloneDeep(this.canvasHistory[historyStep])
       // line text image 上書き
       const { lines } = storeToRefs(useStoreLine())
       const { texts } = storeToRefs(useStoreText())
@@ -119,12 +135,6 @@ const useStoreStage = defineStore({
       lines.value = next.lines
       texts.value = next.texts
       konvaImages.value = next.images
-      // transformer 解除
-      const { configShapeTransformer, selectedShapeId } = storeToRefs(
-        useStoreTransformer(),
-      )
-      configShapeTransformer.value.nodes = []
-      selectedShapeId.value = ''
     },
   },
 })

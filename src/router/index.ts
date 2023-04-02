@@ -15,6 +15,7 @@ import profileSettingsView from '@/views/ProfileSettingsPage.vue'
 import WorkListView from '@/views/WorkList.vue'
 import GalleryView from '@/views/GalleryPage.vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import useStoreUserImage from '@/stores/userImage'
 /* eslint-enable */
 
 const router = createRouter({
@@ -92,6 +93,8 @@ async function autoLogin(to: RouteLocationNormalized) {
       if (user != null) {
         await authStore.setUser(user)
         await authStore.getCanvases()
+        const { loadUserImageStorage } = useStoreUserImage()
+        loadUserImageStorage()
         if (to.name === 'Home' || to.meta.requiresAuth === false) {
           await forceToWorksPage()
         }

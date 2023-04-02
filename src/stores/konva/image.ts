@@ -5,15 +5,26 @@ import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
 
-interface UploadedImage {
-  id: string
-  imgSrc: string
-}
-
 export interface KonvaImage {
   id: string
+  imageId: string
   name: string
   image: HTMLImageElement
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation: number
+  scaleX: number
+  scaleY: number
+}
+
+// firestoreにはimage elementを保存できないのでurlだけ保存
+export interface FirestoreCanvasImage {
+  id: string
+  imageId: string
+  name: string
+  image: string
   x: number
   y: number
   width: number
@@ -27,74 +38,114 @@ const useStoreImage = defineStore({
   id: 'image',
   state: () => ({
     dragUrl: '',
-    uploadedImages: [] as UploadedImage[],
-    konvaImages: [] as KonvaImage[],
+    dragUploadedImageId: '',
+    konvaImages: [] as KonvaImage[], // canvasの画像の状態（リアルタイム）
+    firstKonvaImages: [] as KonvaImage[], // canvas保存前の画像の状態
   }),
 
   actions: {
-    addImageList(e: Event) {
-      const inputElement = e.target as HTMLInputElement
-      if (inputElement === null) return
-      const { files } = inputElement
-      if (files === null) return
-      const file = files.item(0)
-      if (file === null) return
-      this.loadImage(file)
-      inputElement.value = ''
-    },
-
-    loadImage(file: File) {
-      // FileRenderオブジェクト
-      const reader = new FileReader()
-      // URLとして読み込まれたときに実行する処理
-      reader.onload = (e) => {
-        const fileReader = e.target
-        if (fileReader === null) return
-        const imgURL = fileReader.result as string
-        const id = nanoid()
-        // imageをstoreにupload
-        this.uploadedImages = [...this.uploadedImages, { id, imgSrc: imgURL }]
-      }
-      // ファイルをURLとして読み込む
-      reader.readAsDataURL(file)
-    },
-
-    // image listから削除
-    removeImage(imageId: string) {
-      this.uploadedImages = this.uploadedImages.filter(
-        (img) => img.id !== imageId,
+    // FirestoreCanvasImageをKonvaImageに変換
+    changeFirestoreCanvasImagesToKonvaImages(
+      firestoreCanvasImages: FirestoreCanvasImage[],
+    ) {
+      const konvaImageArray = [] as KonvaImage[]
+      firestoreCanvasImages?.forEach(
+        (firestoreCanvasImage: FirestoreCanvasImage) => {
+          konvaImageArray.push({
+            id: firestoreCanvasImage.id,
+            imageId: firestoreCanvasImage.imageId,
+            name: firestoreCanvasImage.name,
+            image: this.changeURLToImageElement(
+              firestoreCanvasImage.image,
+              firestoreCanvasImage.imageId,
+            ),
+            x: firestoreCanvasImage.x,
+            y: firestoreCanvasImage.y,
+            width: firestoreCanvasImage.width,
+            height: firestoreCanvasImage.height,
+            rotation: firestoreCanvasImage.rotation,
+            scaleX: firestoreCanvasImage.scaleX,
+            scaleY: firestoreCanvasImage.scaleY,
+          })
+        },
       )
+      return konvaImageArray
+    },
+
+    // KonvaImageをFirestoreCanvasImageに変換
+    changeKonvaImagesToFirestoreCanvasImages(konvaImages: KonvaImage[]) {
+      console.log('changeKonvaImagesToFirestoreCanvasImages')
+      const firestoreCanvasImagesArray = [] as FirestoreCanvasImage[]
+      konvaImages?.forEach((konvaImage: KonvaImage) => {
+        firestoreCanvasImagesArray.push({
+          id: konvaImage.id,
+          imageId: konvaImage.imageId,
+          name: konvaImage.name,
+          image: konvaImage.image.src,
+          x: konvaImage.x,
+          y: konvaImage.y,
+          width: konvaImage.width,
+          height: konvaImage.height,
+          rotation: konvaImage.rotation,
+          scaleX: konvaImage.scaleX,
+          scaleY: konvaImage.scaleY,
+        })
+      })
+      return firestoreCanvasImagesArray
+    },
+
+    // image urlをimage elementに変換する
+    changeURLToImageElement(url: string, id: string): HTMLImageElement {
+      // corsエラー回避のためanonymousにするとなぜかwidthとheightが0になるため
+      // originを生成し、widthとheightを取得しています。
+      const origin = new Image()
+      origin.src = url
+      // キャンバスに乗せる方のimage element
+      const imageElement = new Image()
+      imageElement.crossOrigin = 'anonymous'
+      imageElement.src = url
+      imageElement.id = id
+
+      // リサイズ
+      const originalWidth = origin.width
+      // widthは100pxに縮小するかそのまま
+      imageElement.width = Math.min(originalWidth, 100)
+      // 100pxに縮小したらheightも変更する
+      if (imageElement.width === 100) {
+        imageElement.height = (origin.height * 100) / originalWidth
+      }
+      return imageElement
     },
 
     // image drag
-    setDragUrl(e: DragEvent) {
+    setDragImageUrlAndId(e: DragEvent) {
       const img = e.target as HTMLImageElement
       this.dragUrl = img.src
+      this.dragUploadedImageId = img.id
     },
 
     // image drop
-    setImages(e: DragEvent, stageRef: Konva.Stage) {
+    async setImages(
+      e: DragEvent,
+      stageRef: Konva.Stage,
+      canvasId: string | string[],
+    ) {
       e.preventDefault()
       // register event position
       const stage = stageRef.getStage()
       stage.setPointersPositions(e)
-      // add image
-      const newImg = new Image()
-      newImg.src = this.dragUrl
 
-      // リサイズ
-      const originalWidth = newImg.width
-      // widthは200pxに縮小するかそのまま
-      newImg.width = Math.min(originalWidth, 100)
-      // 200pxに縮小したらheightも変更する
-      if (newImg.width === 100) {
-        newImg.height *= 100 / originalWidth
-      }
+      const newImg = this.changeURLToImageElement(
+        this.dragUrl,
+        this.dragUploadedImageId,
+      )
+
       const id = nanoid()
       const relativePointerPosition = stage.getRelativePointerPosition()
       this.konvaImages = this.konvaImages.concat([
         {
           id,
+          imageId: newImg.id,
           name: 'image',
           image: newImg,
           x: relativePointerPosition.x - newImg.width / 2,
@@ -110,8 +161,7 @@ const useStoreImage = defineStore({
       useStoreStage().handleEventEndSaveHistory()
 
       // モード終了し、サブメニューを閉じる
-      const { setMode } = useStoreMode()
-      setMode('none')
+      useStoreMode().$reset()
     },
 
     deleteImages() {

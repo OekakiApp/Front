@@ -26,13 +26,13 @@ The map you made can be downloaded for PNG.
 
 - Vue3
 - TypeScript
-- Vue konva
+- Vue konva v3
 - tailwindCSS
 - diasyUI
 
 ### BackEnd-Database
 
-- FireBase
+- Firebase v9
 
 ### Linters
 

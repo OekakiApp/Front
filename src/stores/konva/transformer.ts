@@ -322,7 +322,7 @@ const useStoreTransformer = defineStore({
     },
 
     // keydownで選択中の要素を削除
-    handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
+    async handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
       if (e.key === 'Delete') {
         if (this.configShapeTransformer.nodes.length === 0) return
         const selectedNode = this.configShapeTransformer.nodes[0]
@@ -341,6 +341,7 @@ const useStoreTransformer = defineStore({
         // image
         else if (selectedNode.name() === 'image') {
           const { konvaImages } = storeToRefs(useStoreImage())
+          // フロント側のキャンバスを更新
           konvaImages.value = konvaImages.value.filter(
             (image) => image.id !== selectedNode.id(),
           )
