@@ -9,7 +9,7 @@ import useAuthStore from '@/stores/auth'
 import TopView from '@/views/TopPage.vue'
 import LoginView from '@/views/LoginPage.vue'
 import SignUpView from '@/views/SignUpPage.vue'
-// import CreatePage from '@/views/CreatePage.vue'
+import CreatePage from '@/views/CreatePage.vue'
 import UserView from '@/views/UsersPage.vue'
 import profileSettingsView from '@/views/ProfileSettingsPage.vue'
 import WorkListView from '@/views/WorkList.vue'
@@ -41,8 +41,7 @@ const router = createRouter({
     {
       path: '/create/:canvas_id',
       name: 'Create',
-      // eslint-disable-next-line no-return-await
-      component: async () => await import('@/views/CreatePage.vue'),
+      component: CreatePage,
       meta: { requiresAuth: true },
     },
     {
