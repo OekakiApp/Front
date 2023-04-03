@@ -2,7 +2,6 @@
 import { defineStore } from 'pinia'
 import {
   query,
-  getDocs,
   where,
   collection,
   DocumentData,
@@ -22,17 +21,6 @@ const useStoreCanvas = defineStore({
         collection(db, 'canvas'),
         where('uid', '==', uid),
       )
-
-      await getDocs(canvasQuery)
-        .then((querySnapshot) => {
-          querySnapshot.forEach((document) => {
-            const canvasID = document.id
-            this.canvases[canvasID] = document.data()
-          })
-        })
-        .catch((error) => {
-          console.log(error)
-        })
 
       // リアルタイムでアップデートを取得する
       onSnapshot(canvasQuery, (querySnapshot) => {
