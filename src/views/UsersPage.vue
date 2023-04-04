@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import useAuthStore from '@/stores/auth'
+import useStoreCanvas from '@/stores/canvas'
 import { useRoute } from 'vue-router'
 import { db } from '@/firebase/index'
 import {
@@ -11,12 +12,13 @@ import {
   where,
   collection,
 } from 'firebase/firestore'
-import Icon from '../assets/user_icon.png'
+import Icon from '@/assets/user_icon.png'
 
 const route = useRoute()
 const authStore = useAuthStore()
+const authCanvas = useStoreCanvas()
 
-type Canvases = typeof authStore.canvases
+type Canvases = typeof authCanvas.canvases
 
 type User = {
   name: string
@@ -66,7 +68,7 @@ const setProfile = () => {
       profile: authStore.profile,
     }
     authIsReady.value = true
-    canvases.value = authStore.canvases
+    canvases.value = authCanvas.canvases
   }
 }
 
