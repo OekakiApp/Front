@@ -21,15 +21,24 @@ const useStoreCanvas = defineStore({
         collection(db, 'canvas'),
         where('uid', '==', uid),
       )
-
       // リアルタイムでアップデートを取得する
-      onSnapshot(canvasQuery, (querySnapshot) => {
-        const canvases = {} as DocumentData
-        querySnapshot.forEach((document) => {
-          const canvasID = document.id
-          canvases[canvasID] = document.data()
-        })
-        this.canvases = canvases
+      // eslint-disable-next-line no-return-await
+      return await new Promise<void>((resolve) => {
+        onSnapshot(
+          canvasQuery,
+          (querySnapshot) => {
+            const canvases = {} as DocumentData
+            querySnapshot.forEach((document) => {
+              const canvasID = document.id
+              canvases[canvasID] = document.data()
+            })
+            this.canvases = canvases
+            resolve()
+          },
+          (error) => {
+            console.log(error)
+          },
+        )
       })
     },
   },

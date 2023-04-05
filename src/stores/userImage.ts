@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid'
 import { defineStore, storeToRefs } from 'pinia'
 import {
   doc,
-  getDoc,
   Timestamp,
   setDoc,
   updateDoc,
@@ -165,7 +164,7 @@ const useStoreUserImage = defineStore({
 
     // ログイン時に呼び出し、削除判定
     // countOnCanvas === 0 && show === false ならfireStoregeとfirebaseから画像削除
-    async deleteImageFromStorageWithLogin() {
+    async deleteImageFromStorageWithLogin(uid: string) {
       const { userImageStorage } = this
       if (userImageStorage !== undefined) {
         // eslint-disable-next-line no-restricted-syntax
@@ -183,8 +182,7 @@ const useStoreUserImage = defineStore({
           }
         }
 
-        const { uid } = storeToRefs(useAuthStore())
-        const docRef = doc(db, 'userImageStorage', uid.value)
+        const docRef = doc(db, 'userImageStorage', uid)
         await setDoc(docRef, userImageStorage)
       }
     },
@@ -263,25 +261,27 @@ const useStoreUserImage = defineStore({
       }
     },
 
-    async loadUserImageStorage() {
-      const { uid } = storeToRefs(useAuthStore())
-      const docRef = doc(db, 'userImageStorage', uid.value)
-      const docSnapshot = await getDoc(docRef)
-      if (docSnapshot.exists()) {
-        this.userImageStorage = docSnapshot.data()
-      }
+    async loadUserImageStorage(uid: string) {
+      const docRef = doc(db, 'userImageStorage', uid)
 
       // onsnapshotでローカルのuserImageStorageを更新する
-      onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          this.userImageStorage = docSnap.data()
-        } else {
-          this.userImageStorage = {}
-        }
+      // eslint-disable-next-line no-return-await
+      return await new Promise<void>((resolve) => {
+        onSnapshot(
+          docRef,
+          (docSnap) => {
+            if (docSnap.exists()) {
+              this.userImageStorage = docSnap.data()
+            } else {
+              this.userImageStorage = {}
+            }
+            resolve()
+          },
+          (error) => {
+            console.log(error)
+          },
+        )
       })
-
-      // 使用されていない画像をStorageとFirestoreから削除
-      await this.deleteImageFromStorageWithLogin()
     },
   },
 
