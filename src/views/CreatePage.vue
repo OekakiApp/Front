@@ -377,6 +377,9 @@ const updateImageMetadata = async (fileRef: typeof StorageReference) => {
       console.log(error)
     })
 }
+
+// TODO 変数名変更
+const isOpen = ref(false)
 </script>
 
 <template lang="pug">
@@ -392,6 +395,15 @@ div(class="flex justify-center items-center my-4")
   //- done
   button(v-show="saveState === 'done'" type="button" class="flex items-center focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-4 py-1.5")
     span(class="material-symbols-outlined") done
+
+  div(class="relative ml-8")
+    button(class="three-dot-leader hover:opacity-80" type="button" @click="isOpen = !isOpen")
+        span(class="dot")
+    button(v-show="isOpen" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default" @click="isOpen = false")
+    div(v-show="isOpen"  class="absolute z-10 mt-2 py-2 w-48 bg-white rounded-lg shadow-xl" @click="isOpen = false")
+      a(class="block cursor-pointer px-4 py-2 text-gray-800 hover:bg-gray-100") テスト
+      a(class="block cursor-pointer px-4 py-2 text-gray-800 hover:bg-gray-100") テスト
+
 
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
@@ -453,3 +465,52 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
 div(class="container")
   ToolBar(:stage="stage" :save-canvas="saveCanvas")
 </template>
+
+<style>
+.three-dot-leader {
+  cursor: pointer;
+  border: none;
+  background: none;
+  display: block;
+  position: relative;
+  /* ボタン要素のサイズ */
+  width: 40px;
+  height: 40px;
+}
+
+.three-dot-leader .dot,
+.three-dot-leader .dot::before,
+.three-dot-leader .dot::after {
+  display: block;
+  position: absolute;
+  border-radius: 50%;
+  /* ドット1つのサイズ */
+  width: 6px;
+  height: 6px;
+  /* ドットの色 */
+  background-color: #333;
+}
+
+.three-dot-leader .dot {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+}
+
+.three-dot-leader .dot::before,
+.three-dot-leader .dot::after {
+  content: '';
+}
+
+.three-dot-leader .dot::before {
+  /* 上側ドットの位置 */
+  top: -12px;
+}
+
+.three-dot-leader .dot::after {
+  /* 下側ドットの位置 */
+  top: 12px;
+}
+</style>
