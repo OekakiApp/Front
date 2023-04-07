@@ -22,8 +22,7 @@ const useStoreCanvas = defineStore({
         where('uid', '==', uid),
       )
       // リアルタイムでアップデートを取得する
-      // eslint-disable-next-line no-return-await
-      return await new Promise<void>((resolve) => {
+      const promise = new Promise<void>((resolve) => {
         onSnapshot(
           canvasQuery,
           (querySnapshot) => {
@@ -40,6 +39,7 @@ const useStoreCanvas = defineStore({
           },
         )
       })
+      await promise
     },
   },
 })

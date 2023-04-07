@@ -264,9 +264,8 @@ const useStoreUserImage = defineStore({
     async loadUserImageStorage(uid: string) {
       const docRef = doc(db, 'userImageStorage', uid)
 
-      // onsnapshotでローカルのuserImageStorageを更新する
-      // eslint-disable-next-line no-return-await
-      return await new Promise<void>((resolve) => {
+      // リアルタイムでアップデートを取得する
+      const promise = new Promise<void>((resolve) => {
         onSnapshot(
           docRef,
           (docSnap) => {
@@ -282,6 +281,7 @@ const useStoreUserImage = defineStore({
           },
         )
       })
+      await promise
     },
   },
 

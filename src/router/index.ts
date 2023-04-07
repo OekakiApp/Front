@@ -98,7 +98,7 @@ async function autoLogin(to: RouteLocationNormalized) {
         // ユーザーがアップロードした画像を取得
         await loadUserImageStorage(user.uid)
         // 使用されていない画像をStorageとFirestoreから削除
-        await deleteImageFromStorageWithLogin(user.uid)
+        deleteImageFromStorageWithLogin(user.uid)
         if (to.name === 'Home' || to.meta.requiresAuth === false) {
           await forceToWorksPage()
         }
