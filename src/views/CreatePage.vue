@@ -81,7 +81,7 @@ const {
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
-const canvasId = ref(useRoute().params.canvas_id)
+const canvasId = ref(useRoute().params.canvas_id as string)
 const router = useRouter()
 
 type SaveState = 'normal' | 'loading' | 'done'
@@ -128,7 +128,16 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
 }
 
 onMounted(async () => {
+  // 初期化
+  useStoreMode().$reset()
+  useStoreLine().$reset()
+  useStoreText().$reset()
+  useStoreImage().$reset()
+  useStoreStage().$reset()
+
+  // stageのリサイズ
   fitStageIntoParentContainer(stageParentDiv.value)
+
   window.addEventListener('resize', () =>
     fitStageIntoParentContainer(stageParentDiv.value),
   )
@@ -138,6 +147,7 @@ onMounted(async () => {
   })
 
   // Font読み込み
+  // TODO:まれに読み込みが完了しない場合があるため、要検証
   if (!isFontLoaded.value) {
     WebFont.load({
       google: {
@@ -154,22 +164,10 @@ onMounted(async () => {
     })
   }
 
-  // 初期化
-  mode.value = 'none'
-  lines.value = []
-  texts.value = []
-  konvaImages.value = []
-  // 履歴初期化
-  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
-  historyStep.value = 0
-
-  const canvasVal = canvasId.value
-  // 途中からの場合
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
-    const canvas = canvases.value[canvasVal]
+  // キャンバスが既にある場合
+  if (canvases.value[canvasId.value] !== undefined) {
+    const canvas = canvases.value[canvasId.value]
+    // キャンバスの各プロパティをセット
     lines.value = canvas.lines
     texts.value = canvas.texts
     konvaImages.value = changeFirestoreCanvasImagesToKonvaImages(
@@ -184,9 +182,9 @@ onMounted(async () => {
         images: _.cloneDeep(konvaImages.value),
       },
     ]
+    // 編集開始時のkonvaImagesをセット（画像の使用状況追跡のため）
+    firstKonvaImages.value = _.cloneDeep(konvaImages.value)
   }
-  // 初期状態のkonvaImagesを保存
-  firstKonvaImages.value = _.cloneDeep(konvaImages.value)
 })
 
 onUnmounted(() => {
