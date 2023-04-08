@@ -157,8 +157,8 @@ onMounted(() => {
   if (canvases.value[canvasId.value] !== undefined) {
     const canvas = canvases.value[canvasId.value]
     // キャンバスの各プロパティをセット
-    lines.value = canvas.lines
-    texts.value = canvas.texts
+    lines.value = _.cloneDeep(canvas.lines)
+    texts.value = _.cloneDeep(canvas.texts)
     konvaImages.value = changeFirestoreCanvasImagesToKonvaImages(
       canvas.konvaImages,
     )
