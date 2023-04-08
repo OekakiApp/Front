@@ -6,9 +6,8 @@ import { db, storage } from '@/firebase/index'
 import { doc, Timestamp, updateDoc, setDoc } from 'firebase/firestore'
 import {
   ref as storageRef,
-  uploadBytesResumable,
   getDownloadURL,
-  updateMetadata,
+  uploadString,
 } from 'firebase/storage'
 import ToolBar from '@/components/ToolBar.vue'
 import UserCursor from '@/components/UserCursor.vue'
@@ -26,10 +25,7 @@ import Konva from 'konva'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
 
-// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-type KonvaEventObject<T> = Konva.KonvaEventObject<T>
-const StorageReference = storageRef(storage, '')
-
+// useStore start
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
@@ -77,17 +73,26 @@ const {
   setImages,
   handleImageDragEnd,
 } = useStoreImage()
+// useStore end
+
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+type KonvaEventObject<T> = Konva.KonvaEventObject<T>
+type SaveState = 'normal' | 'loading' | 'done'
 
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
 const canvasId = ref(useRoute().params.canvas_id as string)
 const router = useRouter()
-
-type SaveState = 'normal' | 'loading' | 'done'
-
 const saveState = ref<SaveState>('normal')
 // const selectionRectangle = ref()
+
+const showDoneBtn = () => {
+  saveState.value = 'done'
+  setTimeout(() => {
+    saveState.value = 'normal'
+  }, 3000)
+}
 
 const inputText = reactive({
   inputType: 'text',
@@ -105,6 +110,7 @@ const blurInput = () => {
 }
 
 // ショートカット
+// TODO: 全てのショートカット実装
 const changeModeByShortCut = (e: KeyboardEvent) => {
   // テキスト編集中はショートカット無効
   if (isEditing.value || inputText.isEditing) return
@@ -197,6 +203,7 @@ onUnmounted(() => {
   })
 })
 
+// セーブ中は他のページに遷移できない
 router.beforeEach(() => {
   if (saveState.value === 'loading') {
     return false
@@ -204,25 +211,20 @@ router.beforeEach(() => {
   return true
 })
 
+// キャンバスの保存
 const saveCanvas = async (): Promise<void> => {
   // 選択を解除
-  selectedShapeId.value = ''
-  configShapeTransformer.value.nodes = []
-
+  useStoreTransformer().$reset()
   // btn loadingに変更
   saveState.value = 'loading'
 
   // 途中からの場合
-  const canvasVal = canvasId.value
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
+  if (canvases.value[canvasId.value] !== undefined) {
     // createdAtがある場合
-    if (canvases.value[canvasVal].createdAt !== undefined) {
+    if (canvases.value[canvasId.value].createdAt !== undefined) {
       // isShareがある場合
-      if (canvases.value[canvasVal].isShare !== undefined) {
-        await updateDoc(doc(db, 'canvas', canvasVal), {
+      if (canvases.value[canvasId.value].isShare !== undefined) {
+        await updateDoc(doc(db, 'canvas', canvasId.value), {
           name: inputText.text === '' ? 'タイトル' : inputText.text,
           lines: lines.value,
           texts: texts.value,
@@ -233,7 +235,7 @@ const saveCanvas = async (): Promise<void> => {
         })
         // isShareがない場合
       } else {
-        await updateDoc(doc(db, 'canvas', canvasVal), {
+        await updateDoc(doc(db, 'canvas', canvasId.value), {
           name: inputText.text === '' ? 'タイトル' : inputText.text,
           lines: lines.value,
           texts: texts.value,
@@ -247,8 +249,8 @@ const saveCanvas = async (): Promise<void> => {
     }
     // createdAtがない場合
     // isShareがある場合
-    else if (canvases.value[canvasVal].isShare !== undefined) {
-      await updateDoc(doc(db, 'canvas', canvasVal), {
+    else if (canvases.value[canvasId.value].isShare !== undefined) {
+      await updateDoc(doc(db, 'canvas', canvasId.value), {
         name: inputText.text === '' ? 'タイトル' : inputText.text,
         lines: lines.value,
         texts: texts.value,
@@ -260,7 +262,7 @@ const saveCanvas = async (): Promise<void> => {
       })
       // isShareがない場合
     } else {
-      await updateDoc(doc(db, 'canvas', canvasVal), {
+      await updateDoc(doc(db, 'canvas', canvasId.value), {
         name: inputText.text === '' ? 'タイトル' : inputText.text,
         lines: lines.value,
         texts: texts.value,
@@ -274,11 +276,8 @@ const saveCanvas = async (): Promise<void> => {
     }
   }
   // 新規の場合
-  else if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] === undefined
-  ) {
-    await setDoc(doc(db, 'canvas', canvasVal), {
+  else {
+    await setDoc(doc(db, 'canvas', canvasId.value), {
       name: inputText.text === '' ? 'タイトル' : inputText.text,
       lines: lines.value,
       texts: texts.value,
@@ -289,87 +288,44 @@ const saveCanvas = async (): Promise<void> => {
       isShare: false,
     })
   }
-
   // 画像の使用枚数の更新
   saveImageCountToFirebase(firstKonvaImages.value, konvaImages.value)
-  // firstKonvaImagesの状態を更新
+  // 保存時点でのkonvaImagesをセット(画像の使用状況追跡のため)
   firstKonvaImages.value = _.cloneDeep(konvaImages.value)
-
-  saveImage()
+  // サムネイルを生成・保存
+  generageAndSaveThumbnail()
 }
 
-const saveImage = () => {
-  const canvasVal = canvasId.value
-  const file = stage.value.getStage().toDataURL({
+// サムネイルを生成し、storageにアップロード
+// キャンバスのサムネイルとしてfiresotreに保存
+const generageAndSaveThumbnail = () => {
+  // キャンバスからData URL stringを取得
+  const dataURLString: string = stage.value.getStage().toDataURL({
     quality: 1,
     pixelRatio: 2,
     mimeType: 'image/png',
   })
-
-  uploadURI(file, `${canvasVal}.png`)
-}
-
-const uploadURI = async (uri: string, name: string) => {
-  const blob = await (await fetch(uri)).blob()
-  const file = new File([blob], name)
-
-  const fileRef = storageRef(storage, `canvas-image/${name}`)
-  const uploadTask = uploadBytesResumable(fileRef, file)
-
-  uploadTask.on(
-    'state_changed',
+  const thumbnailName = `${canvasId.value}.png`
+  // 保存先の参照を生成(firebase storage)
+  const fileRef = storageRef(storage, `canvas-image/${thumbnailName}`)
+  const metadata = {
+    contentType: 'image/png',
+  }
+  // 文字列(Data URL string)から画像をアップロード
+  uploadString(fileRef, dataURLString, 'data_url', metadata).then(
     (snapshot) => {
-      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-      console.log(`Upload is ${progress}% done`)
-      switch (snapshot.state) {
-        case 'paused':
-          console.log('Upload is paused')
-          break
-        case 'running':
-          console.log('Upload is running')
-          break
-        // no default
-      }
-    },
-    (error) => {
-      console.log(error)
-    },
-    () => {
-      const canvasVal = canvasId.value
-      getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-        if (typeof canvasVal === 'string') {
-          await updateDoc(doc(db, 'canvas', canvasVal), {
-            image: downloadURL,
-          })
-          await updateImageMetadata(fileRef)
-
-          // firebase,storeの更新終了
-          showDoneBtn()
-        }
+      console.log('Uploaded a data_url string!')
+      // storageの画像URLをダウンロード
+      getDownloadURL(snapshot.ref).then(async (downloadURL) => {
+        await updateDoc(doc(db, 'canvas', canvasId.value), {
+          image: downloadURL,
+        })
+        // firebase,storageの更新終了
+        // btn done -> normal
+        showDoneBtn()
       })
     },
   )
-}
-
-const showDoneBtn = () => {
-  saveState.value = 'done'
-  setTimeout(() => {
-    saveState.value = 'normal'
-  }, 3000)
-}
-
-const updateImageMetadata = async (fileRef: typeof StorageReference) => {
-  const newMetadata = {
-    contentType: 'image/png',
-  }
-
-  await updateMetadata(fileRef, newMetadata)
-    .then((metadata) => {
-      console.log(metadata)
-    })
-    .catch((error) => {
-      console.log(error)
-    })
 }
 </script>
 
