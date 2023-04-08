@@ -195,9 +195,6 @@ onUnmounted(() => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
   })
-
-  // 履歴(canvasHistory)のリセット
-  useStoreStage().$reset()
 })
 
 router.beforeEach(() => {
