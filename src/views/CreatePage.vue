@@ -29,7 +29,7 @@ import _ from 'lodash'
 const { mode } = storeToRefs(useStoreMode())
 const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
-const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
+const { texts, isEditing } = storeToRefs(useStoreText())
 const { uid } = storeToRefs(useAuthStore())
 const { canvases } = storeToRefs(useStoreCanvas())
 const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
@@ -140,6 +140,7 @@ onMounted(() => {
   useStoreText().$reset()
   useStoreImage().$reset()
   useStoreStage().$reset()
+  useStoreTransformer().$reset()
 
   // stageのリサイズ
   fitStageIntoParentContainer(stageParentDiv.value)
@@ -151,24 +152,6 @@ onMounted(() => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
   })
-
-  // Font読み込み
-  // TODO:まれに読み込みが完了しない場合があるため、要検証
-  if (!isFontLoaded.value) {
-    WebFont.load({
-      google: {
-        families: fontFamilyList,
-      },
-      loading: () => {
-        console.log('font is loading')
-      },
-      // 全てWebフォントの読み込みが完了したときに発火
-      active: () => {
-        isFontLoaded.value = true
-        console.log('fonts is loaded!')
-      },
-    })
-  }
 
   // キャンバスが既にある場合
   if (canvases.value[canvasId.value] !== undefined) {
@@ -191,6 +174,20 @@ onMounted(() => {
     // 編集開始時のkonvaImagesをセット(画像の使用状況追跡のため)
     firstKonvaImages.value = _.cloneDeep(konvaImages.value)
   }
+
+  // Font読み込み(キャンバスのセット後に読み込む必要あり)
+  WebFont.load({
+    google: {
+      families: fontFamilyList,
+    },
+    loading: () => {
+      console.log('font is loading')
+    },
+    // 全てWebフォントの読み込みが完了したときに発火
+    active: () => {
+      console.log('fonts is loaded!')
+    },
+  })
 })
 
 onUnmounted(() => {
