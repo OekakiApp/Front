@@ -49,24 +49,6 @@ const toolArray: {
   shortcut: string
   event: () => void
 }[] = reactive([
-  // {
-  //   icon: 'navigation',
-  //   mode: 'select',
-  //   tooltip: 'Select tool',
-  //   shortcut: 'V',
-  //   event: () => {
-  //     setMode('select')
-  //   },
-  // },
-  // {
-  //   icon: 'pan_tool',
-  //   mode: 'hand',
-  //   tooltip: 'Hand tool',
-  //   shortcut: 'H',
-  //   event: () => {
-  //     setMode('hand')
-  //   },
-  // },
   {
     icon: 'edit',
     mode: 'pen',
@@ -74,7 +56,7 @@ const toolArray: {
     shortcut: 'P',
     event: () => {
       setMode('pen')
-      setGlobalCompositeOperation()
+      setGlobalCompositeOperation('source-over')
       configShapeTransformer.value.nodes = []
       selectedShapeId.value = ''
     },
@@ -87,7 +69,7 @@ const toolArray: {
     event: () => {
       setMode('eraser')
       setLineStyle('normal')
-      setGlobalCompositeOperation()
+      setGlobalCompositeOperation('destination-out')
       configShapeTransformer.value.nodes = []
       selectedShapeId.value = ''
     },
@@ -99,17 +81,10 @@ const toolArray: {
     shortcut: 'T',
     event: () => {
       setMode('text')
+      configShapeTransformer.value.nodes = []
+      selectedShapeId.value = ''
     },
   },
-  // {
-  //   icon: 'sticky_note_2',
-  //   mode: 'sticky',
-  //   tooltip: 'Sticky note',
-  //   shortcut: 'S',
-  //   event: () => {
-  //     setMode('sticky')
-  //   },
-  // },
   {
     icon: 'image',
     mode: 'image',
@@ -117,6 +92,8 @@ const toolArray: {
     shortcut: 'I',
     event: () => {
       setMode('image')
+      configShapeTransformer.value.nodes = []
+      selectedShapeId.value = ''
     },
   },
 ])
@@ -148,7 +125,7 @@ div(class="flex flex-col items-center relative")
   SubToolMenu
   div(class="flex justify-center items-centers w-full max-w-screen-xl px-4 py-3 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 z-0")
     ul.flex
-      //- select hand pen text sticky image
+      //- pen text image
       li(v-for="(tool, index) of toolArray" :key="index" class="flex mx-2")
         button(v-show="mode !== tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
           span(class="material-symbols-outlined") {{tool.icon}}

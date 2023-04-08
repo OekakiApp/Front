@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-// import { Color } from '@/types/index'
+
 interface Color {
   name: string
   type: 'color-button' | 'color-picker'
