@@ -31,7 +31,7 @@ type KonvaEventObject<T> = Konva.KonvaEventObject<T>
 const StorageReference = storageRef(storage, '')
 
 const { mode } = storeToRefs(useStoreMode())
-const { configKonva, canvasHistory, historyStep } = storeToRefs(useStoreStage())
+const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
 const { uid } = storeToRefs(useAuthStore())
@@ -182,7 +182,7 @@ onMounted(async () => {
         images: _.cloneDeep(konvaImages.value),
       },
     ]
-    // 編集開始時のkonvaImagesをセット（画像の使用状況追跡のため）
+    // 編集開始時のkonvaImagesをセット(画像の使用状況追跡のため)
     firstKonvaImages.value = _.cloneDeep(konvaImages.value)
   }
 })
@@ -196,9 +196,8 @@ onUnmounted(() => {
     handleKeyDownSelectedNodeDelete(e)
   })
 
-  // canvasHistoryのリセット
-  historyStep.value = 0
-  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  // 履歴(canvasHistory)のリセット
+  useStoreStage().$reset()
 })
 
 router.beforeEach(() => {
