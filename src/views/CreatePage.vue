@@ -133,7 +133,7 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   // redo
 }
 
-onMounted(async () => {
+onMounted(() => {
   // 初期化
   useStoreMode().$reset()
   useStoreLine().$reset()
