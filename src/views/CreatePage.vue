@@ -451,5 +451,5 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
-  ToolBar(:stage="stage" :save-canvas="saveCanvas")
+  ToolBar(:stage="stage" :stage-parent-div="stageParentDiv" :save-canvas="saveCanvas")
 </template>

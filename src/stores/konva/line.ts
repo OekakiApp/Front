@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid'
 import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 
-interface Points {
+export interface Points {
   id: string
   name: string
   points: number[]

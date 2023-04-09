@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, toRefs } from 'vue'
 import { storeToRefs } from 'pinia'
 import Konva from 'konva'
 import useStoreMode, { type Mode } from '@/stores/mode'
@@ -13,10 +13,12 @@ import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
 
 interface Props {
   stage: Konva.Stage
+  stageParentDiv: HTMLDivElement
   saveCanvas: () => Promise<void>
 }
 
 const props = defineProps<Props>()
+const { stage, stageParentDiv } = toRefs(props)
 
 const { mode } = storeToRefs(useStoreMode())
 const { setMode } = useStoreMode()
@@ -24,10 +26,7 @@ const { setLineStyle, setGlobalCompositeOperation, deleteLines } =
   useStoreLine()
 const { deleteTexts } = useStoreText()
 const { deleteImages } = useStoreImage()
-const { configShapeTransformer, selectedShapeId } = storeToRefs(
-  useStoreTransformer(),
-)
-const { historyStep, canvasHistory } = storeToRefs(useStoreStage())
+const { fitStageIntoParentContainer } = useStoreStage()
 
 const resetCanvas = async () => {
   // delete
@@ -38,8 +37,32 @@ const resetCanvas = async () => {
   // キャンバスの状態をfirebaseに保存
   props.saveCanvas()
   // reset history
-  historyStep.value = 0
-  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
+  useStoreStage().$reset()
+  // stageのリサイズ
+  fitStageIntoParentContainer(stageParentDiv.value)
+}
+
+// キャンバスをPNGでダウンロード
+const downloadImage = async () =>
+  new Promise<void>((resolve) => {
+    useStoreTransformer().$reset()
+    resolve()
+  }).then(() => {
+    const dataURL = stage.value.getStage().toDataURL({
+      quality: 1,
+      pixelRatio: 2,
+      mimeType: 'image/png',
+    })
+    downloadURI(dataURL, 'stage.png')
+  })
+
+const downloadURI = (uri: string, name: string) => {
+  const link = document.createElement('a')
+  link.download = name
+  link.href = uri
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 const toolArray: {
@@ -57,8 +80,7 @@ const toolArray: {
     event: () => {
       setMode('pen')
       setGlobalCompositeOperation('source-over')
-      configShapeTransformer.value.nodes = []
-      selectedShapeId.value = ''
+      useStoreTransformer().$reset()
     },
   },
   {
@@ -70,8 +92,7 @@ const toolArray: {
       setMode('eraser')
       setLineStyle('normal')
       setGlobalCompositeOperation('destination-out')
-      configShapeTransformer.value.nodes = []
-      selectedShapeId.value = ''
+      useStoreTransformer().$reset()
     },
   },
   {
@@ -81,8 +102,7 @@ const toolArray: {
     shortcut: 'T',
     event: () => {
       setMode('text')
-      configShapeTransformer.value.nodes = []
-      selectedShapeId.value = ''
+      useStoreTransformer().$reset()
     },
   },
   {
@@ -92,32 +112,10 @@ const toolArray: {
     shortcut: 'I',
     event: () => {
       setMode('image')
-      configShapeTransformer.value.nodes = []
-      selectedShapeId.value = ''
+      useStoreTransformer().$reset()
     },
   },
 ])
-
-const downloadURI = (uri: string, name: string) => {
-  const link = document.createElement('a')
-  link.download = name
-  link.href = uri
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
-
-const saveImage = () => {
-  // 選択解除
-  selectedShapeId.value = ''
-  configShapeTransformer.value.nodes = []
-  // なぜか出力した画像上では選択が解除されない…（props.stageが非リアクティブ?）
-  const dataURL = props.stage.getStage().toDataURL({
-    quality: 1,
-    pixelRatio: 2,
-  })
-  downloadURI(dataURL, 'stage.png')
-}
 </script>
 
 <template lang="pug">
@@ -139,7 +137,7 @@ div(class="flex flex-col items-center relative")
           span(class="material-symbols-outlined") delete
       //- Download
       li.flex.mx-2
-        button(type="button" data-tip="Download" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="saveImage")
+        button(type="button" data-tip="Download" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="downloadImage")
           span(class="material-symbols-outlined") file_download
 
 input(id="my-modal" type="checkbox" className="modal-toggle")

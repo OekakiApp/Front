@@ -1,11 +1,8 @@
+/* eslint-disable import/no-cycle */
 import { defineStore, storeToRefs } from 'pinia'
-// eslint-disable-next-line import/no-cycle
 import useStoreLine, { Points } from '@/stores/konva/line'
-// eslint-disable-next-line import/no-cycle
 import useStoreText, { TextNode } from '@/stores/konva/text'
-// eslint-disable-next-line import/no-cycle
 import useStoreImage, { KonvaImage } from '@/stores/konva/image'
-// eslint-disable-next-line import/no-cycle
 import useStoreTransformer from '@/stores/konva/transformer'
 import _ from 'lodash'
 
@@ -85,17 +82,13 @@ const useStoreStage = defineStore({
       this.historyStep += 1
     },
 
-    async handleUndo() {
+    handleUndo() {
       // これ以上遡れない場合何もしない
       if (this.historyStep === 0) return
       this.historyStep -= 1
       this.canvasUndo(this.historyStep)
       // transformer 解除
-      const { configShapeTransformer, selectedShapeId } = storeToRefs(
-        useStoreTransformer(),
-      )
-      configShapeTransformer.value.nodes = []
-      selectedShapeId.value = ''
+      useStoreTransformer().$reset()
     },
 
     // キャンバス描画のUndo
@@ -111,17 +104,13 @@ const useStoreStage = defineStore({
       konvaImages.value = previous.images
     },
 
-    async handleRedo() {
+    handleRedo() {
       // 履歴の上限の場合何もしない
       if (this.historyStep === this.canvasHistory.length - 1) return
       this.historyStep += 1
       this.canvasRedo(this.historyStep)
       // transformer 解除
-      const { configShapeTransformer, selectedShapeId } = storeToRefs(
-        useStoreTransformer(),
-      )
-      configShapeTransformer.value.nodes = []
-      selectedShapeId.value = ''
+      useStoreTransformer().$reset()
     },
 
     // キャンバス描画のRedo
