@@ -184,9 +184,8 @@ const useStoreTransformer = defineStore({
     ) {
       // clicked on stage - clear selection
       if (e.target.attrs.name === 'background-rect') {
-        this.selectedShapeId = ''
         // 選択されているnodesを空にする
-        this.configShapeTransformer.nodes = []
+        this.$reset()
         return
       }
 
@@ -220,19 +219,7 @@ const useStoreTransformer = defineStore({
           // 選択したテキストの色を取得
           fill.value = text.fill
         } else {
-          this.selectedShapeId = ''
-          this.configShapeTransformer.nodes = []
-          // reset transformer anchors
-          this.configShapeTransformer.enabledAnchors = [
-            'top-left',
-            'top-center',
-            'top-right',
-            'middle-right',
-            'middle-left',
-            'bottom-left',
-            'bottom-center',
-            'bottom-right',
-          ]
+          this.$reset()
         }
       }
       // image
@@ -253,19 +240,7 @@ const useStoreTransformer = defineStore({
           this.selectedShapeId = id
           this.configShapeTransformer.nodes = [e.target]
         } else {
-          this.selectedShapeId = ''
-          this.configShapeTransformer.nodes = []
-          // reset transformer anchors
-          this.configShapeTransformer.enabledAnchors = [
-            'top-left',
-            'top-center',
-            'top-right',
-            'middle-right',
-            'middle-left',
-            'bottom-left',
-            'bottom-center',
-            'bottom-right',
-          ]
+          this.$reset()
         }
       }
     },
@@ -337,8 +312,7 @@ const useStoreTransformer = defineStore({
           texts.value = texts.value.filter(
             (text) => text.id !== selectedNode.id(),
           )
-          this.configShapeTransformer.nodes = []
-          this.selectedShapeId = ''
+          this.$reset()
         }
         // image
         else if (selectedNode.name() === 'image') {
@@ -347,8 +321,7 @@ const useStoreTransformer = defineStore({
           konvaImages.value = konvaImages.value.filter(
             (image) => image.id !== selectedNode.id(),
           )
-          this.configShapeTransformer.nodes = []
-          this.selectedShapeId = ''
+          this.$reset()
         }
       }
       useStoreStage().handleEventEndSaveHistory()
