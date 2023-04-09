@@ -1,10 +1,9 @@
+/* eslint-disable import/no-cycle */
 import { defineStore, storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
 import useStoreMode from '@/stores/mode'
-// eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
-// eslint-disable-next-line import/no-cycle
 import useStoreTransformer from '@/stores/konva/transformer'
 
 type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
@@ -48,14 +47,13 @@ export interface TextNode {
 const useStoreText = defineStore({
   id: 'text',
   state: () => ({
+    texts: [] as TextNode[],
     fontSize: 30, // default font size
     fontFamily: 'Roboto',
     fontStyle: 'normal',
     textDecoration: 'empty string',
     fill: '#1E1E1E',
     align: 'left',
-    verticalAlign: 'top',
-    texts: [] as TextNode[],
     isFontLoaded: false,
     isEditing: false,
   }),
@@ -72,12 +70,10 @@ const useStoreText = defineStore({
       // get x, y of Stage
       const point = stage.getRelativePointerPosition()
       // add text
-      const id = nanoid()
-
       this.texts = [
         ...this.texts,
         {
-          id,
+          id: nanoid(),
           text: 'Double click to edit text...',
           rotation: 0,
           x: point.x,

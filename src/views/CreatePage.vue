@@ -112,12 +112,12 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   else if (e.key === 'v') setMode('select')
   else if (e.key === 'p' || e.key === 'm') {
     setMode('pen')
-    setGlobalCompositeOperation()
+    setGlobalCompositeOperation('source-over')
     configShapeTransformer.value.nodes = []
     selectedShapeId.value = ''
   } else if (e.shiftKey && e.key === 'Delete') {
     setMode('eraser')
-    setGlobalCompositeOperation()
+    setGlobalCompositeOperation('destination-out')
     configShapeTransformer.value.nodes = []
     selectedShapeId.value = ''
   } else if (e.key === 't') setMode('text')

@@ -212,11 +212,13 @@ const useStoreTransformer = defineStore({
           'middle-right',
         ]
 
-        const { texts } = storeToRefs(useStoreText())
+        const { texts, fill } = storeToRefs(useStoreText())
         const text = texts.value.find((t) => t.id === id)
         if (text !== undefined) {
           this.selectedShapeId = id
           this.configShapeTransformer.nodes = [e.target]
+          // 選択したテキストの色を取得
+          fill.value = text.fill
         } else {
           this.selectedShapeId = ''
           this.configShapeTransformer.nodes = []
