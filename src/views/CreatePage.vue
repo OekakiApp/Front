@@ -133,15 +133,19 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   // redo
 }
 
-onMounted(() => {
-  // 初期化
+// CreatePageに関わるstoreを初期化
+const initializeCanvas = () => {
   useStoreMode().$reset()
   useStoreLine().$reset()
   useStoreText().$reset()
   useStoreImage().$reset()
   useStoreStage().$reset()
   useStoreTransformer().$reset()
+}
 
+onMounted(() => {
+  // 初期化
+  initializeCanvas()
   // stageのリサイズ
   fitStageIntoParentContainer(stageParentDiv.value)
 
@@ -154,8 +158,9 @@ onMounted(() => {
   })
 
   // キャンバスが既にある場合
-  if (canvases.value[canvasId.value] !== undefined) {
-    const canvas = canvases.value[canvasId.value]
+  const canvasID = canvasId.value
+  if (canvases.value[canvasID] !== undefined) {
+    const canvas = canvases.value[canvasID]
     // キャンバスの各プロパティをセット
     lines.value = _.cloneDeep(canvas.lines)
     texts.value = _.cloneDeep(canvas.texts)
@@ -216,65 +221,29 @@ const saveCanvas = async (): Promise<void> => {
   saveState.value = 'loading'
 
   // 途中からの場合
-  if (canvases.value[canvasId.value] !== undefined) {
-    // createdAtがある場合
-    if (canvases.value[canvasId.value].createdAt !== undefined) {
-      // isShareがある場合
-      if (canvases.value[canvasId.value].isShare !== undefined) {
-        await updateDoc(doc(db, 'canvas', canvasId.value), {
-          name: inputText.text === '' ? 'タイトル' : inputText.text,
-          lines: lines.value,
-          texts: texts.value,
-          konvaImages: changeKonvaImagesToFirestoreCanvasImages(
-            konvaImages.value,
-          ),
-          updatedAt: Timestamp.now(),
-        })
-        // isShareがない場合
-      } else {
-        await updateDoc(doc(db, 'canvas', canvasId.value), {
-          name: inputText.text === '' ? 'タイトル' : inputText.text,
-          lines: lines.value,
-          texts: texts.value,
-          konvaImages: changeKonvaImagesToFirestoreCanvasImages(
-            konvaImages.value,
-          ),
-          updatedAt: Timestamp.now(),
-          isShare: false,
-        })
-      }
-    }
-    // createdAtがない場合
-    // isShareがある場合
-    else if (canvases.value[canvasId.value].isShare !== undefined) {
-      await updateDoc(doc(db, 'canvas', canvasId.value), {
-        name: inputText.text === '' ? 'タイトル' : inputText.text,
-        lines: lines.value,
-        texts: texts.value,
-        konvaImages: changeKonvaImagesToFirestoreCanvasImages(
-          konvaImages.value,
-        ),
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      })
-      // isShareがない場合
-    } else {
-      await updateDoc(doc(db, 'canvas', canvasId.value), {
-        name: inputText.text === '' ? 'タイトル' : inputText.text,
-        lines: lines.value,
-        texts: texts.value,
-        konvaImages: changeKonvaImagesToFirestoreCanvasImages(
-          konvaImages.value,
-        ),
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        isShare: false,
-      })
-    }
+  const canvasID = canvasId.value
+  if (canvases.value[canvasID] !== undefined) {
+    await updateDoc(doc(db, 'canvas', canvasID), {
+      name: inputText.text === '' ? 'タイトル' : inputText.text,
+      lines: lines.value,
+      texts: texts.value,
+      konvaImages: changeKonvaImagesToFirestoreCanvasImages(konvaImages.value),
+      // createdAtの有無を判定
+      createdAt:
+        canvases.value[canvasID].createdAt === undefined
+          ? Timestamp.now()
+          : canvases.value[canvasID].createdAt,
+      updatedAt: Timestamp.now(),
+      // isShareの有無を判定
+      isShare:
+        canvases.value[canvasID].isShare === undefined
+          ? false
+          : canvases.value[canvasID].isShare,
+    })
   }
   // 新規の場合
   else {
-    await setDoc(doc(db, 'canvas', canvasId.value), {
+    await setDoc(doc(db, 'canvas', canvasID), {
       name: inputText.text === '' ? 'タイトル' : inputText.text,
       lines: lines.value,
       texts: texts.value,
@@ -290,12 +259,12 @@ const saveCanvas = async (): Promise<void> => {
   // 保存時点でのkonvaImagesをセット(画像の使用状況追跡のため)
   firstKonvaImages.value = _.cloneDeep(konvaImages.value)
   // サムネイルを生成・保存
-  generageAndSaveThumbnail()
+  generateAndSaveThumbnail()
 }
 
 // サムネイルを生成し、storageにアップロード
 // キャンバスのサムネイルとしてfiresotreに保存
-const generageAndSaveThumbnail = () => {
+const generateAndSaveThumbnail = () => {
   // キャンバスからData URL stringを取得
   const dataURLString: string = stage.value.getStage().toDataURL({
     quality: 1,
