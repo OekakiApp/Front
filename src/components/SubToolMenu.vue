@@ -231,7 +231,7 @@ watch(fill, () => {
 
 <template lang="pug">
 //- pen
-div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
+div(v-show="mode === 'pen'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
   LineStyleSelect
   //- Not use Hand
   div(class="px-2")
@@ -247,11 +247,11 @@ div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 ro
     StrokeWidthRange
 //- eraser
 div(
-  v-else-if="mode === 'eraser'"
+  v-show="mode === 'eraser'"
   class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
   StrokeWidthRange
 //- text
-div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
+div(v-show="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
   FontSizeSelect
   FontFamilySelect
   TextAlignmentSelect
@@ -260,7 +260,7 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
     :key="color.name" :color="color"
     :colors="textColors" :store-color="fill" @toggle-picker-active="(color:string) => {setTextColor(color);setTextOptionValue('textFillColor', color)}")
 //- image
-div(v-else-if="mode === 'image'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm w-screen")
+div(v-show="mode === 'image'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm w-screen")
   div(class="flex items-end h-52 w-full")
     label(class="upload-label bg-neutral inline-block cursor-pointer rounded-lg py-2 px-5 text-white text-lg") ファイルを選択
       input(type="file" class="bg-white file-input file-input-bordered file-input-sm min-w-min rounded-lg" accept=".png, .jpeg, .jpg" @change="addImageToToolbar")
