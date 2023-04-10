@@ -267,7 +267,7 @@ div(v-else-if="mode === 'image'" class="flex justify-center items-center bg-gray
     //- image list
     div(class="bg-slate-50 flex-1 grid grid-cols-3 h-52 w-full overflow-y-scroll rounded-lg ml-2")
       div(v-for="image of getToolbarImages" :key="image.id" class="relative flex justify-center items-center")
-        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="async () => {await deleteImageFromToolbar(image);}") ✕
+        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="deleteImageFromToolbar(image)") ✕
         img(:id="image.id" :src="image.storageURL" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="(e) => {setDragImageUrlAndId(e);}")
 </template>
 

@@ -74,7 +74,7 @@ const {
 const {
   changeKonvaImagesToFirestoreCanvasImages,
   changeFirestoreCanvasImagesToKonvaImages,
-  setImages,
+  setImagesOnCanvas,
   handleImageDragEnd,
 } = useStoreImage()
 
@@ -394,7 +394,7 @@ div(class="flex justify-center items-center my-4")
     span(class="material-symbols-outlined") done
 
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
-  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImagesOnCanvas(e, stage)}" @dragover.prevent)
     v-stage(
       ref="stage"
       :draggable="mode === 'hand'"

@@ -1,8 +1,8 @@
+/* eslint-disable import/no-cycle */
 import Konva from 'konva'
 import { nanoid } from 'nanoid'
 import { defineStore } from 'pinia'
 import useStoreMode from '@/stores/mode'
-// eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
 
 export interface KonvaImage {
@@ -55,10 +55,7 @@ const useStoreImage = defineStore({
             id: firestoreCanvasImage.id,
             imageId: firestoreCanvasImage.imageId,
             name: firestoreCanvasImage.name,
-            image: this.changeURLToImageElement(
-              firestoreCanvasImage.image,
-              firestoreCanvasImage.imageId,
-            ),
+            image: this.changeURLToImageElement(firestoreCanvasImage.image),
             x: firestoreCanvasImage.x,
             y: firestoreCanvasImage.y,
             width: firestoreCanvasImage.width,
@@ -95,26 +92,11 @@ const useStoreImage = defineStore({
     },
 
     // image urlをimage elementに変換する
-    changeURLToImageElement(url: string, id: string): HTMLImageElement {
-      // corsエラー回避のためanonymousにするとなぜかwidthとheightが0になるため
-      // originを生成し、widthとheightを取得しています。
-      const origin = new Image()
-      origin.src = url
-      // キャンバスに乗せる方のimage element
-      const imageElement = new Image()
-      imageElement.crossOrigin = 'anonymous'
-      imageElement.src = url
-      imageElement.id = id
-
-      // リサイズ
-      const originalWidth = origin.width
-      // widthは100pxに縮小するかそのまま
-      imageElement.width = Math.min(originalWidth, 100)
-      // 100pxに縮小したらheightも変更する
-      if (imageElement.width === 100) {
-        imageElement.height = (origin.height * 100) / originalWidth
-      }
-      return imageElement
+    changeURLToImageElement(url: string): HTMLImageElement {
+      const imageObj = new Image()
+      imageObj.src = url
+      imageObj.crossOrigin = 'anonymous'
+      return imageObj
     },
 
     // image drag
@@ -125,39 +107,44 @@ const useStoreImage = defineStore({
     },
 
     // image drop
-    async setImages(
-      e: DragEvent,
-      stageRef: Konva.Stage,
-      canvasId: string | string[],
-    ) {
+    setImagesOnCanvas(e: DragEvent, stageRef: Konva.Stage) {
       e.preventDefault()
-      // register event position
+
+      // register event position(dropした位置を取得)
       const stage = stageRef.getStage()
       stage.setPointersPositions(e)
-
-      const newImg = this.changeURLToImageElement(
-        this.dragUrl,
-        this.dragUploadedImageId,
-      )
-
-      const id = nanoid()
       const relativePointerPosition = stage.getRelativePointerPosition()
-      this.konvaImages = this.konvaImages.concat([
-        {
-          id,
-          imageId: newImg.id,
-          name: 'image',
-          image: newImg,
-          x: relativePointerPosition.x - newImg.width / 2,
-          y: relativePointerPosition.y - newImg.height / 2,
-          width: newImg.width,
-          height: newImg.height,
-          rotation: 0,
-          scaleX: 1,
-          scaleY: 1,
-        },
-      ])
 
+      const imageObj = new Image()
+      imageObj.id = this.dragUploadedImageId
+      imageObj.src = this.dragUrl
+      imageObj.crossOrigin = 'anonymous'
+      imageObj.onload = () => {
+        // 画像のリサイズ
+        const originalWidth = imageObj.width
+        // widthは100pxに縮小するかそのまま
+        imageObj.width = Math.min(originalWidth, 100)
+        // 100pxに縮小したらheightも変更する
+        if (imageObj.width === 100) {
+          imageObj.height = (imageObj.height * 100) / originalWidth
+        }
+
+        this.konvaImages = this.konvaImages.concat([
+          {
+            id: nanoid(),
+            imageId: imageObj.id,
+            name: 'image',
+            image: imageObj,
+            x: relativePointerPosition.x - imageObj.width / 2,
+            y: relativePointerPosition.y - imageObj.height / 2,
+            width: imageObj.width,
+            height: imageObj.height,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+          },
+        ])
+      }
       useStoreStage().handleEventEndSaveHistory()
 
       // モード終了し、サブメニューを閉じる
@@ -168,13 +155,13 @@ const useStoreImage = defineStore({
       this.konvaImages = []
     },
 
-    // save text position
+    // save image position
     handleImageDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
       const shape = e.target
-      const text = this.konvaImages.find((i) => i.id === shape.id())
-      if (text !== undefined) {
-        text.x = shape.x()
-        text.y = shape.y()
+      const image = this.konvaImages.find((i) => i.id === shape.id())
+      if (image !== undefined) {
+        image.x = shape.x()
+        image.y = shape.y()
       }
       useStoreStage().handleEventEndSaveHistory()
     },
