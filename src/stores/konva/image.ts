@@ -74,7 +74,6 @@ const useStoreImage = defineStore({
 
     // KonvaImageをFirestoreCanvasImageに変換
     changeKonvaImagesToFirestoreCanvasImages(konvaImages: KonvaImage[]) {
-      console.log('changeKonvaImagesToFirestoreCanvasImages')
       const firestoreCanvasImagesArray = [] as FirestoreCanvasImage[]
       konvaImages?.forEach((konvaImage: KonvaImage) => {
         firestoreCanvasImagesArray.push({
