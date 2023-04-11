@@ -26,7 +26,6 @@ import WebFont from 'webfontloader'
 import _ from 'lodash'
 
 // useStore start
-const { mode } = storeToRefs(useStoreMode())
 const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
@@ -313,7 +312,6 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
       ref="stage"
-      :draggable="mode === 'hand'"
       :config="configKonva"
       @mouseenter="(e: KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
       @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
