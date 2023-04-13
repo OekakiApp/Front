@@ -25,11 +25,11 @@ const handleColorPickerClick = (color: string) => {
 
 <template lang="pug">
 //- button
-div(v-if="props.color.type === 'color-button'" class="rounded-full w-9 h-9 flex justify-center items-center mx-0.5" :class="{'active-circle': props.color.color === storeColor }")
-  button(type="button" class="flex justify-center items-center" @click="() => { props.color.onClick() }")
+div(v-if="props.color.type === 'color-button'" class="rounded-full w-9 h-9 flex justify-center items-center" :class="{'active-circle': props.color.color === storeColor }")
+  button(type="button" class="flex justify-center items-center" @click="props.color.onClick()")
     div(class="tooltip rounded-full w-7 h-7 m-0 cursor-pointer" :data-tip="props.color.name" :style="props.color.style")
 //- color-picker
-div(v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 flex justify-center items-center mx-0.5 color-picker" :class="{'active-circle': props.color.color === storeColor}")
+div(v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 flex justify-center items-center color-picker" :class="{'active-circle': props.color.color === storeColor}")
   button(type="button" class="flex justify-center items-center")
     input(ref="colorPicker" v-model="colors[colors.length - 1].color" type="color" class="tooltip input-color-style" :data-tip="props.color.name" @change="handleColorPickerClick(colorPicker.value)")
 </template>

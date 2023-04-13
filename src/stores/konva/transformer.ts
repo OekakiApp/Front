@@ -1,11 +1,9 @@
+/* eslint-disable import/no-cycle */
 import Konva from 'konva'
 import { defineStore, storeToRefs } from 'pinia'
 import useStoreMode from '@/stores/mode'
-// eslint-disable-next-line import/no-cycle
 import useStoreText from '@/stores/konva/text'
-// eslint-disable-next-line import/no-cycle
 import useStoreImage from '@/stores/konva/image'
-// eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
 
 const useStoreTransformer = defineStore({
@@ -323,8 +321,8 @@ const useStoreTransformer = defineStore({
           )
           this.$reset()
         }
+        useStoreStage().handleEventEndSaveHistory()
       }
-      useStoreStage().handleEventEndSaveHistory()
     },
   },
 })

@@ -32,9 +32,7 @@ const { texts, isEditing } = storeToRefs(useStoreText())
 const { uid } = storeToRefs(useAuthStore())
 const { canvases } = storeToRefs(useStoreCanvas())
 const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
-const { configShapeTransformer, selectedShapeId } = storeToRefs(
-  useStoreTransformer(),
-)
+const { configShapeTransformer } = storeToRefs(useStoreTransformer())
 const { saveImageCountToFirebase } = useStoreUserImage()
 
 const { setMode } = useStoreMode()
@@ -118,13 +116,11 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   else if (e.key === 'p' || e.key === 'm') {
     setMode('pen')
     setGlobalCompositeOperation('source-over')
-    configShapeTransformer.value.nodes = []
-    selectedShapeId.value = ''
+    useStoreTransformer().$reset()
   } else if (e.shiftKey && e.key === 'Delete') {
     setMode('eraser')
     setGlobalCompositeOperation('destination-out')
-    configShapeTransformer.value.nodes = []
-    selectedShapeId.value = ''
+    useStoreTransformer().$reset()
   } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
   else if (e.key === 'i') setMode('image')
