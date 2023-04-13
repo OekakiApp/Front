@@ -1,9 +1,9 @@
+/* eslint-disable import/no-cycle */
 import Konva from 'konva'
 import { nanoid } from 'nanoid'
 import { defineStore } from 'pinia'
 import useStoreMode from '@/stores/mode'
-// eslint-disable-next-line import/no-cycle
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 
 export interface KonvaImage {
   id: string
@@ -157,7 +157,7 @@ const useStoreImage = defineStore({
         },
       ])
 
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
 
       // モード終了し、サブメニューを閉じる
       useStoreMode().$reset()
@@ -175,7 +175,7 @@ const useStoreImage = defineStore({
         text.x = shape.x()
         text.y = shape.y()
       }
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
   },
 })

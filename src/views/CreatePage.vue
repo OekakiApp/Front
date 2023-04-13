@@ -12,7 +12,6 @@ import {
 import ToolBar from '@/components/ToolBar.vue'
 import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText, { fontFamilyList } from '@/stores/konva/text'
 import useAuthStore from '@/stores/auth'
@@ -24,9 +23,10 @@ import useStoreUserImage from '@/stores/userImage'
 import Konva from 'konva'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
+import useStoreHistory from '@/stores/konva/history'
 
 // useStore start
-const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
+const { canvasHistory } = storeToRefs(useStoreHistory())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
 const { uid } = storeToRefs(useAuthStore())
@@ -36,7 +36,6 @@ const { configShapeTransformer } = storeToRefs(useStoreTransformer())
 const { saveImageCountToFirebase } = useStoreUserImage()
 
 const { setMode } = useStoreMode()
-const { fitStageIntoParentContainer } = useStoreStage()
 const {
   handleLineMouseDown,
   handleLineMouseMove,
@@ -83,6 +82,49 @@ const canvasId = ref(useRoute().params.canvas_id as string)
 const router = useRouter()
 const saveState = ref<SaveState>('normal')
 // const selectionRectangle = ref()
+
+const configKonva = reactive({
+  size: {
+    width: window.innerWidth,
+    height: window.innerWidth,
+  },
+  scale: {
+    x: 1,
+    y: 1,
+  },
+})
+
+// Stageのリサイズ
+const fitStageIntoParentContainer = () => {
+  // Fixed stage size
+  const SCENE_BASE_WIDTH = 896
+  const SCENE_BASE_HEIGHT = 504
+
+  // Max upscale
+  const SCENE_MAX_WIDTH = 1280
+  const SCENE_MAX_HEIGHT = 720
+  const container = stageParentDiv.value
+  if (container === null) return
+
+  const stageWidth =
+    container.offsetWidth % 2 !== 0
+      ? container.offsetWidth - 1
+      : container.offsetWidth
+
+  configKonva.size = {
+    width: stageWidth,
+    height: (stageWidth * 9) / 16, // aspect-ratio
+  }
+
+  const scaleX =
+    Math.min(configKonva.size.width, SCENE_MAX_WIDTH) / SCENE_BASE_WIDTH
+
+  const scaleY =
+    Math.min(configKonva.size.height, SCENE_MAX_HEIGHT) / SCENE_BASE_HEIGHT
+
+  const minRatio = Math.min(scaleX, scaleY)
+  configKonva.scale = { x: minRatio, y: minRatio }
+}
 
 const showDoneBtn = () => {
   saveState.value = 'done'
@@ -134,19 +176,17 @@ const initializeCanvas = () => {
   useStoreLine().$reset()
   useStoreText().$reset()
   useStoreImage().$reset()
-  useStoreStage().$reset()
+  useStoreHistory().$reset()
   useStoreTransformer().$reset()
 }
 
 onMounted(() => {
   // 初期化
   initializeCanvas()
-  // stageのリサイズ
-  fitStageIntoParentContainer(stageParentDiv.value)
+  // Stageのリサイズ
+  fitStageIntoParentContainer()
 
-  window.addEventListener('resize', () =>
-    fitStageIntoParentContainer(stageParentDiv.value),
-  )
+  window.addEventListener('resize', () => fitStageIntoParentContainer())
   window.addEventListener('keydown', (e) => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
@@ -191,9 +231,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', () =>
-    fitStageIntoParentContainer(stageParentDiv.value),
-  )
+  window.removeEventListener('resize', () => fitStageIntoParentContainer())
   window.removeEventListener('keydown', (e) => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
@@ -361,5 +399,5 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
-  ToolBar(:stage="stage" :stage-parent-div="stageParentDiv" :save-canvas="saveCanvas")
+  ToolBar(:stage="stage" :save-canvas="saveCanvas")
 </template>
