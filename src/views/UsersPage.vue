@@ -13,8 +13,7 @@ import {
   collection,
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
-import type { User } from '@/types/index'
-import type { Canvas } from '@/firebase/types/index'
+import type { Canvas, User } from '@/firebase/types/index'
 
 const route = useRoute()
 const authStore = useAuthStore()

@@ -1,6 +1,7 @@
 import { Timestamp } from 'firebase/firestore'
 import { Points, TextNode, FirestoreCanvasImage } from '@/types/konva'
 
+// canvas
 export interface Canvas {
   name: string
   lines: Points[]
@@ -13,7 +14,15 @@ export interface Canvas {
   image: string
 }
 
-// userImage
+// users
+export interface User {
+  name: string
+  icon: string
+  profile: string
+}
+
+// userImageStorage
+export type UserImageStorage = Record<string, UploadedImage>
 export interface UploadedImage {
   userUid: string // アップロードしたユーザーのid
   id: string // 画像自身のid
@@ -25,5 +34,3 @@ export interface UploadedImage {
   show: boolean // Toolbarに表示・非表示
   countOnCanvas: number // 使用されている枚数
 }
-
-export type UserImageStorage = Record<string, UploadedImage>

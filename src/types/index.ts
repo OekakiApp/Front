@@ -33,10 +33,3 @@ export interface faqType {
   question: string
   answer: string
 }
-
-// Auth
-export interface User {
-  name: string
-  icon: string
-  profile: string
-}

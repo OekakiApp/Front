@@ -2,7 +2,7 @@
 import { reactive, toRefs } from 'vue'
 import { storeToRefs } from 'pinia'
 import Konva from 'konva'
-import useStoreMode, { type Mode } from '@/stores/mode'
+import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
@@ -10,6 +10,7 @@ import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreStage from '@/stores/konva/stage'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
+import type { Mode } from '@/types/mode'
 
 interface Props {
   stage: Konva.Stage
