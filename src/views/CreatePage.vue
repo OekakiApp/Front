@@ -26,16 +26,13 @@ import WebFont from 'webfontloader'
 import _ from 'lodash'
 
 // useStore start
-const { mode } = storeToRefs(useStoreMode())
 const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
 const { uid } = storeToRefs(useAuthStore())
 const { canvases } = storeToRefs(useStoreCanvas())
 const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
-const { configShapeTransformer, selectedShapeId } = storeToRefs(
-  useStoreTransformer(),
-)
+const { configShapeTransformer } = storeToRefs(useStoreTransformer())
 const { saveImageCountToFirebase } = useStoreUserImage()
 
 const { setMode } = useStoreMode()
@@ -118,14 +115,12 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   else if (e.key === 'v') setMode('select')
   else if (e.key === 'p' || e.key === 'm') {
     setMode('pen')
-    setGlobalCompositeOperation()
-    configShapeTransformer.value.nodes = []
-    selectedShapeId.value = ''
+    setGlobalCompositeOperation('source-over')
+    useStoreTransformer().$reset()
   } else if (e.shiftKey && e.key === 'Delete') {
     setMode('eraser')
-    setGlobalCompositeOperation()
-    configShapeTransformer.value.nodes = []
-    selectedShapeId.value = ''
+    setGlobalCompositeOperation('destination-out')
+    useStoreTransformer().$reset()
   } else if (e.key === 't') setMode('text')
   else if (e.key === 's') setMode('sticky')
   else if (e.key === 'i') setMode('image')
@@ -313,7 +308,6 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
     v-stage(
       ref="stage"
-      :draggable="mode === 'hand'"
       :config="configKonva"
       @mouseenter="(e: KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
       @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
@@ -367,5 +361,5 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
-  ToolBar(:stage="stage" :save-canvas="saveCanvas")
+  ToolBar(:stage="stage" :stage-parent-div="stageParentDiv" :save-canvas="saveCanvas")
 </template>

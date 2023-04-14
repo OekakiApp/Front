@@ -1,8 +1,8 @@
+/* eslint-disable import/no-cycle */
+import { defineStore } from 'pinia'
 import Konva from 'konva'
-import { defineStore, storeToRefs } from 'pinia'
-import useStoreMode from '@/stores/mode'
 import { nanoid } from 'nanoid'
-// eslint-disable-next-line import/no-cycle
+import useStoreMode from '@/stores/mode'
 import useStoreStage from '@/stores/konva/stage'
 
 export interface Points {
@@ -16,21 +16,13 @@ export interface Points {
   globalCompositeOperation: string
 }
 
-export type LineStyle = 'normal' | 'dash'
-
-export type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
-export type TextDecoration = 'empty string' | 'line-through' | 'underline'
-export type TextAlign = 'left' | 'center' | 'right'
-export type TextVerticalAlign = 'top' | 'middle' | 'bottom'
-
-export interface AreaPosition {
-  x: number
-  y: number
-}
+type LineStyle = 'normal' | 'dash'
+type GlobalCompositeOperation = 'source-over' | 'destination-out'
 
 const useStoreLine = defineStore({
   id: 'line',
   state: () => ({
+    lines: [] as Points[], // canvas line
     isDrawing: false,
     drawColor: '#1E1E1E', // default Color
     strokeWidth: 1, // default stroke width
@@ -38,7 +30,6 @@ const useStoreLine = defineStore({
     dash: [10, 10],
     dashEnabled: false,
     globalCompositeOperation: 'source-over',
-    lines: [] as Points[],
     isTouchActive: true,
   }),
 
@@ -55,14 +46,10 @@ const useStoreLine = defineStore({
       this.dashEnabled = selectedLineStyle !== 'normal'
     },
 
-    setGlobalCompositeOperation() {
-      const { mode } = storeToRefs(useStoreMode())
-      this.globalCompositeOperation =
-        mode.value === 'eraser' ? 'destination-out' : 'source-over'
-    },
-
-    setLines(line: Points) {
-      this.lines = [...this.lines, line]
+    setGlobalCompositeOperation(
+      globalCompositeOperation: GlobalCompositeOperation,
+    ) {
+      this.globalCompositeOperation = globalCompositeOperation
     },
 
     deleteLines() {
@@ -80,15 +67,15 @@ const useStoreLine = defineStore({
       const { mode } = useStoreMode()
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return
-      const stage = e.target.getStage()
       // clickしたのがTextならskip（Textをdragするため）
       if (e.target.getClassName() === 'Text') return
+
       this.isDrawing = true
-      const id = nanoid()
+      const stage = e.target.getStage()
       if (stage !== null) {
         const pos = stage.getRelativePointerPosition()
         const points = {
-          id,
+          id: nanoid(),
           name: 'line',
           points: [pos.x, pos.y],
           color: this.drawColor,
@@ -97,7 +84,7 @@ const useStoreLine = defineStore({
           dashEnabled: this.dashEnabled,
           globalCompositeOperation: this.globalCompositeOperation,
         }
-        this.setLines(points)
+        this.lines = [...this.lines, points]
       }
     },
 
@@ -106,12 +93,12 @@ const useStoreLine = defineStore({
       if (!this.isDrawing) {
         return
       }
-      // pencilを使うときはtouchを無効か
+      // pencilを使うときはtouchを無効化
       if (!this.isTouchActive && e.evt.pointerType === 'touch') return
 
       // ステージを取得
       const stage = e.target.getStage()
-      // ステージのx,yを取得
+      // ステージのx,yを取得して、座標を追加していく
       if (stage !== null) {
         const point = stage.getRelativePointerPosition()
         const lastLine = this.lines[this.lines.length - 1]
@@ -123,7 +110,7 @@ const useStoreLine = defineStore({
     },
 
     handleLineMouseUp(e: Konva.KonvaEventObject<PointerEvent>) {
-      // pencilを使うときはtouchを無効か
+      // pencilを使うときはtouchを無効化
       if (!this.isTouchActive && e.evt.pointerType === 'touch') return
 
       const { mode } = useStoreMode()
