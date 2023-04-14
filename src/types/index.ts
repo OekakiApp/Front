@@ -1,3 +1,4 @@
+// CreatePage
 export interface Color {
   name: string
   type: 'color-button' | 'color-picker'
@@ -8,11 +9,34 @@ export interface Color {
   onClick: () => void
 }
 
-export interface InputTextType {
+export type SaveState = 'normal' | 'loading' | 'done'
+
+// SignupPage
+export interface SignUpInputTextType {
   icon: string
   inputType: string
   placeholder: string
   text: string
   isAlert: boolean
   alertText: string
+}
+// LoginPage
+export interface LoginInputTextType {
+  icon: string
+  inputType: string
+  placeholder: string
+  text: string
+}
+
+// TopPage
+export interface faqType {
+  question: string
+  answer: string
+}
+
+// Auth
+export interface User {
+  name: string
+  icon: string
+  profile: string
 }

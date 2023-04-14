@@ -4,35 +4,7 @@ import { defineStore } from 'pinia'
 import useStoreMode from '@/stores/mode'
 // eslint-disable-next-line import/no-cycle
 import useStoreStage from '@/stores/konva/stage'
-
-export interface KonvaImage {
-  id: string
-  imageId: string
-  name: string
-  image: HTMLImageElement
-  x: number
-  y: number
-  width: number
-  height: number
-  rotation: number
-  scaleX: number
-  scaleY: number
-}
-
-// firestoreにはimage elementを保存できないのでurlだけ保存
-export interface FirestoreCanvasImage {
-  id: string
-  imageId: string
-  name: string
-  image: string
-  x: number
-  y: number
-  width: number
-  height: number
-  rotation: number
-  scaleX: number
-  scaleY: number
-}
+import type { KonvaImage, FirestoreCanvasImage } from '@/types/konva'
 
 const useStoreImage = defineStore({
   id: 'image',

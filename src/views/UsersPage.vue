@@ -13,21 +13,15 @@ import {
   collection,
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
+import type { User } from '@/types/index'
+import type { Canvas } from '@/firebase/types/index'
 
 const route = useRoute()
 const authStore = useAuthStore()
 const authCanvas = useStoreCanvas()
 
-type Canvases = typeof authCanvas.canvases
-
-type User = {
-  name: string
-  icon: string
-  profile: string
-}
-
 const user = ref<User | null>(null)
-const canvases: Canvases = ref({})
+const canvases = ref({} as Record<string, Canvas>)
 const authIsReady = ref(false)
 
 onMounted(() => {
@@ -73,7 +67,7 @@ const setProfile = () => {
 }
 
 const setCanvases = async (otherUserUID: string) => {
-  const canvasHash: Canvases = {}
+  const canvasHash: Record<string, Canvas> = {}
   const canvasQuery = query(
     collection(db, 'canvas'),
     where('uid', '==', otherUserUID),
@@ -83,7 +77,7 @@ const setCanvases = async (otherUserUID: string) => {
     .then((querySnapshot) => {
       querySnapshot.forEach((document) => {
         const canvasID = document.id
-        canvasHash[canvasID] = document.data()
+        canvasHash[canvasID] = document.data() as Canvas
       })
       return canvasHash
     })

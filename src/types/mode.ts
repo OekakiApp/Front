@@ -1,9 +1,1 @@
-export type Mode =
-  | 'select'
-  | 'hand'
-  | 'pen'
-  | 'eraser'
-  | 'text'
-  | 'sticky'
-  | 'image'
-  | 'none'
+export type Mode = 'pen' | 'eraser' | 'text' | 'image' | 'none'

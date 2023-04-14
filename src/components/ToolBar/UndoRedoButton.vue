@@ -4,7 +4,11 @@ import useStoreStage from '@/stores/konva/stage'
 
 const { handleUndo, handleRedo } = useStoreStage()
 
-const undoRedoArray = reactive([
+const undoRedoArray: {
+  icon: string
+  tooltip: string
+  onClick: () => void
+}[] = reactive([
   {
     icon: 'undo',
     tooltip: 'Undo : Ctrl + Z',
