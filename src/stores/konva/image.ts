@@ -57,7 +57,7 @@ const useStoreImage = defineStore({
             name: firestoreCanvasImage.name,
             image: this.changeURLToImageElement(
               firestoreCanvasImage.image,
-              firestoreCanvasImage.id,
+              firestoreCanvasImage.imageId,
             ),
             x: firestoreCanvasImage.x,
             y: firestoreCanvasImage.y,
@@ -94,9 +94,9 @@ const useStoreImage = defineStore({
     },
 
     // image urlをimage elementに変換する
-    changeURLToImageElement(url: string, id: string): HTMLImageElement {
+    changeURLToImageElement(url: string, imageId: string): HTMLImageElement {
       const imageObj = new Image()
-      imageObj.id = id
+      imageObj.id = imageId
       imageObj.src = url
       imageObj.crossOrigin = 'anonymous'
       return imageObj
