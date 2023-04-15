@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { reactive, toRefs } from 'vue'
+import { ref, reactive, toRefs } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
 import Konva from 'konva'
 import useStoreMode, { type Mode } from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
@@ -8,6 +9,7 @@ import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreStage from '@/stores/konva/stage'
+import useStoreCanvas from '@/stores/canvas'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
 
@@ -27,6 +29,9 @@ const { setLineStyle, setGlobalCompositeOperation, deleteLines } =
 const { deleteTexts } = useStoreText()
 const { deleteImages } = useStoreImage()
 const { fitStageIntoParentContainer } = useStoreStage()
+const { canvases } = storeToRefs(useStoreCanvas())
+
+const canvasId = ref(useRoute().params.canvas_id as string)
 
 const resetCanvas = async () => {
   // delete
@@ -53,7 +58,8 @@ const downloadImage = async () =>
       pixelRatio: 2,
       mimeType: 'image/png',
     })
-    downloadURI(dataURL, 'stage.png')
+    const canvasName = canvases.value[canvasId.value].name
+    downloadURI(dataURL, `${canvasName}.png`)
   })
 
 const downloadURI = (uri: string, name: string) => {
