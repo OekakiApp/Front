@@ -209,13 +209,18 @@ const useStoreTransformer = defineStore({
           'middle-right',
         ]
 
-        const { texts, fill } = storeToRefs(useStoreText())
+        const { texts, fill, fontSize, fontFamily, align } = storeToRefs(
+          useStoreText(),
+        )
         const text = texts.value.find((t) => t.id === id)
         if (text !== undefined) {
           this.selectedShapeId = id
           this.configShapeTransformer.nodes = [e.target]
-          // 選択したテキストの色を取得
+          // 選択したテキストの要素（color fontFamily fontSize align）を取得してツールバーと同期
           fill.value = text.fill
+          fontSize.value = text.fontSize
+          fontFamily.value = text.fontFamily
+          align.value = text.align
         } else {
           this.$reset()
         }
