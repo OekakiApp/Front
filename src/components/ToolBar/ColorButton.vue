@@ -1,50 +1,37 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-// import { Color } from '@/types/index'
-interface Color {
-  name: string
-  type: 'color-button' | 'color-picker'
-  color: string
-  style?: {
-    'background-color': string
-  }
-  onClick: () => void
-}
+import { ref, toRefs } from 'vue'
+import { type Color } from '@/components/SubToolMenu.vue'
 
 interface Props {
-  color: Color
-  index: number
-  activeIndex: number
+  colors: Color[] // colorリスト全体
+  color: Color // btnのcolor
+  storeColor: string // storeのcolor
 }
 
 interface Emits {
-  (e: 'toggle-button-active', index: number): void
-  (e: 'toggle-picker-active', index: number, color: string): void
+  (e: 'toggle-picker-active', color: string): void
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const { colors, storeColor } = toRefs(props)
 const colorPicker = ref()
 
-const handleColorButtonClick = () => {
-  emit('toggle-button-active', props.index)
-}
-
 const handleColorPickerClick = (color: string) => {
-  emit('toggle-picker-active', props.index, color)
+  emit('toggle-picker-active', color)
 }
 </script>
 
 <template lang="pug">
 //- button
-div(v-if="props.color.type === 'color-button'" class="rounded-full w-9 h-9 flex justify-center items-center mx-0.5" :class="{'active-circle': props.index === props.activeIndex }")
-  button(type="button" class="flex justify-center items-center" @click="() => {props.color.onClick();handleColorButtonClick()}")
+div(v-if="props.color.type === 'color-button'" class="rounded-full w-9 h-9 flex justify-center items-center" :class="{'active-circle': props.color.color === storeColor }")
+  button(type="button" class="flex justify-center items-center" @click="props.color.onClick()")
     div(class="tooltip rounded-full w-7 h-7 m-0 cursor-pointer" :data-tip="props.color.name" :style="props.color.style")
 //- color-picker
-div(v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 flex justify-center items-center mx-0.5" :class="{'active-circle': props.index === props.activeIndex }")
+div(v-else-if="props.color.type === 'color-picker'" class="rounded-full w-9 h-9 flex justify-center items-center color-picker" :class="{'active-circle': props.color.color === storeColor}")
   button(type="button" class="flex justify-center items-center")
-    input(ref="colorPicker" type="color" class="tooltip input-color-style" :data-tip="props.color.name" value="#000000" @input="handleColorPickerClick(colorPicker.value)")
+    input(ref="colorPicker" v-model="colors[colors.length - 1].color" type="color" class="tooltip input-color-style" :data-tip="props.color.name" @change="handleColorPickerClick(colorPicker.value)")
 </template>
 
 <style scoped>

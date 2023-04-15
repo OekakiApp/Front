@@ -87,14 +87,18 @@ async function autoLogin(to: RouteLocationNormalized) {
   const authStore = useAuthStore()
   const canvasStore = useStoreCanvas()
   const { isLoggedIn } = authStore
+  const { loadUserImageStorage, deleteImageFromStorageWithLogin } =
+    useStoreUserImage()
   /* eslint-disable */
   return new Promise<void>((resolve) => {
     onAuthStateChanged(auth, async (user) => {
       if (user != null) {
         await authStore.setUser(user)
         await canvasStore.getCanvases(user.uid)
-        const { loadUserImageStorage } = useStoreUserImage()
-        loadUserImageStorage()
+        // ユーザーがアップロードした画像を取得
+        await loadUserImageStorage(user.uid)
+        // 使用されていない画像をStorageとFirestoreから削除
+        deleteImageFromStorageWithLogin(user.uid)
         if (to.name === 'Home' || to.meta.requiresAuth === false) {
           await forceToWorksPage()
         }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { reactive, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
 import LineStyleSelect from '@/components/ToolBar/LineStyleSelect.vue'
 import ColorButton from '@/components/ToolBar/ColorButton.vue'
 import StrokeWidthRange from '@/components/ToolBar/StrokeWidthRange.vue'
@@ -13,7 +13,7 @@ import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStoreUserImage from '@/stores/userImage'
 
-interface Color {
+export interface Color {
   name: string
   type: 'color-button' | 'color-picker'
   color: string
@@ -24,17 +24,15 @@ interface Color {
 }
 
 const { mode } = storeToRefs(useStoreMode())
-const { isTouchActive } = storeToRefs(useStoreLine())
+const { drawColor, isTouchActive } = storeToRefs(useStoreLine())
 const { setLineColor, toggleIsTouchActive } = useStoreLine()
+const { fill } = storeToRefs(useStoreText())
 const { setTextOptionValue, setTextColor } = useStoreText()
 const { setDragImageUrlAndId } = useStoreImage()
 const { getToolbarImages } = storeToRefs(useStoreUserImage())
 const { addImageToToolbar, deleteImageFromToolbar } = useStoreUserImage()
 
-const activeLineColorIndex = ref<number>(0)
-const activeTextColorIndex = ref<number>(0)
-
-const lineColors: Color[] = [
+const lineColors: Color[] = reactive([
   {
     name: 'Black',
     type: 'color-button',
@@ -94,13 +92,13 @@ const lineColors: Color[] = [
   {
     name: 'Custom',
     type: 'color-picker',
-    color: 'rainbow',
+    color: '#000000',
     // 便宜上何も設定しない関数を挿入する
     onClick: () => setLineColor(''),
   },
-]
+])
 
-const textColors: Color[] = [
+const textColors: Color[] = reactive([
   {
     name: 'Black',
     type: 'color-button',
@@ -184,11 +182,51 @@ const textColors: Color[] = [
   {
     name: 'Custom',
     type: 'color-picker',
-    color: 'rainbow',
+    color: '#000000',
     // 便宜上何も設定しない関数を挿入する
     onClick: () => setLineColor(''),
   },
-]
+])
+
+// default line colors
+const defaultLineColors = computed(() => {
+  const defaultList = []
+  // eslint-disable-next-line no-restricted-syntax
+  for (const color of lineColors) {
+    if (color.type === 'color-button') {
+      defaultList.push(color.color)
+    }
+  }
+  return defaultList
+})
+// default text colors
+const defaultTextColors = computed(() => {
+  const defaultList = []
+  // eslint-disable-next-line no-restricted-syntax
+  for (const color of textColors) {
+    if (color.type === 'color-button') {
+      defaultList.push(color.color)
+    }
+  }
+  return defaultList
+})
+
+// storeのline colorの変更を監視
+watch(drawColor, () => {
+  // default colorにない=color pickerによる変更
+  // color pickerのcolorプロパティを更新
+  if (!defaultLineColors.value.includes(drawColor.value)) {
+    lineColors[lineColors.length - 1].color = drawColor.value
+  }
+})
+// storeのtext colorの変更を監視
+watch(fill, () => {
+  // default colorにない=color pickerによる変更
+  // color pickerのcolorプロパティを更新
+  if (!defaultTextColors.value.includes(fill.value)) {
+    textColors[textColors.length - 1].color = fill.value
+  }
+})
 </script>
 
 <template lang="pug">
@@ -202,11 +240,9 @@ div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 ro
     button(v-else type="button" data-tip="Not use touch" class="tooltip flex justify-center items-center w-8 h-8 bg-slate-300 rounded-full" @click="toggleIsTouchActive")
       span(class="material-symbols-outlined") do_not_touch
   ColorButton(
-    v-for="(color, index) in lineColors"
-    :key="color.color" :color="color" :index="index"
-    :active-index="activeLineColorIndex"
-    @toggle-button-active="(index:number) => activeLineColorIndex = index"
-    @toggle-picker-active="(index:number, color: string) => {activeLineColorIndex = index;setLineColor(color)}")
+    v-for="color in lineColors"
+    :key="color.name" :color="color"
+    :colors="lineColors" :store-color="drawColor" @toggle-picker-active="(color: string) => {setLineColor(color)}")
   div(class="pl-2")
     StrokeWidthRange
 //- eraser
@@ -220,11 +256,9 @@ div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-
   FontFamilySelect
   TextAlignmentSelect
   ColorButton(
-    v-for="(color, index) in textColors"
-    :key="color.color" :color="color"
-    :index="index" :active-index="activeTextColorIndex"
-    @toggle-button-active="(index:number) => activeTextColorIndex = index"
-    @toggle-picker-active="(index:number, color:string) =>{activeTextColorIndex = index;setTextColor(color);setTextOptionValue('textFillColor', color)}")
+    v-for="color in textColors"
+    :key="color.name" :color="color"
+    :colors="textColors" :store-color="fill" @toggle-picker-active="(color:string) => {setTextColor(color);setTextOptionValue('textFillColor', color)}")
 //- image
 div(v-else-if="mode === 'image'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm w-screen")
   div(class="flex items-end h-52 w-full")
