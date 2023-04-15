@@ -83,6 +83,7 @@ const canvasId = ref(useRoute().params.canvas_id as string)
 const router = useRouter()
 const saveState = ref<SaveState>('normal')
 const isShare = ref(false)
+const pointLeaderOpen = ref(false)
 // const selectionRectangle = ref()
 
 const showDoneBtn = () => {
@@ -299,8 +300,9 @@ const generateAndSaveThumbnail = () => {
   )
 }
 
-// TODO 変数名変更
-const isOpen = ref(false)
+const resetCanvasFor3PointLeader = async () => {
+  await useStoreCanvas().resetCanvas(stageParentDiv.value)
+}
 </script>
 
 <template lang="pug">
@@ -318,17 +320,17 @@ div(class="flex justify-center items-center my-4")
     span(class="material-symbols-outlined") done
 
   div(class="relative ml-8")
-    button(class="three-dot-leader hover:opacity-80" type="button" @click="isOpen = !isOpen")
+    button(class="three-dot-leader hover:opacity-80" type="button" @click="pointLeaderOpen = !pointLeaderOpen")
         span(class="dot")
-    button(v-show="isOpen" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default" @click="isOpen = false")
-    div(v-show="isOpen"  class="absolute z-10 mt-2 py-2 w-max bg-white rounded-lg shadow-xl")
+    button(v-show="pointLeaderOpen" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default" @click="pointLeaderOpen = false")
+    div(v-show="pointLeaderOpen"  class="absolute z-10 mt-2 py-2 w-max bg-white rounded-lg shadow-xl")
       div(class="flex items-center cursor-pointer px-4 py-2 text-gray-800") 
         span(class="material-symbols-outlined mr-2") open_in_new
         div(class="mr-2 text-lg") 共有
         label(class="relative inline-flex items-center cursor-pointer")
           input(:checked="isShare" type="checkbox" class="sr-only peer" @click="saveIsShare()")
           div(class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300  rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600")
-      div(class="flex items-center cursor-pointer px-4 py-2 text-gray-800") 
+      label(htmlFor="reset-modal"  class="flex items-center cursor-pointer px-4 py-2 text-gray-800") 
         span(class="material-symbols-outlined mr-2") restart_alt
         div(class="mr-2 text-lg") リセット
 
@@ -391,6 +393,17 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
   ToolBar(:stage="stage" :stage-parent-div="stageParentDiv" :save-canvas="saveCanvas")
+
+input(id="reset-modal" type="checkbox" className="modal-toggle")
+div(className="modal")
+  div(className="modal-box max-w-none w-auto")
+    h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
+    div(class="flex justify-end")
+      div(className="modal-action mr-3" @click="pointLeaderOpen = false")
+        label(htmlFor="reset-modal" className="btn w-36") Cancel
+      div(className="modal-action" @click="pointLeaderOpen = false")
+        label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="resetCanvasFor3PointLeader()") OK
+
 </template>
 
 <style>

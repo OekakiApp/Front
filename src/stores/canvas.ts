@@ -8,6 +8,10 @@ import {
   onSnapshot,
 } from 'firebase/firestore'
 import { db } from '@/firebase/index'
+import useStoreLine from '@/stores/konva/line'
+import useStoreText from '@/stores/konva/text'
+import useStoreImage from '@/stores/konva/image'
+import useStoreStage from '@/stores/konva/stage'
 
 const useStoreCanvas = defineStore({
   id: 'canvas',
@@ -40,6 +44,16 @@ const useStoreCanvas = defineStore({
         )
       })
       await promise
+    },
+    async resetCanvas(stageParentDiv: HTMLDivElement) {
+      // delete
+      useStoreLine().deleteLines()
+      useStoreText().deleteTexts()
+      useStoreImage().deleteImages()
+      // reset history
+      useStoreStage().handleEventEndSaveHistory()
+      // stageのリサイズ
+      useStoreStage().fitStageIntoParentContainer(stageParentDiv)
     },
   },
 })
