@@ -82,6 +82,7 @@ const transformer = ref()
 const canvasId = ref(useRoute().params.canvas_id as string)
 const router = useRouter()
 const saveState = ref<SaveState>('normal')
+const isShare = ref(false)
 // const selectionRectangle = ref()
 
 const showDoneBtn = () => {
@@ -163,6 +164,7 @@ onMounted(() => {
       canvas.konvaImages,
     )
     inputText.text = canvas.name
+    isShare.value = canvas.isShare === undefined ? false : canvas.isShare
     // 履歴をセット
     canvasHistory.value = [
       {
@@ -229,11 +231,7 @@ const saveCanvas = async (): Promise<void> => {
           ? Timestamp.now()
           : canvases.value[canvasID].createdAt,
       updatedAt: Timestamp.now(),
-      // isShareの有無を判定
-      isShare:
-        canvases.value[canvasID].isShare === undefined
-          ? false
-          : canvases.value[canvasID].isShare,
+      isShare: isShare.value,
     })
   }
   // 新規の場合
@@ -246,7 +244,7 @@ const saveCanvas = async (): Promise<void> => {
       uid: uid.value,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-      isShare: false,
+      isShare: isShare.value,
     })
   }
   // 画像の使用枚数の更新
@@ -255,6 +253,18 @@ const saveCanvas = async (): Promise<void> => {
   firstKonvaImages.value = _.cloneDeep(konvaImages.value)
   // サムネイルを生成・保存
   generateAndSaveThumbnail()
+}
+
+// 共有トグルボタン切り替えで発火
+const saveIsShare = async (): Promise<void> => {
+  isShare.value = !isShare.value
+  const canvasID = canvasId.value
+  if (canvases.value[canvasID] !== undefined) {
+    await updateDoc(doc(db, 'canvas', canvasID), {
+      updatedAt: Timestamp.now(),
+      isShare: isShare.value,
+    })
+  }
 }
 
 // サムネイルを生成し、storageにアップロード
@@ -291,7 +301,6 @@ const generateAndSaveThumbnail = () => {
 
 // TODO 変数名変更
 const isOpen = ref(false)
-const isCheck = ref(false)
 </script>
 
 <template lang="pug">
@@ -317,7 +326,7 @@ div(class="flex justify-center items-center my-4")
         span(class="material-symbols-outlined mr-2") open_in_new
         div(class="mr-2 text-lg") 共有
         label(class="relative inline-flex items-center cursor-pointer")
-          input(v-model="isCheck" type="checkbox" value="" class="sr-only peer")
+          input(:checked="isShare" type="checkbox" class="sr-only peer" @click="saveIsShare()")
           div(class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300  rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600")
       div(class="flex items-center cursor-pointer px-4 py-2 text-gray-800") 
         span(class="material-symbols-outlined mr-2") restart_alt
