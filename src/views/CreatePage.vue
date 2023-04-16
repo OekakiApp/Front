@@ -324,8 +324,8 @@ div(class="flex justify-center items-center my-4")
         span(class="dot")
     button(v-show="pointLeaderOpen" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default" @click="pointLeaderOpen = false")
     div(v-show="pointLeaderOpen"  class="absolute z-10 mt-2 py-2 w-max bg-white rounded-lg shadow-xl")
-      div(class="flex items-center cursor-pointer px-4 py-2 text-gray-800") 
-        span(class="material-symbols-outlined mr-2") open_in_new
+      div(class="flex items-center cursor-auto px-4 py-2 text-gray-800") 
+        span(class="material-symbols-outlined mr-2" style='color:#2F90EA') open_in_new
         div(class="mr-2 text-lg") 共有
         label(class="relative inline-flex items-center cursor-pointer")
           input(:checked="isShare" type="checkbox" class="sr-only peer" @click="saveIsShare()")
@@ -399,7 +399,7 @@ div(className="modal")
   div(className="modal-box max-w-none w-auto")
     h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
     div(class="flex justify-end")
-      div(className="modal-action mr-3" @click="pointLeaderOpen = false")
+      div(className="modal-action mr-3")
         label(htmlFor="reset-modal" className="btn w-36") Cancel
       div(className="modal-action" @click="pointLeaderOpen = false")
         label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="resetCanvasFor3PointLeader()") OK
