@@ -45,15 +45,13 @@ const useStoreCanvas = defineStore({
       })
       await promise
     },
-    async resetCanvas(stageParentDiv: HTMLDivElement) {
+    resetCanvas() {
       // delete
       useStoreLine().deleteLines()
       useStoreText().deleteTexts()
       useStoreImage().deleteImages()
-      // reset history
+      // save history
       useStoreStage().handleEventEndSaveHistory()
-      // stageのリサイズ
-      useStoreStage().fitStageIntoParentContainer(stageParentDiv)
     },
   },
 })

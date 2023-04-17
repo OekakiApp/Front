@@ -299,10 +299,6 @@ const generateAndSaveThumbnail = () => {
     },
   )
 }
-
-const resetCanvasFor3PointLeader = async () => {
-  await useStoreCanvas().resetCanvas(stageParentDiv.value)
-}
 </script>
 
 <template lang="pug">
@@ -392,7 +388,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
-  ToolBar(:stage="stage" :stage-parent-div="stageParentDiv" :save-canvas="saveCanvas")
+  ToolBar(:stage="stage")
 
 input(id="reset-modal" type="checkbox" className="modal-toggle")
 div(className="modal")
@@ -402,11 +398,11 @@ div(className="modal")
       div(className="modal-action mr-3")
         label(htmlFor="reset-modal" className="btn w-36") Cancel
       div(className="modal-action" @click="pointLeaderOpen = false")
-        label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="resetCanvasFor3PointLeader()") OK
+        label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="useStoreCanvas().resetCanvas") OK
 
 </template>
 
-<style>
+<style scoped>
 .three-dot-leader {
   cursor: pointer;
   border: none;
