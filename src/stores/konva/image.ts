@@ -123,9 +123,12 @@ const useStoreImage = defineStore({
       imageObj.src = this.dragUrl
       imageObj.crossOrigin = 'anonymous'
       imageObj.onload = () => {
+        // maxCanvasRatio:キャンバスに対して設定した倍率の大きさの画像を描画できる。
+        const maxCanvasRatio = 0.9
         // stage
-        const maxImageWidth = (stage.width() / stage.scaleX()) * 0.8
-        const maxImageHeight = (stage.height() / stage.scaleY()) * 0.8
+        const maxImageWidth = (stage.width() / stage.scaleX()) * maxCanvasRatio
+        const maxImageHeight =
+          (stage.height() / stage.scaleY()) * maxCanvasRatio
         // image
         let imageWidth = imageObj.width
         let imageHeight = imageObj.height
