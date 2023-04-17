@@ -1,3 +1,4 @@
+import type { Mode } from '@/types/mode'
 // CreatePage
 export interface Color {
   name: string
@@ -32,4 +33,25 @@ export interface LoginInputTextType {
 export interface faqType {
   question: string
   answer: string
+}
+
+// Toolbar
+export interface ToolArray {
+  icon: string
+  mode: Mode
+  tooltip: string
+  shortcut: string
+  event: () => void
+}
+
+export interface TextAlignmentArray {
+  icon: string
+  tooltip: string
+  onClick: () => void
+}
+
+export interface UndoRedoArray {
+  icon: string
+  tooltip: string
+  onClick: () => void
 }

@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import useStoreStage from '@/stores/konva/stage'
+import type { UndoRedoArray } from '@/types/index'
 
 const { handleUndo, handleRedo } = useStoreStage()
 
-const undoRedoArray: {
-  icon: string
-  tooltip: string
-  onClick: () => void
-}[] = reactive([
+const undoRedoArray: UndoRedoArray[] = reactive([
   {
     icon: 'undo',
     tooltip: 'Undo : Ctrl + Z',

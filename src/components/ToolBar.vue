@@ -10,7 +10,7 @@ import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreStage from '@/stores/konva/stage'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
-import type { Mode } from '@/types/mode'
+import type { ToolArray } from '@/types/index'
 
 interface Props {
   stage: Konva.Stage
@@ -66,13 +66,7 @@ const downloadURI = (uri: string, name: string) => {
   document.body.removeChild(link)
 }
 
-const toolArray: {
-  icon: string
-  mode: Mode
-  tooltip: string
-  shortcut: string
-  event: () => void
-}[] = reactive([
+const toolArray: ToolArray[] = reactive([
   {
     icon: 'edit',
     mode: 'pen',
