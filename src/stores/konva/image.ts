@@ -123,13 +123,20 @@ const useStoreImage = defineStore({
       imageObj.src = this.dragUrl
       imageObj.crossOrigin = 'anonymous'
       imageObj.onload = () => {
-        // 画像のリサイズ
-        const originalWidth = imageObj.width
-        // widthは100pxに縮小するかそのまま
-        imageObj.width = Math.min(originalWidth, 100)
-        // 100pxに縮小したらheightも変更する
-        if (imageObj.width === 100) {
-          imageObj.height = (imageObj.height * 100) / originalWidth
+        // stage
+        const maxImageWidth = (stage.width() / stage.scaleX()) * 0.8
+        const maxImageHeight = (stage.height() / stage.scaleY()) * 0.8
+        // image
+        let imageWidth = imageObj.width
+        let imageHeight = imageObj.height
+
+        if (imageWidth > maxImageWidth || imageHeight > maxImageHeight) {
+          const ratio = Math.min(
+            maxImageWidth / imageWidth,
+            maxImageHeight / imageHeight,
+          )
+          imageWidth *= ratio
+          imageHeight *= ratio
         }
 
         this.konvaImages = this.konvaImages.concat([
@@ -138,10 +145,10 @@ const useStoreImage = defineStore({
             imageId: imageObj.id,
             name: 'image',
             image: imageObj,
-            x: relativePointerPosition.x - imageObj.width / 2,
-            y: relativePointerPosition.y - imageObj.height / 2,
-            width: imageObj.width,
-            height: imageObj.height,
+            x: relativePointerPosition.x - imageWidth / 2,
+            y: relativePointerPosition.y - imageHeight / 2,
+            width: imageWidth,
+            height: imageHeight,
             rotation: 0,
             scaleX: 1,
             scaleY: 1,

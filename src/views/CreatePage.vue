@@ -20,10 +20,11 @@ import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreUserImage from '@/stores/userImage'
+import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import Konva from 'konva'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
-import useStoreHistory from '@/stores/konva/history'
 
 // useStore start
 const { canvasHistory } = storeToRefs(useStoreHistory())
@@ -33,7 +34,7 @@ const { uid } = storeToRefs(useAuthStore())
 const { canvases } = storeToRefs(useStoreCanvas())
 const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer } = storeToRefs(useStoreTransformer())
-const { saveImageCountToFirebase } = useStoreUserImage()
+const { configKonva } = storeToRefs(useStoreStage())
 
 const { setMode } = useStoreMode()
 const {
@@ -69,6 +70,9 @@ const {
   setImagesOnCanvas,
   handleImageDragEnd,
 } = useStoreImage()
+
+const { saveImageCountToFirebase } = useStoreUserImage()
+const { fitStageIntoParentContainer } = useStoreStage()
 // useStore end
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -82,49 +86,6 @@ const canvasId = ref(useRoute().params.canvas_id as string)
 const router = useRouter()
 const saveState = ref<SaveState>('normal')
 // const selectionRectangle = ref()
-
-const configKonva = reactive({
-  size: {
-    width: window.innerWidth,
-    height: window.innerWidth,
-  },
-  scale: {
-    x: 1,
-    y: 1,
-  },
-})
-
-// Stageのリサイズ
-const fitStageIntoParentContainer = () => {
-  // Fixed stage size
-  const SCENE_BASE_WIDTH = 896
-  const SCENE_BASE_HEIGHT = 504
-
-  // Max upscale
-  const SCENE_MAX_WIDTH = 1280
-  const SCENE_MAX_HEIGHT = 720
-  const container = stageParentDiv.value
-  if (container === null) return
-
-  const stageWidth =
-    container.offsetWidth % 2 !== 0
-      ? container.offsetWidth - 1
-      : container.offsetWidth
-
-  configKonva.size = {
-    width: stageWidth,
-    height: (stageWidth * 9) / 16, // aspect-ratio
-  }
-
-  const scaleX =
-    Math.min(configKonva.size.width, SCENE_MAX_WIDTH) / SCENE_BASE_WIDTH
-
-  const scaleY =
-    Math.min(configKonva.size.height, SCENE_MAX_HEIGHT) / SCENE_BASE_HEIGHT
-
-  const minRatio = Math.min(scaleX, scaleY)
-  configKonva.scale = { x: minRatio, y: minRatio }
-}
 
 const showDoneBtn = () => {
   saveState.value = 'done'
@@ -184,9 +145,11 @@ onMounted(() => {
   // 初期化
   initializeCanvas()
   // Stageのリサイズ
-  fitStageIntoParentContainer()
+  fitStageIntoParentContainer(stageParentDiv.value)
 
-  window.addEventListener('resize', () => fitStageIntoParentContainer())
+  window.addEventListener('resize', () =>
+    fitStageIntoParentContainer(stageParentDiv.value),
+  )
   window.addEventListener('keydown', (e) => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
@@ -231,7 +194,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', () => fitStageIntoParentContainer())
+  window.removeEventListener('resize', () =>
+    fitStageIntoParentContainer(stageParentDiv.value),
+  )
   window.removeEventListener('keydown', (e) => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
