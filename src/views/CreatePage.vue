@@ -12,7 +12,6 @@ import {
 import ToolBar from '@/components/ToolBar.vue'
 import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText, { fontFamilyList } from '@/stores/konva/text'
 import useAuthStore from '@/stores/auth'
@@ -21,22 +20,23 @@ import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreUserImage from '@/stores/userImage'
+import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import Konva from 'konva'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
 
 // useStore start
-const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
+const { canvasHistory } = storeToRefs(useStoreHistory())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
 const { uid } = storeToRefs(useAuthStore())
 const { canvases } = storeToRefs(useStoreCanvas())
 const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer } = storeToRefs(useStoreTransformer())
-const { saveImageCountToFirebase } = useStoreUserImage()
+const { configKonva } = storeToRefs(useStoreStage())
 
 const { setMode } = useStoreMode()
-const { fitStageIntoParentContainer } = useStoreStage()
 const {
   handleLineMouseDown,
   handleLineMouseMove,
@@ -67,9 +67,12 @@ const {
 const {
   changeKonvaImagesToFirestoreCanvasImages,
   changeFirestoreCanvasImagesToKonvaImages,
-  setImages,
+  setImagesOnCanvas,
   handleImageDragEnd,
 } = useStoreImage()
+
+const { saveImageCountToFirebase } = useStoreUserImage()
+const { fitStageIntoParentContainer } = useStoreStage()
 // useStore end
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -134,14 +137,14 @@ const initializeCanvas = () => {
   useStoreLine().$reset()
   useStoreText().$reset()
   useStoreImage().$reset()
-  useStoreStage().$reset()
+  useStoreHistory().$reset()
   useStoreTransformer().$reset()
 }
 
 onMounted(() => {
   // 初期化
   initializeCanvas()
-  // stageのリサイズ
+  // Stageのリサイズ
   fitStageIntoParentContainer(stageParentDiv.value)
 
   window.addEventListener('resize', () =>
@@ -305,7 +308,7 @@ div(class="flex justify-center items-center my-4")
     span(class="material-symbols-outlined") done
 
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
-  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImagesOnCanvas(e, stage)}" @dragover.prevent)
     v-stage(
       ref="stage"
       :config="configKonva"
@@ -361,5 +364,5 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
-  ToolBar(:stage="stage" :stage-parent-div="stageParentDiv" :save-canvas="saveCanvas")
+  ToolBar(:stage="stage" :save-canvas="saveCanvas")
 </template>

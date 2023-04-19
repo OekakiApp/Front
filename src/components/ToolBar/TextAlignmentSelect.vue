@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import useStoreText from '@/stores/konva/text'
 import { reactive } from 'vue'
+import useStoreText from '@/stores/konva/text'
 
 const { setTextOptionValue, setTextAlign } = useStoreText()
 

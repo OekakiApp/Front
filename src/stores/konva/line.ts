@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import Konva from 'konva'
 import { nanoid } from 'nanoid'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 
 export interface Points {
   id: string
@@ -117,14 +117,14 @@ const useStoreLine = defineStore({
       // modeがpenかeraserでないならskip
       if (mode !== 'pen' && mode !== 'eraser') return
       this.isDrawing = false
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
 
     handleLineMouseLeave() {
       // 描画中にキャンバスからマウスが外れたら、描画終了
       if (!this.isDrawing) return
       this.isDrawing = false
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
   },
 })
