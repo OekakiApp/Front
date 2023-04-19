@@ -48,6 +48,7 @@ const useStoreText = defineStore({
   id: 'text',
   state: () => ({
     texts: [] as TextNode[],
+    selectedText: null,
     fontSize: 30, // default font size
     fontFamily: 'Roboto',
     fontStyle: 'normal',
@@ -67,32 +68,96 @@ const useStoreText = defineStore({
       // get Stage
       const stage = e.target.getStage()
       if (stage === null) return
-      // get x, y of Stage
+      // get x, y of Stage テキストを配置する座標
       const point = stage.getRelativePointerPosition()
-      // add text
-      this.texts = [
-        ...this.texts,
-        {
-          id: nanoid(),
-          text: 'Double click to edit text...',
-          rotation: 0,
-          x: point.x,
-          y: point.y,
-          scaleX: 1,
-          fontSize: this.fontSize,
-          fontStyle: this.fontStyle as FontStyle,
-          textDecoration: this.textDecoration as TextDecoration,
-          fontFamily: this.fontFamily,
-          align: this.align as TextAlign,
-          draggable: true,
-          width: 200,
-          fill: this.fill,
-          wrap: 'word',
-          ellipsis: false,
-          name: 'text',
-        },
-      ]
-      useStoreStage().handleEventEndSaveHistory()
+
+      // 編集開始
+      this.isEditing = true
+      // so position of textarea will be the sum of positions above:
+      // textareaをcanvas上に乗せるので
+      // Stage上でのtextの位置(x, y) + Stageまでの距離(x, y)が必要
+      const absolutePoint = stage.getPointersPositions()[0]
+      const areaAbsolutePosition = {
+        x: stage.container().offsetLeft + absolutePoint.x,
+        y: stage.container().offsetTop + absolutePoint.y,
+      }
+      // テキストエリア表示
+      const textarea = document.createElement('textarea')
+      document.body.appendChild(textarea)
+      // apply many styles to match text on canvas as close as possible
+      // remember that text rendering on canvas and on the textarea can be different
+      // and sometimes it is hard to make it 100% the same. But we will try...
+      textarea.value = ''
+      textarea.wrap = 'soft'
+      textarea.style.position = 'absolute'
+      textarea.style.top = `${areaAbsolutePosition.y}px`
+      textarea.style.left = `${areaAbsolutePosition.x}px`
+      textarea.style.width = `200px`
+      textarea.style.fontSize = `${this.fontSize}px`
+      textarea.style.border = 'none'
+      textarea.style.padding = '0px'
+      textarea.style.margin = '0px'
+      textarea.style.overflow = 'hidden'
+      textarea.style.outline = 'none'
+      textarea.style.resize = 'none'
+      textarea.style.lineHeight = '1'
+      textarea.style.fontFamily = this.fontFamily
+      textarea.style.transformOrigin = 'left top'
+      textarea.style.textAlign = this.align
+      textarea.style.color = this.fill
+      textarea.style.scale = stage.getStage().scaleX().toString()
+      textarea.spellcheck = false
+      const rotation = 0
+      let transform = ''
+      transform += `rotateZ(${rotation}deg)`
+      textarea.style.transform = transform
+
+      // reset height
+      textarea.style.height = 'auto'
+      // after browsers resized it we can set actual value
+      textarea.style.height = `${textarea.scrollHeight}px`
+
+      textarea.focus()
+
+      textarea.addEventListener('keydown', () => {
+        const scale = stage.getAbsoluteScale().x
+        textarea.style.width = `${Number(textarea.style.width) * scale}`
+        textarea.style.height = 'auto'
+        textarea.style.height = `${textarea.scrollHeight + this.fontSize}px`
+      })
+
+      textarea.addEventListener('blur', () => {
+        // textareaが空ならテキストは追加しない
+        if (textarea.value !== '') {
+          this.texts = [
+            ...this.texts,
+            {
+              id: nanoid(),
+              text: textarea.value,
+              rotation: Number(textarea.style.rotate),
+              x: point.x,
+              y: point.y,
+              scaleX: 1,
+              fontSize: this.fontSize,
+              fontStyle: this.fontStyle as FontStyle,
+              textDecoration: this.textDecoration as TextDecoration,
+              fontFamily: this.fontFamily,
+              align: this.align as TextAlign,
+              draggable: true,
+              width: 200,
+              fill: this.fill,
+              wrap: 'word',
+              ellipsis: false,
+              name: 'text',
+            },
+          ]
+          useStoreStage().handleEventEndSaveHistory()
+        }
+        // textareaを取り除く
+        textarea.parentNode?.removeChild(textarea)
+        // 編集終了
+        this.isEditing = false
+      })
     },
 
     setTextOptionValue(option: string, value: string | TextAlign) {
@@ -139,22 +204,16 @@ const useStoreText = defineStore({
       this.texts = []
     },
 
-    toggleEdit(
-      e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
-      transformer: Konva.Transformer,
-      stageParentDiv: HTMLDivElement,
-    ) {
-      const transformerNode = transformer.getNode() as Konva.Transformer
+    toggleEdit(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
       const textNode = e.target as Konva.Text
       // 編集開始
       this.isEditing = true
-      // hide text and transformer
-      this.hideTextAndTransformer(textNode, transformerNode)
-
+      // reset transformer
+      useStoreTransformer().$reset()
       // at first lets find position of text node relative to the stage:
       const textPosition = this.findTextNodePosition(textNode) // {x: number,y, number}
 
-      const stage = transformerNode.getStage()
+      const stage = e.target.getStage()
       // so position of textarea will be the sum of positions above:
       // textareaをcanvas上に乗せるので
       // Stage上でのtextの位置(x, y) + Stageまでの距離(x, y)が必要
@@ -164,34 +223,16 @@ const useStoreText = defineStore({
         y: stage.container().offsetTop + textPosition.y,
       }
       // create textarea and style it
-      this.createTextarea(
-        textNode,
-        transformerNode,
-        areaPosition,
-        stageParentDiv,
-      )
-    },
-
-    hideTextAndTransformer(
-      textNode: Konva.Text,
-      transformerNode: Konva.Transformer,
-    ) {
-      textNode.hide()
-      transformerNode.hide()
+      this.createTextarea(textNode, areaPosition)
     },
 
     findTextNodePosition(textNode: Konva.Text) {
       return textNode.absolutePosition()
     },
 
-    createTextarea(
-      textNode: Konva.Text,
-      transformerNode: Konva.Transformer,
-      areaPosition: AreaPosition,
-      stageParentDiv: HTMLDivElement,
-    ) {
+    createTextarea(textNode: Konva.Text, areaPosition: AreaPosition) {
       const textarea = document.createElement('textarea')
-      stageParentDiv.appendChild(textarea)
+      document.body.appendChild(textarea)
       // apply many styles to match text on canvas as close as possible
       // remember that text rendering on canvas and on the textarea can be different
       // and sometimes it is hard to make it 100% the same. But we will try...
@@ -200,16 +241,12 @@ const useStoreText = defineStore({
       textarea.style.position = 'absolute'
       textarea.style.top = `${areaPosition.y}px`
       textarea.style.left = `${areaPosition.x}px`
-      textarea.style.width = `${textNode.width() - textNode.padding() * 2}px`
-      textarea.style.height = `${
-        textNode.height() - textNode.padding() * 2 + 5
-      }px`
+      textarea.style.width = `${textNode.width()}px`
       textarea.style.fontSize = `${textNode.fontSize()}px`
       textarea.style.border = 'none'
       textarea.style.padding = '0px'
       textarea.style.margin = '0px'
       textarea.style.overflow = 'hidden'
-      textarea.style.background = 'none'
       textarea.style.outline = 'none'
       textarea.style.resize = 'none'
       textarea.style.lineHeight = String(textNode.lineHeight())
@@ -231,7 +268,7 @@ const useStoreText = defineStore({
 
       textarea.focus()
 
-      textarea.addEventListener('keydown', (e) => {
+      textarea.addEventListener('keydown', () => {
         const scale = textNode.getAbsoluteScale().x
         textarea.style.width = `${textNode.width() * scale}`
         textarea.style.height = 'auto'
@@ -241,27 +278,16 @@ const useStoreText = defineStore({
       })
 
       textarea.addEventListener('blur', () => {
-        textNode.text(textarea.value)
         const text = this.texts.find((t) => t.id === textNode.id())
         if (text !== undefined) {
           text.text = textarea.value
         }
-        this.removeTextarea(textNode, transformerNode, textarea)
+        // textareaを取り除く
+        textarea.parentNode?.removeChild(textarea)
         // 編集終了
         this.isEditing = false
         useStoreStage().handleEventEndSaveHistory()
       })
-    },
-
-    removeTextarea(
-      textNode: Konva.Text,
-      transformerNode: Konva.Transformer,
-      textarea: HTMLTextAreaElement,
-    ) {
-      textarea.parentNode?.removeChild(textarea)
-      textNode.show()
-      transformerNode.show()
-      transformerNode.forceUpdate()
     },
 
     // save text position

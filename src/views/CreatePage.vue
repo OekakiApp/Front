@@ -344,8 +344,8 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
           @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
-          @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
-          @dbltap="(e: KonvaEventObject<TouchEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e)"
+          @dbltap="(e: KonvaEventObject<TouchEvent>) => toggleEdit(e)"
           )
       v-layer
         v-line(
