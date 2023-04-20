@@ -1,16 +1,11 @@
 /* eslint-disable import/no-cycle */
 import { defineStore, storeToRefs } from 'pinia'
-import useStoreLine, { Points } from '@/stores/konva/line'
-import useStoreText, { TextNode } from '@/stores/konva/text'
-import useStoreImage, { KonvaImage } from '@/stores/konva/image'
+import useStoreLine from '@/stores/konva/line'
+import useStoreText from '@/stores/konva/text'
+import useStoreImage from '@/stores/konva/image'
 import useStoreTransformer from '@/stores/konva/transformer'
+import type { History } from '@/types/konva'
 import _ from 'lodash'
-
-interface History {
-  lines: Points[]
-  texts: TextNode[]
-  images: KonvaImage[]
-}
 
 const useStoreHistory = defineStore({
   id: 'history',

@@ -4,12 +4,13 @@ import { storeToRefs } from 'pinia'
 import Konva from 'konva'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
-import useStoreMode, { type Mode } from '@/stores/mode'
+import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreHistory from '@/stores/konva/history'
+import type { ToolArray } from '@/types/index'
 
 interface Props {
   stage: Konva.Stage
@@ -61,13 +62,7 @@ const downloadURI = (uri: string, name: string) => {
   document.body.removeChild(link)
 }
 
-const toolArray: {
-  icon: string
-  mode: Mode
-  tooltip: string
-  shortcut: string
-  event: () => void
-}[] = reactive([
+const toolArray: ToolArray[] = reactive([
   {
     icon: 'edit',
     mode: 'pen',

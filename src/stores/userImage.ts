@@ -16,22 +16,9 @@ import {
 } from 'firebase/storage'
 import useAuthStore from '@/stores/auth'
 import { db, storage } from '@/firebase/index'
-import { KonvaImage } from '@/stores/konva/image'
+import type { KonvaImage } from '@/types/konva'
+import type { UploadedImage, UserImageStorage } from '@/firebase/types/index'
 import sortImagesByCreatedAt from '@/utils/sort'
-
-export interface UploadedImage {
-  userUid: string // アップロードしたユーザーのid
-  id: string // 画像自身のid
-  storageURL: string // for access to storage
-  fileName: string // ex) filename.png
-  fileType: string // ex) image/jpeg
-  fileExtension: string // ex) png
-  createdAt: Timestamp // アップロードされた日
-  show: boolean // Toolbarに表示・非表示
-  countOnCanvas: number // 使用されている枚数
-}
-
-type UserImageStorage = Record<string, UploadedImage>
 
 const useStoreUserImage = defineStore({
   id: 'user-image',

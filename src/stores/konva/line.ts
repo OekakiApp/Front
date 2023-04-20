@@ -4,20 +4,7 @@ import Konva from 'konva'
 import { nanoid } from 'nanoid'
 import useStoreMode from '@/stores/mode'
 import useStoreHistory from '@/stores/konva/history'
-
-export interface Points {
-  id: string
-  name: string
-  points: number[]
-  color: string
-  dash: number[]
-  dashEnabled: boolean
-  strokeWidth: number
-  globalCompositeOperation: string
-}
-
-type LineStyle = 'normal' | 'dash'
-type GlobalCompositeOperation = 'source-over' | 'destination-out'
+import type { Points, LineStyle, GlobalCompositeOperation } from '@/types/konva'
 
 const useStoreLine = defineStore({
   id: 'line',
