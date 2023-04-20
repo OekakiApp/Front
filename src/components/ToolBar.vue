@@ -2,23 +2,23 @@
 import { reactive, toRefs } from 'vue'
 import { storeToRefs } from 'pinia'
 import Konva from 'konva'
-import useStoreMode, { type Mode } from '@/stores/mode'
+import SubToolMenu from '@/components/SubToolMenu.vue'
+import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
+import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStoreTransformer from '@/stores/konva/transformer'
-import useStoreStage from '@/stores/konva/stage'
-import SubToolMenu from '@/components/SubToolMenu.vue'
-import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
+import useStoreHistory from '@/stores/konva/history'
+import type { ToolArray } from '@/types/index'
 
 interface Props {
   stage: Konva.Stage
-  stageParentDiv: HTMLDivElement
   saveCanvas: () => Promise<void>
 }
 
 const props = defineProps<Props>()
-const { stage, stageParentDiv } = toRefs(props)
+const { stage } = toRefs(props)
 
 const { mode } = storeToRefs(useStoreMode())
 const { setMode } = useStoreMode()
@@ -26,7 +26,6 @@ const { setLineStyle, setGlobalCompositeOperation, deleteLines } =
   useStoreLine()
 const { deleteTexts } = useStoreText()
 const { deleteImages } = useStoreImage()
-const { fitStageIntoParentContainer } = useStoreStage()
 
 const resetCanvas = async () => {
   // delete
@@ -37,9 +36,7 @@ const resetCanvas = async () => {
   // キャンバスの状態をfirebaseに保存
   props.saveCanvas()
   // reset history
-  useStoreStage().$reset()
-  // stageのリサイズ
-  fitStageIntoParentContainer(stageParentDiv.value)
+  useStoreHistory().$reset()
 }
 
 // キャンバスをPNGでダウンロード
@@ -65,13 +62,7 @@ const downloadURI = (uri: string, name: string) => {
   document.body.removeChild(link)
 }
 
-const toolArray: {
-  icon: string
-  mode: Mode
-  tooltip: string
-  shortcut: string
-  event: () => void
-}[] = reactive([
+const toolArray: ToolArray[] = reactive([
   {
     icon: 'edit',
     mode: 'pen',

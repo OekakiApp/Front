@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, toRefs } from 'vue'
-import { type Color } from '@/components/SubToolMenu.vue'
+import type { Color } from '@/types/index'
 
 interface Props {
   colors: Color[] // colorリスト全体

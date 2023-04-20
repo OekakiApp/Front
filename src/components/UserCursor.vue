@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// import Konva from 'konva'
 import { storeToRefs } from 'pinia'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'

@@ -1,8 +1,6 @@
 <script setup lang="ts">
-type faqType = {
-  question: string
-  answer: string
-}
+import type { faqType } from '@/types/index'
+
 const faqs: faqType[] = [
   {
     question: '偏愛マップって何ですか？',
