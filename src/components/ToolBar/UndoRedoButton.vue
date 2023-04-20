@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import type { UndoRedoArray } from '@/types/index'
 
-const { handleUndo, handleRedo } = useStoreStage()
+const { handleUndo, handleRedo } = useStoreHistory()
 
 const undoRedoArray: UndoRedoArray[] = reactive([
   {

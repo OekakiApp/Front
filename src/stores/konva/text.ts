@@ -3,7 +3,7 @@ import { defineStore, storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import useStoreTransformer from '@/stores/konva/transformer'
 import type {
   FontStyle,
@@ -70,7 +70,7 @@ const useStoreText = defineStore({
           name: 'text',
         },
       ]
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
 
     setTextOptionValue(option: string, value: string | TextAlign) {
@@ -93,7 +93,7 @@ const useStoreText = defineStore({
           default:
             break
         }
-        useStoreStage().handleEventEndSaveHistory()
+        useStoreHistory().handleEventEndSaveHistory()
       }
     },
 
@@ -227,7 +227,7 @@ const useStoreText = defineStore({
         this.removeTextarea(textNode, transformerNode, textarea)
         // 編集終了
         this.isEditing = false
-        useStoreStage().handleEventEndSaveHistory()
+        useStoreHistory().handleEventEndSaveHistory()
       })
     },
 
@@ -250,7 +250,7 @@ const useStoreText = defineStore({
         text.x = shape.x()
         text.y = shape.y()
       }
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
   },
 })
