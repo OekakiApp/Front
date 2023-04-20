@@ -137,7 +137,7 @@ const useStoreUserImage = defineStore({
       }
 
       const { userImageStorage } = this
-      userImageStorage[id] = { ...newUploadedImage, loaded: false }
+      userImageStorage[id] = newUploadedImage
 
       const docRef = doc(db, 'userImageStorage', uid.value)
       await updateDoc(docRef, userImageStorage)
