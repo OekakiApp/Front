@@ -19,6 +19,7 @@ import { db, storage } from '@/firebase/index'
 import type { KonvaImage } from '@/types/konva'
 import type { UploadedImage, UserImageStorage } from '@/firebase/types/index'
 import sortImagesByCreatedAt from '@/utils/sort'
+import Compressor from 'compressorjs'
 
 const useStoreUserImage = defineStore({
   id: 'user-image',
@@ -36,7 +37,19 @@ const useStoreUserImage = defineStore({
       if (files === null) return
       const file = files.item(0)
       if (file === null) return
-      this.uploadImageToStorage(file)
+      // 画像圧縮
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const compressedFile = new Compressor(file, {
+        quality: 0.6,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        success(result) {
+          useStoreUserImage().uploadImageToStorage(result as File)
+        },
+        error(err) {
+          console.log(err.message)
+        },
+      })
     },
 
     // Storageに画像をアップロードする。
