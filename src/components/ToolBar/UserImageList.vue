@@ -1,46 +1,47 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import useStoreImage from '@/stores/konva/image'
 import useStoreUserImage from '@/stores/userImage'
 
 const { setDragImageUrlAndId } = useStoreImage()
-const { getToolbarImages } = storeToRefs(useStoreUserImage())
+const { getToolbarImages, userImageStorage } = storeToRefs(useStoreUserImage())
 const { addImageToToolbar, deleteImageFromToolbar } = useStoreUserImage()
-
-const isLoading = reactive<{ value: boolean }>({ value: true })
-
-const loaded = reactive<{ [id: string]: boolean }>(
-  getToolbarImages.value.reduce((acc: { [id: string]: boolean }, cur) => {
-    acc[cur.id] = false
-    return acc
-  }, {}),
-)
-
-const onImageLoad = (imageId: string) => {
-  loaded[imageId] = true
-  isLoading.value = !Object.values(loaded).some((l) => !l)
-}
 
 getToolbarImages.value.forEach((image) => {
   const img = new Image()
   img.onload = () => {
-    onImageLoad(image.id)
+    userImageStorage.value[image.id].loaded = true
   }
   img.src = image.storageURL
+})
+
+watch(getToolbarImages, () => {
+  getToolbarImages.value.forEach((image) => {
+    if (!image.loaded) {
+      const img = new Image()
+      img.onload = () => {
+        userImageStorage.value[image.id].loaded = true
+      }
+      img.src = image.storageURL
+    }
+  })
 })
 </script>
 
 <template lang="pug">
 div(class="flex items-end h-52 w-full")
+  //- file input
   label(class="upload-label bg-neutral inline-block cursor-pointer rounded-lg py-2 px-5 text-white text-lg") ファイルを選択
     input(type="file" class="bg-white file-input file-input-bordered file-input-sm min-w-min rounded-lg" accept=".png, .jpeg, .jpg" @change="addImageToToolbar")
   //- image list
   div(class="bg-slate-50 flex-1 grid grid-cols-3 h-52 w-full overflow-y-scroll rounded-lg ml-2")
     div(v-for="image of getToolbarImages" :key="image.id" class="relative flex justify-center items-center")
-      div(v-if="loaded[image.id]")
+      //- image
+      div(v-if="image.loaded")
         button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="deleteImageFromToolbar(image)") ✕
         img(:id="image.id" :src="image.storageURL" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="setDragImageUrlAndId")
+      //- loading
       div(v-else role="status" class="text-center")
         svg(aria-hidden="true" class="inline w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-yellow-400" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg")
             path(d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor")

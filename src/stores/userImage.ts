@@ -16,22 +16,11 @@ import {
 } from 'firebase/storage'
 import useAuthStore from '@/stores/auth'
 import { db, storage } from '@/firebase/index'
-import { KonvaImage } from '@/stores/konva/image'
+import type { FirebaseUploadedImage } from '@/firebase/types/index'
+import type { ClientUploadedImage, UserImageStorage } from '@/types/index'
+import type { KonvaImage } from '@/types/konva'
 import sortImagesByCreatedAt from '@/utils/sort'
-
-export interface UploadedImage {
-  userUid: string // アップロードしたユーザーのid
-  id: string // 画像自身のid
-  storageURL: string // for access to storage
-  fileName: string // ex) filename.png
-  fileType: string // ex) image/jpeg
-  fileExtension: string // ex) png
-  createdAt: Timestamp // アップロードされた日
-  show: boolean // Toolbarに表示・非表示
-  countOnCanvas: number // 使用されている枚数
-}
-
-type UserImageStorage = Record<string, UploadedImage>
+import Compressor from 'compressorjs'
 
 const useStoreUserImage = defineStore({
   id: 'user-image',
@@ -49,7 +38,19 @@ const useStoreUserImage = defineStore({
       if (files === null) return
       const file = files.item(0)
       if (file === null) return
-      this.uploadImageToStorage(file)
+      // 画像圧縮
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const compressedFile = new Compressor(file, {
+        quality: 0.6,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        success(result) {
+          useStoreUserImage().uploadImageToStorage(result as File)
+        },
+        error(err) {
+          console.log(err.message)
+        },
+      })
     },
 
     // Storageに画像をアップロードする。
@@ -122,7 +123,7 @@ const useStoreUserImage = defineStore({
       const id = imageId
       const fileExtension = file.name.split('.').pop() as string // input accept .jpeg .png .jpg
 
-      const newUploadedImage: UploadedImage = {
+      const newUploadedImage: FirebaseUploadedImage = {
         userUid: uid.value,
         id, // imageId
         storageURL: url, // StorageのURL
@@ -135,14 +136,14 @@ const useStoreUserImage = defineStore({
       }
 
       const { userImageStorage } = this
-      userImageStorage[id] = newUploadedImage
+      userImageStorage[id] = { ...newUploadedImage, loaded: false }
 
       const docRef = doc(db, 'userImageStorage', uid.value)
       await updateDoc(docRef, userImageStorage)
     },
 
     // ツールバーから画像を削除
-    async deleteImageFromToolbar(image: UploadedImage) {
+    async deleteImageFromToolbar(image: ClientUploadedImage) {
       // firestore上でshowをfalseにする
       const { userImageStorage } = this
 
@@ -157,7 +158,7 @@ const useStoreUserImage = defineStore({
     },
 
     // Storage削除判定
-    isDeleteImageFromStorage(uploadedImage: UploadedImage) {
+    isDeleteImageFromStorage(uploadedImage: ClientUploadedImage) {
       // 条件canvasで使用されていないかつToolbarで非表示
       return uploadedImage.countOnCanvas <= 0 && !uploadedImage.show
     },
@@ -169,7 +170,8 @@ const useStoreUserImage = defineStore({
       if (userImageStorage !== undefined) {
         // eslint-disable-next-line no-restricted-syntax
         for (const key of Object.keys(userImageStorage)) {
-          const userImage: UploadedImage | undefined = userImageStorage[key]
+          const userImage: ClientUploadedImage | undefined =
+            userImageStorage[key]
           if (
             userImage !== undefined &&
             this.isDeleteImageFromStorage(userImage)
@@ -188,7 +190,7 @@ const useStoreUserImage = defineStore({
     },
 
     // Storageからユーザーがアップロードした画像を削除する
-    deleteImageFromStorage(userImage: UploadedImage) {
+    deleteImageFromStorage(userImage: ClientUploadedImage) {
       const deletedRef = ref(
         storage,
         `user-image/${userImage.userUid}/user-upload/${userImage.id}.${userImage.fileExtension}`,
@@ -271,6 +273,12 @@ const useStoreUserImage = defineStore({
           (docSnap) => {
             if (docSnap.exists()) {
               this.userImageStorage = docSnap.data()
+              // eslint-disable-next-line no-restricted-syntax
+              for (const key in this.userImageStorage) {
+                if (Object.hasOwn(this.userImageStorage, key)) {
+                  this.userImageStorage[key].loaded = false
+                }
+              }
             } else {
               this.userImageStorage = {}
             }

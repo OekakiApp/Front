@@ -7,20 +7,11 @@ import StrokeWidthRange from '@/components/ToolBar/StrokeWidthRange.vue'
 import FontSizeSelect from '@/components/ToolBar/FontSizeSelect.vue'
 import FontFamilySelect from '@/components/ToolBar/FontFamilySelect.vue'
 import TextAlignmentSelect from '@/components/ToolBar/TextAlignmentSelect.vue'
+import UserImageList from '@/components/ToolBar/UserImageList.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
-import UserImageList from './ToolBar/UserImageList.vue'
-
-export interface Color {
-  name: string
-  type: 'color-button' | 'color-picker'
-  color: string
-  style?: {
-    'background-color': string
-  }
-  onClick: () => void
-}
+import type { Color } from '@/types/index'
 
 const { mode } = storeToRefs(useStoreMode())
 const { drawColor, isTouchActive } = storeToRefs(useStoreLine())
