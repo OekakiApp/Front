@@ -7,6 +7,7 @@ import {
   setDoc,
   updateDoc,
   onSnapshot,
+  getDoc,
 } from 'firebase/firestore'
 import {
   ref,
@@ -16,8 +17,7 @@ import {
 } from 'firebase/storage'
 import useAuthStore from '@/stores/auth'
 import { db, storage } from '@/firebase/index'
-import type { FirebaseUploadedImage } from '@/firebase/types/index'
-import type { ClientUploadedImage, UserImageStorage } from '@/types/index'
+import type { UploadedImage, UserImageStorage } from '@/firebase/types/index'
 import type { KonvaImage } from '@/types/konva'
 import sortImagesByCreatedAt from '@/utils/sort'
 import Compressor from 'compressorjs'
@@ -123,7 +123,7 @@ const useStoreUserImage = defineStore({
       const id = imageId
       const fileExtension = file.name.split('.').pop() as string // input accept .jpeg .png .jpg
 
-      const newUploadedImage: FirebaseUploadedImage = {
+      const newUploadedImage: UploadedImage = {
         userUid: uid.value,
         id, // imageId
         storageURL: url, // StorageのURL
@@ -133,6 +133,7 @@ const useStoreUserImage = defineStore({
         createdAt: Timestamp.now(),
         show: true, // Toolbarに表示・非表示
         countOnCanvas: 0, // key: canvasId, value: 使用数 valueが0になったらkeyを削除
+        loaded: false,
       }
 
       const { userImageStorage } = this
@@ -143,7 +144,7 @@ const useStoreUserImage = defineStore({
     },
 
     // ツールバーから画像を削除
-    async deleteImageFromToolbar(image: ClientUploadedImage) {
+    async deleteImageFromToolbar(image: UploadedImage) {
       // firestore上でshowをfalseにする
       const { userImageStorage } = this
 
@@ -158,7 +159,7 @@ const useStoreUserImage = defineStore({
     },
 
     // Storage削除判定
-    isDeleteImageFromStorage(uploadedImage: ClientUploadedImage) {
+    isDeleteImageFromStorage(uploadedImage: UploadedImage) {
       // 条件canvasで使用されていないかつToolbarで非表示
       return uploadedImage.countOnCanvas <= 0 && !uploadedImage.show
     },
@@ -170,8 +171,7 @@ const useStoreUserImage = defineStore({
       if (userImageStorage !== undefined) {
         // eslint-disable-next-line no-restricted-syntax
         for (const key of Object.keys(userImageStorage)) {
-          const userImage: ClientUploadedImage | undefined =
-            userImageStorage[key]
+          const userImage: UploadedImage | undefined = userImageStorage[key]
           if (
             userImage !== undefined &&
             this.isDeleteImageFromStorage(userImage)
@@ -190,7 +190,7 @@ const useStoreUserImage = defineStore({
     },
 
     // Storageからユーザーがアップロードした画像を削除する
-    deleteImageFromStorage(userImage: ClientUploadedImage) {
+    deleteImageFromStorage(userImage: UploadedImage) {
       const deletedRef = ref(
         storage,
         `user-image/${userImage.userUid}/user-upload/${userImage.id}.${userImage.fileExtension}`,
@@ -265,31 +265,32 @@ const useStoreUserImage = defineStore({
 
     async loadUserImageStorage(uid: string) {
       const docRef = doc(db, 'userImageStorage', uid)
+      const firstDocSnap = await getDoc(docRef)
+      if (firstDocSnap.exists()) {
+        this.userImageStorage = firstDocSnap.data()
+        // loadedを全てfalseにセット
+        // eslint-disable-next-line no-restricted-syntax
+        for (const key in this.userImageStorage) {
+          if (Object.hasOwn(this.userImageStorage, key)) {
+            this.userImageStorage[key].loaded = false
+          }
+        }
+      }
 
       // リアルタイムでアップデートを取得する
-      const promise = new Promise<void>((resolve) => {
-        onSnapshot(
-          docRef,
-          (docSnap) => {
-            if (docSnap.exists()) {
-              this.userImageStorage = docSnap.data()
-              // eslint-disable-next-line no-restricted-syntax
-              for (const key in this.userImageStorage) {
-                if (Object.hasOwn(this.userImageStorage, key)) {
-                  this.userImageStorage[key].loaded = false
-                }
-              }
-            } else {
-              this.userImageStorage = {}
-            }
-            resolve()
-          },
-          (error) => {
-            console.log(error)
-          },
-        )
-      })
-      await promise
+      onSnapshot(
+        docRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            this.userImageStorage = docSnap.data()
+          } else {
+            this.userImageStorage = {}
+          }
+        },
+        (error) => {
+          console.log(error)
+        },
+      )
     },
   },
 

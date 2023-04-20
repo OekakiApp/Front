@@ -22,7 +22,8 @@ export interface User {
 }
 
 // userImageStorage
-export interface FirebaseUploadedImage {
+export type UserImageStorage = Record<string, UploadedImage>
+export interface UploadedImage {
   userUid: string // アップロードしたユーザーのid
   id: string // 画像自身のid
   storageURL: string // for access to storage
@@ -32,4 +33,5 @@ export interface FirebaseUploadedImage {
   createdAt: Timestamp // アップロードされた日
   show: boolean // Toolbarに表示・非表示
   countOnCanvas: number // 使用されている枚数
+  loaded: boolean // 画像が読み込まれたか
 }
