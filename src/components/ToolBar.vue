@@ -78,7 +78,7 @@ const toolArray: ToolArray[] = reactive([
     icon: 'auto_fix_normal',
     mode: 'eraser',
     tooltip: 'Eraser',
-    shortcut: 'Shift + Del',
+    shortcut: 'Shift + Backspace',
     event: () => {
       setMode('eraser')
       setLineStyle('normal')

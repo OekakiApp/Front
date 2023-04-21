@@ -75,6 +75,7 @@ const {
 
 const { saveImageCountToFirebase } = useStoreUserImage()
 const { fitStageIntoParentContainer } = useStoreStage()
+const { handleRedo, handleUndo } = useStoreHistory()
 // useStore end
 
 const stageParentDiv = ref()
@@ -112,18 +113,26 @@ const blurInput = () => {
 const changeModeByShortCut = (e: KeyboardEvent) => {
   // テキスト編集中はショートカット無効
   if (isEditing.value || inputText.isEditing) return
-  if (e.key === 'p' || e.key === 'm') {
+  // pen
+  if (e.key === 'p') {
     setMode('pen')
     setGlobalCompositeOperation('source-over')
     useStoreTransformer().$reset()
-  } else if (e.shiftKey && e.key === 'Delete') {
+  }
+  // eraser
+  else if (e.shiftKey && e.key === 'Backspace') {
     setMode('eraser')
     setGlobalCompositeOperation('destination-out')
     useStoreTransformer().$reset()
-  } else if (e.key === 't') setMode('text')
+  }
+  // text
+  else if (e.key === 't') setMode('text')
+  // image
   else if (e.key === 'i') setMode('image')
   // undo
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'z') handleUndo()
   // redo
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'y') handleRedo()
 }
 
 // CreatePageに関わるstoreを初期化

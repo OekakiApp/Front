@@ -5,17 +5,23 @@ import type { UndoRedoArray } from '@/types/index'
 
 const { handleUndo, handleRedo } = useStoreHistory()
 
+const ua = window.navigator.userAgent.toLowerCase()
+
 const undoRedoArray: UndoRedoArray[] = reactive([
   {
     icon: 'undo',
-    tooltip: 'Undo : Ctrl + Z',
+    tooltip: `Undo : ${
+      ua.indexOf('windows nt') !== -1 ? 'Ctrl + Z' : 'Command + Z'
+    }`,
     onClick: () => {
       handleUndo()
     },
   },
   {
     icon: 'redo',
-    tooltip: 'Redo : Ctrl + Y',
+    tooltip: `Redo : ${
+      ua.indexOf('windows nt') !== -1 ? 'Ctrl + Y' : 'Command + Y'
+    }`,
     onClick: () => {
       handleRedo()
     },

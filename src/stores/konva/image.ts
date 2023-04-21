@@ -129,8 +129,8 @@ const useStoreImage = defineStore({
             scaleY: 1,
           },
         ])
+        useStoreHistory().handleEventEndSaveHistory()
       }
-      useStoreHistory().handleEventEndSaveHistory()
 
       // モード終了し、サブメニューを閉じる
       useStoreMode().$reset()
