@@ -2,17 +2,12 @@
 import { reactive } from 'vue'
 import { storeToRefs } from 'pinia'
 import useStoreText from '@/stores/konva/text'
-import type { TextAlign } from '@/types/konva'
+import type { TextAlignmentArray } from '@/types/index'
 
 const { align } = storeToRefs(useStoreText())
 const { setTextOptionValue, setTextAlign } = useStoreText()
 
-const textAlignmentArray: {
-  name: TextAlign
-  icon: string
-  tooltip: string
-  onClick: () => void
-}[] = reactive([
+const textAlignmentArray: TextAlignmentArray[] = reactive([
   {
     name: 'left',
     icon: 'format_align_left',

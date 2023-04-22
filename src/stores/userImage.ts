@@ -16,22 +16,10 @@ import {
 } from 'firebase/storage'
 import useAuthStore from '@/stores/auth'
 import { db, storage } from '@/firebase/index'
-import { KonvaImage } from '@/stores/konva/image'
+import type { KonvaImage } from '@/types/konva'
+import type { UploadedImage, UserImageStorage } from '@/firebase/types/index'
 import sortImagesByCreatedAt from '@/utils/sort'
-
-export interface UploadedImage {
-  userUid: string // アップロードしたユーザーのid
-  id: string // 画像自身のid
-  storageURL: string // for access to storage
-  fileName: string // ex) filename.png
-  fileType: string // ex) image/jpeg
-  fileExtension: string // ex) png
-  createdAt: Timestamp // アップロードされた日
-  show: boolean // Toolbarに表示・非表示
-  countOnCanvas: number // 使用されている枚数
-}
-
-type UserImageStorage = Record<string, UploadedImage>
+import Compressor from 'compressorjs'
 
 const useStoreUserImage = defineStore({
   id: 'user-image',
@@ -49,7 +37,19 @@ const useStoreUserImage = defineStore({
       if (files === null) return
       const file = files.item(0)
       if (file === null) return
-      this.uploadImageToStorage(file)
+      // 画像圧縮
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const compressedFile = new Compressor(file, {
+        quality: 0.6,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        success(result) {
+          useStoreUserImage().uploadImageToStorage(result as File)
+        },
+        error(err) {
+          console.log(err.message)
+        },
+      })
     },
 
     // Storageに画像をアップロードする。

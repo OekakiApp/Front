@@ -3,17 +3,15 @@ import { defineStore, storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import useStoreTransformer from '@/stores/konva/transformer'
-
-type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
-type TextDecoration = 'empty string' | 'line-through' | 'underline'
-type TextAlign = 'left' | 'center' | 'right'
-
-interface AreaPosition {
-  x: number
-  y: number
-}
+import type {
+  FontStyle,
+  TextDecoration,
+  TextAlign,
+  AreaPosition,
+  TextNode,
+} from '@/types/konva'
 
 // Fontfamily List
 export const fontFamilyList = [
@@ -23,26 +21,6 @@ export const fontFamilyList = [
   'Train One',
   'Dela Gothic One',
 ]
-
-export interface TextNode {
-  id: string
-  text: string
-  rotation: number
-  x: number
-  y: number
-  scaleX: number
-  fontSize: number
-  fontStyle: FontStyle
-  textDecoration: TextDecoration
-  fontFamily: string
-  align: TextAlign
-  draggable: boolean
-  width: number
-  fill: string
-  wrap: 'word' | 'char' | 'none'
-  ellipsis: boolean
-  name: string
-}
 
 const useStoreText = defineStore({
   id: 'text',
@@ -79,7 +57,7 @@ const useStoreText = defineStore({
           default:
             break
         }
-        useStoreStage().handleEventEndSaveHistory()
+        useStoreHistory().handleEventEndSaveHistory()
       }
     },
 
@@ -117,9 +95,9 @@ const useStoreText = defineStore({
 
       // 編集開始
       this.isEditing = true
-      // // so position of textarea will be the sum of positions above:
-      // // textareaをcanvas上に乗せるので
-      // // Stage上でのtextの位置(x, y) + Stageまでの距離(x, y)が必要
+      // so position of textarea will be the sum of positions above:
+      // textareaをcanvas上に乗せるので
+      // Stage上でのtextの位置(x, y) + Stageまでの距離(x, y)が必要
       const absolutePoint = stage.getPointersPositions()[0]
       const areaAbsolutePosition = {
         x: stage.container().offsetLeft + absolutePoint.x,
@@ -174,7 +152,7 @@ const useStoreText = defineStore({
               fontStyle: newTextarea.style.fontStyle as FontStyle,
               textDecoration: newTextarea.style
                 .textDecoration as TextDecoration,
-              fontFamily: newTextarea.style.fontFamily,
+              fontFamily: newTextarea.style.fontFamily.replaceAll('"', ''),
               align: newTextarea.style.textAlign as TextAlign,
               draggable: true,
               width: 200,
@@ -187,7 +165,7 @@ const useStoreText = defineStore({
               name: 'text',
             },
           ]
-          useStoreStage().handleEventEndSaveHistory()
+          useStoreHistory().handleEventEndSaveHistory()
         }
         // textareaを取り除く
         newTextarea.parentNode?.removeChild(newTextarea)
@@ -242,7 +220,7 @@ const useStoreText = defineStore({
         textNode.show()
         // 編集終了
         this.isEditing = false
-        useStoreStage().handleEventEndSaveHistory()
+        useStoreHistory().handleEventEndSaveHistory()
       })
     },
 
