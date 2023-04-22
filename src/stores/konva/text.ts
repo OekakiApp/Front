@@ -156,7 +156,6 @@ const useStoreText = defineStore({
               align: newTextarea.style.textAlign as TextAlign,
               draggable: true,
               width: 200,
-              // fill: this.fill,
               fill: this.rgbToHex(
                 newTextarea.style.color.match(/\d+/g) as RegExpMatchArray,
               ),
@@ -208,8 +207,7 @@ const useStoreText = defineStore({
         if (text !== undefined) {
           // もしtextareaが空ならテキストを削除する
           if (trimmedValue === '') {
-            const index = this.texts.indexOf(text)
-            this.texts.splice(index, 1)
+            this.texts = this.texts.filter((t) => t.id !== textNode.id())
           } else {
             text.text = trimmedValue
           }
