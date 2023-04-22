@@ -136,7 +136,7 @@ const useStoreText = defineStore({
 
       newTextarea.addEventListener('blur', () => {
         const trimmedValue =
-          this.getStringTrimedLineFeedFromTextarea(newTextarea)
+          this.getStringTrimmedLineFeedFromTextarea(newTextarea)
         // textareaが空ならテキストは追加しない
         if (trimmedValue !== '') {
           this.texts = [
@@ -201,7 +201,7 @@ const useStoreText = defineStore({
       textarea.focus()
 
       textarea.addEventListener('blur', () => {
-        const trimmedValue = this.getStringTrimedLineFeedFromTextarea(textarea)
+        const trimmedValue = this.getStringTrimmedLineFeedFromTextarea(textarea)
 
         const text = this.texts.find((t) => t.id === textNode.id())
         if (text !== undefined) {
@@ -268,7 +268,7 @@ const useStoreText = defineStore({
     },
 
     // textareaの文字列の先頭と末尾の改行を取り除く
-    getStringTrimedLineFeedFromTextarea(textarea: HTMLTextAreaElement) {
+    getStringTrimmedLineFeedFromTextarea(textarea: HTMLTextAreaElement) {
       // 先頭と末尾の改行を削除するための正規表現を定義
       const regex = /^[\n\r]+|[\n\r]+$/g
       // textareaのvalueから先頭と末尾の改行を削除した値を取得
