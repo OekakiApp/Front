@@ -45,12 +45,13 @@ const {
   setGlobalCompositeOperation,
 } = useStoreLine()
 
-const { createNewTextNode, toggleEdit, handleTextDragEnd } = useStoreText()
+const { createNewTextNode, toggleEdit } = useStoreText()
 
 const {
   handleMouseDownTransformer,
   handleTransform,
   handleTransformEnd,
+  handleDragEnd,
   handleKeyDownSelectedNodeDelete,
 } = useStoreTransformer()
 
@@ -68,7 +69,6 @@ const {
   changeKonvaImagesToFirestoreCanvasImages,
   changeFirestoreCanvasImagesToKonvaImages,
   setImages,
-  handleImageDragEnd,
 } = useStoreImage()
 // useStore end
 
@@ -325,7 +325,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           :key="image.id"
           :draggable="true"
           :config="image"
-          @dragend="(e: KonvaEventObject<DragEvent>) => {handleImageDragEnd(e);}"
+          @dragend="(e: KonvaEventObject<DragEvent>) => {handleDragEnd(e);}"
           @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
           @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
@@ -337,7 +337,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           v-for="text in texts"
           :key="text.id"
           :config="text"
-          @dragend="(e: KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
+          @dragend="(e: KonvaEventObject<DragEvent>) => handleDragEnd(e)"
           @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
           @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"

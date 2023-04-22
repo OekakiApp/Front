@@ -48,7 +48,6 @@ const useStoreText = defineStore({
   id: 'text',
   state: () => ({
     texts: [] as TextNode[],
-    selectedText: null,
     fontSize: 30, // default font size
     fontFamily: 'Roboto',
     fontStyle: 'normal',
@@ -60,106 +59,6 @@ const useStoreText = defineStore({
   }),
 
   actions: {
-    createNewTextNode(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
-      const { mode } = storeToRefs(useStoreMode())
-      if (mode.value !== 'text') return
-      // クリックしているのが、Textならスキップ
-      if (e.target.className === 'Text') return
-      // get Stage
-      const stage = e.target.getStage()
-      if (stage === null) return
-      // get x, y of Stage テキストを配置する座標
-      const point = stage.getRelativePointerPosition()
-
-      // 編集開始
-      this.isEditing = true
-      // so position of textarea will be the sum of positions above:
-      // textareaをcanvas上に乗せるので
-      // Stage上でのtextの位置(x, y) + Stageまでの距離(x, y)が必要
-      const absolutePoint = stage.getPointersPositions()[0]
-      const areaAbsolutePosition = {
-        x: stage.container().offsetLeft + absolutePoint.x,
-        y: stage.container().offsetTop + absolutePoint.y,
-      }
-      // テキストエリア表示
-      const textarea = document.createElement('textarea')
-      document.body.appendChild(textarea)
-      // apply many styles to match text on canvas as close as possible
-      // remember that text rendering on canvas and on the textarea can be different
-      // and sometimes it is hard to make it 100% the same. But we will try...
-      textarea.value = ''
-      textarea.wrap = 'soft'
-      textarea.style.position = 'absolute'
-      textarea.style.top = `${areaAbsolutePosition.y}px`
-      textarea.style.left = `${areaAbsolutePosition.x}px`
-      textarea.style.width = `200px`
-      textarea.style.fontSize = `${this.fontSize}px`
-      textarea.style.border = 'none'
-      textarea.style.padding = '0px'
-      textarea.style.margin = '0px'
-      textarea.style.overflow = 'hidden'
-      textarea.style.outline = 'none'
-      textarea.style.resize = 'none'
-      textarea.style.lineHeight = '1'
-      textarea.style.fontFamily = this.fontFamily
-      textarea.style.transformOrigin = 'left top'
-      textarea.style.textAlign = this.align
-      textarea.style.color = this.fill
-      textarea.style.scale = stage.getStage().scaleX().toString()
-      textarea.spellcheck = false
-      const rotation = 0
-      let transform = ''
-      transform += `rotateZ(${rotation}deg)`
-      textarea.style.transform = transform
-
-      // reset height
-      textarea.style.height = 'auto'
-      // after browsers resized it we can set actual value
-      textarea.style.height = `${textarea.scrollHeight}px`
-
-      textarea.focus()
-
-      textarea.addEventListener('keydown', () => {
-        const scale = stage.getAbsoluteScale().x
-        textarea.style.width = `${Number(textarea.style.width) * scale}`
-        textarea.style.height = 'auto'
-        textarea.style.height = `${textarea.scrollHeight + this.fontSize}px`
-      })
-
-      textarea.addEventListener('blur', () => {
-        // textareaが空ならテキストは追加しない
-        if (textarea.value !== '') {
-          this.texts = [
-            ...this.texts,
-            {
-              id: nanoid(),
-              text: textarea.value,
-              rotation: Number(textarea.style.rotate),
-              x: point.x,
-              y: point.y,
-              scaleX: 1,
-              fontSize: this.fontSize,
-              fontStyle: this.fontStyle as FontStyle,
-              textDecoration: this.textDecoration as TextDecoration,
-              fontFamily: this.fontFamily,
-              align: this.align as TextAlign,
-              draggable: true,
-              width: 200,
-              fill: this.fill,
-              wrap: 'word',
-              ellipsis: false,
-              name: 'text',
-            },
-          ]
-          useStoreStage().handleEventEndSaveHistory()
-        }
-        // textareaを取り除く
-        textarea.parentNode?.removeChild(textarea)
-        // 編集終了
-        this.isEditing = false
-      })
-    },
-
     setTextOptionValue(option: string, value: string | TextAlign) {
       const { selectedShapeId } = storeToRefs(useStoreTransformer())
       const text = this.texts.find((t) => t.id === selectedShapeId.value)
@@ -204,6 +103,100 @@ const useStoreText = defineStore({
       this.texts = []
     },
 
+    // テキストエリアを表示、編集後テキスト追加
+    createNewTextNode(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
+      const { mode } = storeToRefs(useStoreMode())
+      if (mode.value !== 'text') return
+      // クリックしているのが、Textならスキップ
+      if (e.target.className === 'Text') return
+      // get Stage
+      const stage = e.target.getStage()
+      if (stage === null) return
+      // get x, y of Stage テキストを配置する座標
+      const point = stage.getRelativePointerPosition()
+
+      // 編集開始
+      this.isEditing = true
+      // // so position of textarea will be the sum of positions above:
+      // // textareaをcanvas上に乗せるので
+      // // Stage上でのtextの位置(x, y) + Stageまでの距離(x, y)が必要
+      const absolutePoint = stage.getPointersPositions()[0]
+      const areaAbsolutePosition = {
+        x: stage.container().offsetLeft + absolutePoint.x,
+        y: stage.container().offsetTop + absolutePoint.y,
+      }
+
+      // Textオブジェクトの定義
+      const newTextNode = new Konva.Text({
+        id: nanoid(),
+        text: '',
+        rotation: 0,
+        x: point.x,
+        y: point.y,
+        scaleX: 1,
+        fontSize: this.fontSize,
+        fontStyle: this.fontStyle as FontStyle,
+        textDecoration: this.textDecoration as TextDecoration,
+        fontFamily: this.fontFamily,
+        align: this.align as TextAlign,
+        draggable: true,
+        width: 200,
+        fill: this.fill,
+        wrap: 'word',
+        ellipsis: false,
+        name: 'text',
+      })
+
+      // textarea生成
+      const newTextarea = this.appendTextarea(
+        newTextNode,
+        stage,
+        areaAbsolutePosition,
+      )
+
+      newTextarea.focus()
+
+      newTextarea.addEventListener('blur', () => {
+        const trimmedValue =
+          this.getStringTrimedLineFeedFromTextarea(newTextarea)
+        // textareaが空ならテキストは追加しない
+        if (trimmedValue !== '') {
+          this.texts = [
+            ...this.texts,
+            {
+              id: newTextNode.id(),
+              text: trimmedValue,
+              rotation: Number(newTextarea.style.rotate),
+              x: newTextNode.x(),
+              y: newTextNode.y(),
+              scaleX: 1,
+              fontSize: Number(newTextarea.style.fontSize.replace('px', '')),
+              fontStyle: newTextarea.style.fontStyle as FontStyle,
+              textDecoration: newTextarea.style
+                .textDecoration as TextDecoration,
+              fontFamily: newTextarea.style.fontFamily,
+              align: newTextarea.style.textAlign as TextAlign,
+              draggable: true,
+              width: 200,
+              // fill: this.fill,
+              fill: this.rgbToHex(
+                newTextarea.style.color.match(/\d+/g) as RegExpMatchArray,
+              ),
+              wrap: 'word',
+              ellipsis: false,
+              name: 'text',
+            },
+          ]
+          useStoreStage().handleEventEndSaveHistory()
+        }
+        // textareaを取り除く
+        newTextarea.parentNode?.removeChild(newTextarea)
+        // 編集終了
+        this.isEditing = false
+      })
+    },
+
+    // Textとtextareaの切り替え
     toggleEdit(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
       const textNode = e.target as Konva.Text
       // 編集開始
@@ -211,7 +204,7 @@ const useStoreText = defineStore({
       // reset transformer
       useStoreTransformer().$reset()
       // at first lets find position of text node relative to the stage:
-      const textPosition = this.findTextNodePosition(textNode) // {x: number,y, number}
+      const textPosition = textNode.absolutePosition() // {x: number,y, number}
 
       const stage = e.target.getStage()
       // so position of textarea will be the sum of positions above:
@@ -222,20 +215,45 @@ const useStoreText = defineStore({
         x: stage.container().offsetLeft + textPosition.x,
         y: stage.container().offsetTop + textPosition.y,
       }
-      // create textarea and style it
-      this.createTextarea(textNode, areaPosition)
+      // textNodeを非表示
+      textNode.hide()
+
+      // テキストエリア生成
+      const textarea = this.appendTextarea(textNode, stage, areaPosition)
+
+      textarea.focus()
+
+      textarea.addEventListener('blur', () => {
+        const trimmedValue = this.getStringTrimedLineFeedFromTextarea(textarea)
+
+        const text = this.texts.find((t) => t.id === textNode.id())
+        if (text !== undefined) {
+          // もしtextareaが空ならテキストを削除する
+          if (trimmedValue === '') {
+            const index = this.texts.indexOf(text)
+            this.texts.splice(index, 1)
+          } else {
+            text.text = trimmedValue
+          }
+        }
+        // textareaを取り除く
+        textarea.parentNode?.removeChild(textarea)
+        // TextNodeを再表示
+        textNode.show()
+        // 編集終了
+        this.isEditing = false
+        useStoreStage().handleEventEndSaveHistory()
+      })
     },
 
-    findTextNodePosition(textNode: Konva.Text) {
-      return textNode.absolutePosition()
-    },
-
-    createTextarea(textNode: Konva.Text, areaPosition: AreaPosition) {
+    appendTextarea(
+      textNode: Konva.Text,
+      stage: Konva.Stage,
+      areaPosition: AreaPosition,
+    ) {
+      // テキストエリア表示
       const textarea = document.createElement('textarea')
       document.body.appendChild(textarea)
-      // apply many styles to match text on canvas as close as possible
-      // remember that text rendering on canvas and on the textarea can be different
-      // and sometimes it is hard to make it 100% the same. But we will try...
       textarea.value = textNode.text()
       textarea.wrap = 'soft'
       textarea.style.position = 'absolute'
@@ -243,62 +261,51 @@ const useStoreText = defineStore({
       textarea.style.left = `${areaPosition.x}px`
       textarea.style.width = `${textNode.width()}px`
       textarea.style.fontSize = `${textNode.fontSize()}px`
+      textarea.style.background = 'none'
       textarea.style.border = 'none'
       textarea.style.padding = '0px'
       textarea.style.margin = '0px'
       textarea.style.overflow = 'hidden'
       textarea.style.outline = 'none'
       textarea.style.resize = 'none'
-      textarea.style.lineHeight = String(textNode.lineHeight())
+      textarea.style.lineHeight = '1'
       textarea.style.fontFamily = textNode.fontFamily()
       textarea.style.transformOrigin = 'left top'
       textarea.style.textAlign = textNode.align()
       textarea.style.color = textNode.fill()
-      textarea.style.scale = textNode.getStage()?.scaleX().toString() as string
+      textarea.style.scale = String(stage.scaleX())
       textarea.spellcheck = false
       const rotation = textNode.rotation()
       let transform = ''
       transform += `rotateZ(${rotation}deg)`
       textarea.style.transform = transform
 
-      // reset height
-      textarea.style.height = 'auto'
-      // after browsers resized it we can set actual value
+      textarea.style.height = '0'
       textarea.style.height = `${textarea.scrollHeight}px`
 
-      textarea.focus()
-
-      textarea.addEventListener('keydown', () => {
-        const scale = textNode.getAbsoluteScale().x
-        textarea.style.width = `${textNode.width() * scale}`
-        textarea.style.height = 'auto'
-        textarea.style.height = `${
-          textarea.scrollHeight + textNode.fontSize()
-        }px`
+      // textareaのリサイズ
+      textarea.addEventListener('input', () => {
+        textarea.style.height = '0'
+        textarea.style.height = `${textarea.scrollHeight}px`
       })
-
-      textarea.addEventListener('blur', () => {
-        const text = this.texts.find((t) => t.id === textNode.id())
-        if (text !== undefined) {
-          text.text = textarea.value
-        }
-        // textareaを取り除く
-        textarea.parentNode?.removeChild(textarea)
-        // 編集終了
-        this.isEditing = false
-        useStoreStage().handleEventEndSaveHistory()
-      })
+      return textarea
     },
 
-    // save text position
-    handleTextDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
-      const shape = e.target
-      const text = this.texts.find((t) => t.id === shape.id())
-      if (text !== undefined) {
-        text.x = shape.x()
-        text.y = shape.y()
-      }
-      useStoreStage().handleEventEndSaveHistory()
+    // textareaの文字列の先頭と末尾の改行を取り除く
+    getStringTrimedLineFeedFromTextarea(textarea: HTMLTextAreaElement) {
+      // 先頭と末尾の改行を削除するための正規表現を定義
+      const regex = /^[\n\r]+|[\n\r]+$/g
+      // textareaのvalueから先頭と末尾の改行を削除した値を取得
+      const trimmedValue = textarea.value.replace(regex, '')
+      return trimmedValue
+    },
+
+    rgbToHex(rgb: RegExpMatchArray) {
+      const [r, g, b] = [...rgb]
+      const hexR = Number(r).toString(16).padStart(2, '0').toLocaleUpperCase()
+      const hexG = Number(g).toString(16).padStart(2, '0').toLocaleUpperCase()
+      const hexB = Number(b).toString(16).padStart(2, '0').toLocaleUpperCase()
+      return `#${hexR}${hexG}${hexB}`
     },
   },
 })

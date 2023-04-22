@@ -301,6 +301,30 @@ const useStoreTransformer = defineStore({
       useStoreStage().handleEventEndSaveHistory()
     },
 
+    // save text position
+    handleDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
+      const shape = e.target
+      // text
+      if (shape.name() === 'text') {
+        const { texts } = storeToRefs(useStoreText())
+        const text = texts.value.find((t) => t.id === shape.id())
+        if (text !== undefined) {
+          text.x = shape.x()
+          text.y = shape.y()
+        }
+      }
+      // image
+      if (shape.name() === 'image') {
+        const { konvaImages } = storeToRefs(useStoreImage())
+        const image = konvaImages.value.find((t) => t.id === shape.id())
+        if (image !== undefined) {
+          image.x = shape.x()
+          image.y = shape.y()
+        }
+      }
+      useStoreStage().handleEventEndSaveHistory()
+    },
+
     // keydownで選択中の要素を削除
     async handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
       if (e.key === 'Delete') {

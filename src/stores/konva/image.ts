@@ -166,17 +166,6 @@ const useStoreImage = defineStore({
     deleteImages() {
       this.konvaImages = []
     },
-
-    // save text position
-    handleImageDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
-      const shape = e.target
-      const text = this.konvaImages.find((i) => i.id === shape.id())
-      if (text !== undefined) {
-        text.x = shape.x()
-        text.y = shape.y()
-      }
-      useStoreStage().handleEventEndSaveHistory()
-    },
   },
 })
 
