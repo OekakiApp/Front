@@ -149,7 +149,7 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   // redo
   else if (
     (isWinOS && e.ctrlKey && e.key === 'y') ||
-    ((isMacOS || isIPadOS) && e.metaKey && e.shiftKey && e.key === 'y')
+    ((isMacOS || isIPadOS) && e.metaKey && e.shiftKey && e.key === 'z')
   ) {
     handleRedo()
   }

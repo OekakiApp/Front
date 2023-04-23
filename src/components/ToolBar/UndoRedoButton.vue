@@ -18,7 +18,7 @@ const undoRedoArray: UndoRedoArray[] = reactive([
   },
   {
     icon: 'redo',
-    tooltip: `Redo : ${isWinOS ? 'Ctrl + Y' : 'Cmd + Shift + Y'}`,
+    tooltip: `Redo : ${isWinOS ? 'Ctrl + Y' : 'Cmd + Shift + Z'}`,
     onClick: () => {
       handleRedo()
     },
