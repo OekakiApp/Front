@@ -396,7 +396,7 @@ div(className="modal")
     h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
     div(class="flex justify-end")
       div(className="modal-action mr-3")
-        label(htmlFor="reset-modal" className="btn w-36") Cancel
+        label(htmlFor="reset-modal" className="btn w-36" @click="pointLeaderOpen = !pointLeaderOpen") Cancel
       div(className="modal-action" @click="pointLeaderOpen = false")
         label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="useStoreCanvas().resetCanvas") OK
 
