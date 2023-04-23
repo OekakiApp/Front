@@ -83,6 +83,8 @@ const transformer = ref()
 const canvasId = ref(useRoute().params.canvas_id as string)
 const router = useRouter()
 const saveState = ref<SaveState>('normal')
+const isShare = ref(false)
+const pointLeaderOpen = ref(false)
 // const selectionRectangle = ref()
 
 const showDoneBtn = () => {
@@ -161,6 +163,7 @@ onMounted(() => {
       canvas.konvaImages,
     )
     inputText.text = canvas.name
+    isShare.value = canvas.isShare === undefined ? false : canvas.isShare
     // 履歴をセット
     canvasHistory.value = [
       {
@@ -227,11 +230,7 @@ const saveCanvas = async (): Promise<void> => {
           ? Timestamp.now()
           : canvases.value[canvasID].createdAt,
       updatedAt: Timestamp.now(),
-      // isShareの有無を判定
-      isShare:
-        canvases.value[canvasID].isShare === undefined
-          ? false
-          : canvases.value[canvasID].isShare,
+      isShare: isShare.value,
     })
   }
   // 新規の場合
@@ -244,7 +243,7 @@ const saveCanvas = async (): Promise<void> => {
       uid: uid.value,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-      isShare: false,
+      isShare: isShare.value,
     })
   }
   // 画像の使用枚数の更新
@@ -253,6 +252,18 @@ const saveCanvas = async (): Promise<void> => {
   firstKonvaImages.value = _.cloneDeep(konvaImages.value)
   // サムネイルを生成・保存
   generateAndSaveThumbnail()
+}
+
+// 共有トグルボタン切り替えで発火
+const saveIsShare = async (): Promise<void> => {
+  isShare.value = !isShare.value
+  const canvasID = canvasId.value
+  if (canvases.value[canvasID] !== undefined) {
+    await updateDoc(doc(db, 'canvas', canvasID), {
+      updatedAt: Timestamp.now(),
+      isShare: isShare.value,
+    })
+  }
 }
 
 // サムネイルを生成し、storageにアップロード
@@ -301,6 +312,22 @@ div(class="flex justify-center items-center my-4")
   //- done
   button(v-show="saveState === 'done'" type="button" class="flex items-center focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-4 py-1.5")
     span(class="material-symbols-outlined") done
+
+  div(class="relative ml-8")
+    button(class="three-dot-leader hover:opacity-80" type="button" @click="pointLeaderOpen = !pointLeaderOpen")
+        span(class="dot")
+    button(v-show="pointLeaderOpen" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default" @click="pointLeaderOpen = false")
+    div(v-show="pointLeaderOpen"  class="absolute z-10 mt-2 py-2 w-max bg-white rounded-lg shadow-xl")
+      div(class="flex items-center cursor-auto px-4 py-2 text-gray-800") 
+        span(class="material-symbols-outlined mr-2" style='color:#2F90EA') open_in_new
+        div(class="mr-2 text-lg") 共有
+        label(class="relative inline-flex items-center cursor-pointer")
+          input(:checked="isShare" type="checkbox" class="sr-only peer" @click="saveIsShare()")
+          div(class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300  rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600")
+      label(htmlFor="reset-modal"  class="flex items-center cursor-pointer px-4 py-2 text-gray-800") 
+        span(class="material-symbols-outlined mr-2") restart_alt
+        div(class="mr-2 text-lg") リセット
+
 
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
   div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImagesOnCanvas(e, stage)}" @dragover.prevent)
@@ -359,5 +386,64 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
-  ToolBar(:stage="stage" :save-canvas="saveCanvas")
+  ToolBar(:stage="stage")
+
+input(id="reset-modal" type="checkbox" className="modal-toggle")
+div(className="modal")
+  div(className="modal-box max-w-none w-auto")
+    h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
+    div(class="flex justify-end")
+      div(className="modal-action mr-3")
+        label(htmlFor="reset-modal" className="btn w-36" @click="pointLeaderOpen = !pointLeaderOpen") Cancel
+      div(className="modal-action" @click="pointLeaderOpen = false")
+        label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="useStoreCanvas().resetCanvas") OK
 </template>
+
+<style scoped>
+.three-dot-leader {
+  cursor: pointer;
+  border: none;
+  background: none;
+  display: block;
+  position: relative;
+  /* ボタン要素のサイズ */
+  width: 40px;
+  height: 40px;
+}
+
+.three-dot-leader .dot,
+.three-dot-leader .dot::before,
+.three-dot-leader .dot::after {
+  display: block;
+  position: absolute;
+  border-radius: 50%;
+  /* ドット1つのサイズ */
+  width: 6px;
+  height: 6px;
+  /* ドットの色 */
+  background-color: #333;
+}
+
+.three-dot-leader .dot {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+}
+
+.three-dot-leader .dot::before,
+.three-dot-leader .dot::after {
+  content: '';
+}
+
+.three-dot-leader .dot::before {
+  /* 上側ドットの位置 */
+  top: -12px;
+}
+
+.three-dot-leader .dot::after {
+  /* 下側ドットの位置 */
+  top: 12px;
+}
+</style>
