@@ -98,7 +98,9 @@ const useStoreText = defineStore({
       // so position of textarea will be the sum of positions above:
       // textareaをcanvas上に乗せるので
       // Stage上でのtextの位置(x, y) + Stageまでの距離(x, y)が必要
-      const absolutePoint = stage.getPointersPositions()[0]
+      const absolutePoint = stage.getPointerPosition()
+      if (absolutePoint === null) return
+
       const areaAbsolutePosition = {
         x: stage.container().offsetLeft + absolutePoint.x,
         y: stage.container().offsetTop + absolutePoint.y,
