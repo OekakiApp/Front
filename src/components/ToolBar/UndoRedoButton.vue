@@ -6,22 +6,19 @@ import type { UndoRedoArray } from '@/types/index'
 const { handleUndo, handleRedo } = useStoreHistory()
 
 const ua = window.navigator.userAgent.toLowerCase()
+const isWinOS = ua.indexOf('windows nt') !== -1
 
 const undoRedoArray: UndoRedoArray[] = reactive([
   {
     icon: 'undo',
-    tooltip: `Undo : ${
-      ua.indexOf('windows nt') !== -1 ? 'Ctrl + Z' : 'Command + Z'
-    }`,
+    tooltip: `Undo : ${isWinOS ? 'Ctrl + Z' : 'Cmd + Z'}`,
     onClick: () => {
       handleUndo()
     },
   },
   {
     icon: 'redo',
-    tooltip: `Redo : ${
-      ua.indexOf('windows nt') !== -1 ? 'Ctrl + Y' : 'Command + Y'
-    }`,
+    tooltip: `Redo : ${isWinOS ? 'Ctrl + Y' : 'Cmd + Shift + Y'}`,
     onClick: () => {
       handleRedo()
     },

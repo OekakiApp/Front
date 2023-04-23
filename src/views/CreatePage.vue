@@ -84,6 +84,12 @@ const transformer = ref()
 const canvasId = ref(useRoute().params.canvas_id as string)
 const router = useRouter()
 const saveState = ref<SaveState>('normal')
+const ua = window.navigator.userAgent.toLocaleLowerCase()
+const isWinOS = ua.indexOf('windows nt') !== -1
+const isMacOS = ua.indexOf('mac os x') !== -1
+const isIPadOS =
+  ua.indexOf('ipad') !== -1 ||
+  (ua.indexOf('macintosh') !== -1 && 'ontouchend' in document)
 // const selectionRectangle = ref()
 
 const showDoneBtn = () => {
@@ -130,9 +136,19 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   // image
   else if (e.key === 'i') setMode('image')
   // undo
-  else if ((e.ctrlKey || e.metaKey) && e.key === 'z') handleUndo()
+  else if (
+    (isWinOS && e.ctrlKey && e.key === 'z') ||
+    ((isMacOS || isIPadOS) && e.metaKey && e.key === 'z')
+  ) {
+    handleUndo()
+  }
   // redo
-  else if ((e.ctrlKey || e.metaKey) && e.key === 'y') handleRedo()
+  else if (
+    (isWinOS && e.ctrlKey && e.key === 'y') ||
+    ((isMacOS || isIPadOS) && e.metaKey && e.shiftKey && e.key === 'y')
+  ) {
+    handleRedo()
+  }
 }
 
 // CreatePageに関わるstoreを初期化

@@ -27,6 +27,9 @@ const { setLineStyle, setGlobalCompositeOperation, deleteLines } =
 const { deleteTexts } = useStoreText()
 const { deleteImages } = useStoreImage()
 
+const ua = window.navigator.userAgent.toLowerCase()
+const isWinOS = ua.indexOf('windows nt') !== -1
+
 const resetCanvas = async () => {
   // delete
   deleteLines()
@@ -78,7 +81,7 @@ const toolArray: ToolArray[] = reactive([
     icon: 'auto_fix_normal',
     mode: 'eraser',
     tooltip: 'Eraser',
-    shortcut: 'Shift + Backspace',
+    shortcut: `Shift + ${isWinOS ? 'BS' : 'Del'}`,
     event: () => {
       setMode('eraser')
       setLineStyle('normal')
