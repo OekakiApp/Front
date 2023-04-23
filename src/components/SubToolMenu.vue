@@ -217,11 +217,11 @@ watch(fill, () => {
 
 // pen eraser text style
 const subToolbarStyle =
-  'flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16'
+  'flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 h-16'
 
 // image style
 const imageSubToolbarStyle =
-  'flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm w-screen'
+  'flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm'
 </script>
 
 <template lang="pug">
