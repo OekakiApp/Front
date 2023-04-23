@@ -5,7 +5,7 @@ import { db } from '@/firebase/index'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import type { Canvas } from '@/firebase/types'
 
 const useStoreCanvas = defineStore({
@@ -46,7 +46,7 @@ const useStoreCanvas = defineStore({
       useStoreText().deleteTexts()
       useStoreImage().deleteImages()
       // save history
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
   },
 })
