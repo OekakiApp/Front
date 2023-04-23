@@ -7,6 +7,7 @@ import {
   setDoc,
   updateDoc,
   onSnapshot,
+  getDoc,
 } from 'firebase/firestore'
 import {
   ref,
@@ -16,8 +17,8 @@ import {
 } from 'firebase/storage'
 import useAuthStore from '@/stores/auth'
 import { db, storage } from '@/firebase/index'
-import type { KonvaImage } from '@/types/konva'
 import type { UploadedImage, UserImageStorage } from '@/firebase/types/index'
+import type { KonvaImage } from '@/types/konva'
 import sortImagesByCreatedAt from '@/utils/sort'
 import Compressor from 'compressorjs'
 
@@ -132,6 +133,7 @@ const useStoreUserImage = defineStore({
         createdAt: Timestamp.now(),
         show: true, // Toolbarに表示・非表示
         countOnCanvas: 0, // key: canvasId, value: 使用数 valueが0になったらkeyを削除
+        loaded: false,
       }
 
       const { userImageStorage } = this
@@ -263,25 +265,32 @@ const useStoreUserImage = defineStore({
 
     async loadUserImageStorage(uid: string) {
       const docRef = doc(db, 'userImageStorage', uid)
+      const firstDocSnap = await getDoc(docRef)
+      if (firstDocSnap.exists()) {
+        this.userImageStorage = firstDocSnap.data()
+        // loadedを全てfalseにセット
+        // eslint-disable-next-line no-restricted-syntax
+        for (const key in this.userImageStorage) {
+          if (Object.hasOwn(this.userImageStorage, key)) {
+            this.userImageStorage[key].loaded = false
+          }
+        }
+      }
 
       // リアルタイムでアップデートを取得する
-      const promise = new Promise<void>((resolve) => {
-        onSnapshot(
-          docRef,
-          (docSnap) => {
-            if (docSnap.exists()) {
-              this.userImageStorage = docSnap.data()
-            } else {
-              this.userImageStorage = {}
-            }
-            resolve()
-          },
-          (error) => {
-            console.log(error)
-          },
-        )
-      })
-      await promise
+      onSnapshot(
+        docRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            this.userImageStorage = docSnap.data()
+          } else {
+            this.userImageStorage = {}
+          }
+        },
+        (error) => {
+          console.log(error)
+        },
+      )
     },
   },
 

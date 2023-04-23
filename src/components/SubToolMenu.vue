@@ -7,11 +7,10 @@ import StrokeWidthRange from '@/components/ToolBar/StrokeWidthRange.vue'
 import FontSizeSelect from '@/components/ToolBar/FontSizeSelect.vue'
 import FontFamilySelect from '@/components/ToolBar/FontFamilySelect.vue'
 import TextAlignmentSelect from '@/components/ToolBar/TextAlignmentSelect.vue'
+import UserImageList from '@/components/ToolBar/UserImageList.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
-import useStoreImage from '@/stores/konva/image'
-import useStoreUserImage from '@/stores/userImage'
 import type { Color } from '@/types/index'
 
 const { mode } = storeToRefs(useStoreMode())
@@ -19,9 +18,6 @@ const { drawColor, isTouchActive } = storeToRefs(useStoreLine())
 const { setLineColor, toggleIsTouchActive } = useStoreLine()
 const { fill } = storeToRefs(useStoreText())
 const { setTextOptionValue, setTextColor } = useStoreText()
-const { setDragImageUrlAndId } = useStoreImage()
-const { getToolbarImages } = storeToRefs(useStoreUserImage())
-const { addImageToToolbar, deleteImageFromToolbar } = useStoreUserImage()
 
 const lineColors: Color[] = reactive([
   {
@@ -218,17 +214,23 @@ watch(fill, () => {
     textColors[textColors.length - 1].color = fill.value
   }
 })
+
+// pen eraser text style
+const subToolbarStyle =
+  'flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 h-16'
+
+// image style
+const imageSubToolbarStyle =
+  'flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm'
 </script>
 
 <template lang="pug">
 //- pen
-div(v-show="mode === 'pen'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
+div(v-show="mode === 'pen'" :class="subToolbarStyle")
   LineStyleSelect
   //- Not use Hand
   div(class="px-2")
-    button(v-if="isTouchActive" type="button" data-tip="Not use touch" class="tooltip flex justify-center items-center w-8 h-8 hover:bg-slate-300 rounded-full" @click="toggleIsTouchActive")
-      span(class="material-symbols-outlined") do_not_touch
-    button(v-else type="button" data-tip="Not use touch" class="tooltip flex justify-center items-center w-8 h-8 bg-slate-300 rounded-full" @click="toggleIsTouchActive")
+    button(type="button" data-tip="Touch disabled" class="tooltip flex justify-center items-center w-8 h-8 rounded-full" :class="{'hover:bg-slate-300': isTouchActive, 'bg-slate-300': !isTouchActive}" @click="toggleIsTouchActive")
       span(class="material-symbols-outlined") do_not_touch
   ColorButton(
     v-for="color in lineColors"
@@ -237,33 +239,20 @@ div(v-show="mode === 'pen'" class="flex justify-center items-center bg-gray-200 
   div(class="pl-2")
     StrokeWidthRange
 //- eraser
-div(
-  v-show="mode === 'eraser'"
-  class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
+div(v-show="mode === 'eraser'" :class="subToolbarStyle")
   StrokeWidthRange
 //- text
-div(v-show="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
+div(v-show="mode === 'text'" :class="subToolbarStyle")
   FontSizeSelect
   FontFamilySelect
   TextAlignmentSelect
   ColorButton(
     v-for="color in textColors"
     :key="color.name" :color="color"
-    :colors="textColors" :store-color="fill" @toggle-picker-active="(color:string) => {setTextColor(color);setTextOptionValue('textFillColor', color)}")
+    :colors="textColors"
+    :store-color="fill"
+    @toggle-picker-active="(color:string) => {setTextColor(color);setTextOptionValue('textFillColor', color)}")
 //- image
-div(v-show="mode === 'image'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm w-screen")
-  div(class="flex items-end h-52 w-full")
-    label(class="upload-label bg-neutral inline-block cursor-pointer rounded-lg py-2 px-5 text-white text-lg") ファイルを選択
-      input(type="file" class="bg-white file-input file-input-bordered file-input-sm min-w-min rounded-lg" accept=".png, .jpeg, .jpg" @change="addImageToToolbar")
-    //- image list
-    div(class="bg-slate-50 flex-1 grid grid-cols-3 h-52 w-full overflow-y-scroll rounded-lg ml-2")
-      div(v-for="image of getToolbarImages" :key="image.id" class="relative flex justify-center items-center")
-        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="deleteImageFromToolbar(image)") ✕
-        img(:id="image.id" :src="image.storageURL" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="(e) => {setDragImageUrlAndId(e);}")
+div(v-show="mode === 'image'" :class="imageSubToolbarStyle")
+  UserImageList
 </template>
-
-<style scoped>
-.upload-label input {
-  display: none;
-}
-</style>

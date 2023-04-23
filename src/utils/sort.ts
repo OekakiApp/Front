@@ -1,4 +1,4 @@
-import type { UploadedImage } from '@/firebase/types'
+import type { UploadedImage } from '@/firebase/types/index'
 
 function sortImagesByCreatedAt(uploadedImages: UploadedImage[]) {
   return uploadedImages.sort((a: UploadedImage, b: UploadedImage) => {
