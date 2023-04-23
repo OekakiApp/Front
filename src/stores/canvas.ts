@@ -6,6 +6,7 @@ import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStoreHistory from '@/stores/konva/history'
+import useStoreTransformer from '@/stores/konva/transformer'
 import type { Canvas } from '@/firebase/types'
 
 const useStoreCanvas = defineStore({
@@ -45,6 +46,8 @@ const useStoreCanvas = defineStore({
       useStoreLine().deleteLines()
       useStoreText().deleteTexts()
       useStoreImage().deleteImages()
+      // reset transformer
+      useStoreTransformer().$reset()
       // save history
       useStoreHistory().handleEventEndSaveHistory()
     },
