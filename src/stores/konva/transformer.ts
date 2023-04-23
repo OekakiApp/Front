@@ -4,7 +4,7 @@ import { defineStore, storeToRefs } from 'pinia'
 import useStoreMode from '@/stores/mode'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 
 const useStoreTransformer = defineStore({
   id: 'transformer',
@@ -293,7 +293,7 @@ const useStoreTransformer = defineStore({
           image.scaleY = shape.scaleY()
         }
       }
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
 
     // keydownで選択中の要素を削除
@@ -321,7 +321,7 @@ const useStoreTransformer = defineStore({
           )
           this.$reset()
         }
-        useStoreStage().handleEventEndSaveHistory()
+        useStoreHistory().handleEventEndSaveHistory()
       }
     },
   },

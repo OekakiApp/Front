@@ -1,22 +1,17 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 import { defineStore } from 'pinia'
-import {
-  query,
-  where,
-  collection,
-  DocumentData,
-  onSnapshot,
-} from 'firebase/firestore'
+import { query, where, collection, onSnapshot } from 'firebase/firestore'
 import { db } from '@/firebase/index'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStoreStage from '@/stores/konva/stage'
+import type { Canvas } from '@/firebase/types'
 
 const useStoreCanvas = defineStore({
   id: 'canvas',
   state: () => ({
-    canvases: {} as DocumentData,
+    canvases: {} as Record<string, Canvas>,
   }),
 
   actions: {
@@ -30,10 +25,10 @@ const useStoreCanvas = defineStore({
         onSnapshot(
           canvasQuery,
           (querySnapshot) => {
-            const canvases = {} as DocumentData
+            const canvases = {} as Record<string, Canvas>
             querySnapshot.forEach((document) => {
               const canvasID = document.id
-              canvases[canvasID] = document.data()
+              canvases[canvasID] = document.data() as Canvas
             })
             this.canvases = canvases
             resolve()

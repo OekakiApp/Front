@@ -3,17 +3,15 @@ import { defineStore, storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
 import Konva from 'konva'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import useStoreTransformer from '@/stores/konva/transformer'
-
-type FontStyle = 'normal' | 'bold' | 'italic' | 'italic bold'
-type TextDecoration = 'empty string' | 'line-through' | 'underline'
-type TextAlign = 'left' | 'center' | 'right'
-
-interface AreaPosition {
-  x: number
-  y: number
-}
+import type {
+  FontStyle,
+  TextDecoration,
+  TextAlign,
+  AreaPosition,
+  TextNode,
+} from '@/types/konva'
 
 // Fontfamily List
 export const fontFamilyList = [
@@ -23,26 +21,6 @@ export const fontFamilyList = [
   'Train One',
   'Dela Gothic One',
 ]
-
-export interface TextNode {
-  id: string
-  text: string
-  rotation: number
-  x: number
-  y: number
-  scaleX: number
-  fontSize: number
-  fontStyle: FontStyle
-  textDecoration: TextDecoration
-  fontFamily: string
-  align: TextAlign
-  draggable: boolean
-  width: number
-  fill: string
-  wrap: 'word' | 'char' | 'none'
-  ellipsis: boolean
-  name: string
-}
 
 const useStoreText = defineStore({
   id: 'text',
@@ -92,7 +70,7 @@ const useStoreText = defineStore({
           name: 'text',
         },
       ]
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
 
     setTextOptionValue(option: string, value: string | TextAlign) {
@@ -115,7 +93,7 @@ const useStoreText = defineStore({
           default:
             break
         }
-        useStoreStage().handleEventEndSaveHistory()
+        useStoreHistory().handleEventEndSaveHistory()
       }
     },
 
@@ -198,8 +176,8 @@ const useStoreText = defineStore({
       textarea.value = textNode.text()
       textarea.wrap = 'soft'
       textarea.style.position = 'absolute'
-      textarea.style.top = `${areaPosition.y}px`
-      textarea.style.left = `${areaPosition.x}px`
+      textarea.style.top = `${areaPosition.y.toString()}px`
+      textarea.style.left = `${areaPosition.x.toString()}px`
       textarea.style.width = `${textNode.width() - textNode.padding() * 2}px`
       textarea.style.height = `${
         textNode.height() - textNode.padding() * 2 + 5
@@ -249,7 +227,7 @@ const useStoreText = defineStore({
         this.removeTextarea(textNode, transformerNode, textarea)
         // 編集終了
         this.isEditing = false
-        useStoreStage().handleEventEndSaveHistory()
+        useStoreHistory().handleEventEndSaveHistory()
       })
     },
 
@@ -272,7 +250,7 @@ const useStoreText = defineStore({
         text.x = shape.x()
         text.y = shape.y()
       }
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
     },
   },
 })

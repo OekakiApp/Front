@@ -12,7 +12,6 @@ import {
 import ToolBar from '@/components/ToolBar.vue'
 import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText, { fontFamilyList } from '@/stores/konva/text'
 import useAuthStore from '@/stores/auth'
@@ -21,22 +20,25 @@ import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreUserImage from '@/stores/userImage'
-import Konva from 'konva'
+import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
+import type { SaveState } from '@/types/index'
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+import Konva from 'konva'
 
 // useStore start
-const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
+const { canvasHistory } = storeToRefs(useStoreHistory())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
 const { uid } = storeToRefs(useAuthStore())
 const { canvases } = storeToRefs(useStoreCanvas())
 const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer } = storeToRefs(useStoreTransformer())
-const { saveImageCountToFirebase } = useStoreUserImage()
+const { configKonva } = storeToRefs(useStoreStage())
 
 const { setMode } = useStoreMode()
-const { fitStageIntoParentContainer } = useStoreStage()
 const {
   handleLineMouseDown,
   handleLineMouseMove,
@@ -67,14 +69,13 @@ const {
 const {
   changeKonvaImagesToFirestoreCanvasImages,
   changeFirestoreCanvasImagesToKonvaImages,
-  setImages,
+  setImagesOnCanvas,
   handleImageDragEnd,
 } = useStoreImage()
-// useStore end
 
-// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-type KonvaEventObject<T> = Konva.KonvaEventObject<T>
-type SaveState = 'normal' | 'loading' | 'done'
+const { saveImageCountToFirebase } = useStoreUserImage()
+const { fitStageIntoParentContainer } = useStoreStage()
+// useStore end
 
 const stageParentDiv = ref()
 const stage = ref()
@@ -113,9 +114,7 @@ const blurInput = () => {
 const changeModeByShortCut = (e: KeyboardEvent) => {
   // テキスト編集中はショートカット無効
   if (isEditing.value || inputText.isEditing) return
-  if (e.key === 'h') setMode('hand')
-  else if (e.key === 'v') setMode('select')
-  else if (e.key === 'p' || e.key === 'm') {
+  if (e.key === 'p' || e.key === 'm') {
     setMode('pen')
     setGlobalCompositeOperation('source-over')
     useStoreTransformer().$reset()
@@ -124,7 +123,6 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
     setGlobalCompositeOperation('destination-out')
     useStoreTransformer().$reset()
   } else if (e.key === 't') setMode('text')
-  else if (e.key === 's') setMode('sticky')
   else if (e.key === 'i') setMode('image')
   // undo
   // redo
@@ -136,14 +134,14 @@ const initializeCanvas = () => {
   useStoreLine().$reset()
   useStoreText().$reset()
   useStoreImage().$reset()
-  useStoreStage().$reset()
+  useStoreHistory().$reset()
   useStoreTransformer().$reset()
 }
 
 onMounted(() => {
   // 初期化
   initializeCanvas()
-  // stageのリサイズ
+  // Stageのリサイズ
   fitStageIntoParentContainer(stageParentDiv.value)
 
   window.addEventListener('resize', () =>
@@ -332,18 +330,18 @@ div(class="flex justify-center items-center my-4")
 
 
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
-  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImagesOnCanvas(e, stage)}" @dragover.prevent)
     v-stage(
       ref="stage"
       :config="configKonva"
-      @mouseenter="(e: KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
-      @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
-      @mousedown="(e: KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
-      @pointerdown="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e)}"
-      @pointermove="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
-      @pointerup="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseUp(e);}"
-      @dblclick="(e: KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
-      @dbltap="(e: KonvaEventObject<TouchEvent>) => {createNewTextNode(e);}"
+      @mouseenter="(e: Konva.KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
+      @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
+      @mousedown="(e: Konva.KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
+      @pointerdown="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e)}"
+      @pointermove="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
+      @pointerup="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseUp(e);}"
+      @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
+      @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => {createNewTextNode(e);}"
       )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
@@ -352,27 +350,27 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           :key="image.id"
           :draggable="true"
           :config="image"
-          @dragend="(e: KonvaEventObject<DragEvent>) => {handleImageDragEnd(e);}"
-          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
-          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
-          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
-          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => {handleImageDragEnd(e);}"
+          @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
         )
         v-text(
           v-for="text in texts"
           :key="text.id"
           :config="text"
-          @dragend="(e: KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
-          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
-          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
-          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
-          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
+          @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
-          @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
-          @dbltap="(e: KonvaEventObject<TouchEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => toggleEdit(e, transformer, stageParentDiv)"
           )
       v-layer
         v-line(
@@ -399,7 +397,6 @@ div(className="modal")
         label(htmlFor="reset-modal" className="btn w-36" @click="pointLeaderOpen = !pointLeaderOpen") Cancel
       div(className="modal-action" @click="pointLeaderOpen = false")
         label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="useStoreCanvas().resetCanvas") OK
-
 </template>
 
 <style scoped>
