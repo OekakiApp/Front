@@ -1,4 +1,5 @@
 import type { Mode } from '@/types/mode'
+
 // CreatePage
 export interface Color {
   name: string

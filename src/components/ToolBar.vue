@@ -7,16 +7,12 @@ import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
-import useStoreText from '@/stores/konva/text'
-import useStoreImage from '@/stores/konva/image'
 import useStoreTransformer from '@/stores/konva/transformer'
-import useStoreHistory from '@/stores/konva/history'
 import useStoreCanvas from '@/stores/canvas'
 import type { ToolArray } from '@/types/index'
 
 interface Props {
   stage: Konva.Stage
-  saveCanvas: () => Promise<void>
 }
 
 const props = defineProps<Props>()
@@ -24,25 +20,10 @@ const { stage } = toRefs(props)
 
 const { mode } = storeToRefs(useStoreMode())
 const { setMode } = useStoreMode()
-const { setLineStyle, setGlobalCompositeOperation, deleteLines } =
-  useStoreLine()
-const { deleteTexts } = useStoreText()
-const { deleteImages } = useStoreImage()
+const { setLineStyle, setGlobalCompositeOperation } = useStoreLine()
 const { canvases } = storeToRefs(useStoreCanvas())
 
 const canvasId = ref(useRoute().params.canvas_id as string)
-
-const resetCanvas = async () => {
-  // delete
-  deleteLines()
-  deleteTexts()
-  deleteImages()
-
-  // キャンバスの状態をfirebaseに保存
-  props.saveCanvas()
-  // reset history
-  useStoreHistory().$reset()
-}
 
 // キャンバスをPNGでダウンロード
 const downloadImage = async () =>
@@ -128,23 +109,8 @@ div(class="flex flex-col items-center relative")
           span(class="material-symbols-outlined") {{tool.icon}}
       //- Undo Redo
       UndoRedoButton
-      //- Reset
-      li.flex.mx-2
-        label(htmlFor="my-modal" data-tip="Reset" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded flex")
-          span(class="material-symbols-outlined") delete
       //- Download
       li.flex.mx-2
         button(type="button" data-tip="Download" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="downloadImage")
           span(class="material-symbols-outlined") file_download
-
-input(id="my-modal" type="checkbox" className="modal-toggle")
-div(className="modal")
-  div(className="modal-box")
-    h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
-    div(class="flex justify-end")
-      div(className="modal-action mr-3")
-        label(htmlFor="my-modal" className="btn w-36") Cancel
-      div(className="modal-action")
-        label(htmlFor="my-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="resetCanvas") OK
-
 </template>
