@@ -11,7 +11,6 @@ import type { ToolArray } from '@/types/index'
 
 interface Props {
   stage: Konva.Stage
-  saveCanvas: () => Promise<void>
 }
 
 const props = defineProps<Props>()
