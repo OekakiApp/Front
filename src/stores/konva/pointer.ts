@@ -13,7 +13,7 @@ const useStorePointer = defineStore({
 
   actions: {
     // キャンバス上にcursorが入った時
-    handlePointerMouseEnter(e: Konva.KonvaEventObject<PointerEvent>) {
+    handlePointerMouseEnter(e: Konva.KonvaEventObject<MouseEvent>) {
       // ポインター種類変更
       const stage = e.target.getStage()
       if (stage === null) return
