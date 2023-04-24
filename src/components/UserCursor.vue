@@ -5,17 +5,19 @@ import useStoreLine from '@/stores/konva/line'
 import useStorePointer from '@/stores/konva/pointer'
 
 const { mode } = storeToRefs(useStoreMode())
-const { drawColor, strokeWidth } = storeToRefs(useStoreLine())
+const { drawColor, penStrokeWidth, eraserStrokeWidth } = storeToRefs(
+  useStoreLine(),
+)
 const { isLinePointer, x, y } = storeToRefs(useStorePointer())
 </script>
 
 <template lang="pug">
 v-circle(
   v-if="mode === 'pen' && isLinePointer"
-  :config="{ x: x, y: y, radius: Math.max(strokeWidth/2, 2.5), fill: drawColor, opacity: 0.3}"
+  :config="{ x: x, y: y, radius: Math.max(penStrokeWidth/2, 2.5), fill: drawColor, opacity: 0.3}"
   )
 v-circle(
   v-else-if="mode === 'eraser' && isLinePointer"
-  :config="{ x: x, y: y, radius: Math.max(strokeWidth/2, 2.5), fill: 'gray', opacity: 0.3}"
+  :config="{ x: x, y: y, radius: Math.max(eraserStrokeWidth/2, 2.5), fill: 'gray', opacity: 0.3}"
   )
 </template>

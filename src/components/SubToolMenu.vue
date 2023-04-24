@@ -14,8 +14,14 @@ import useStoreText from '@/stores/konva/text'
 import type { Color } from '@/types/index'
 
 const { mode } = storeToRefs(useStoreMode())
-const { drawColor, isTouchActive } = storeToRefs(useStoreLine())
-const { setLineColor, toggleIsTouchActive } = useStoreLine()
+const { drawColor, penStrokeWidth, eraserStrokeWidth, isTouchActive } =
+  storeToRefs(useStoreLine())
+const {
+  setLineColor,
+  setPenStrokeWidth,
+  setEraserStrokeWidth,
+  toggleIsTouchActive,
+} = useStoreLine()
 const { fill } = storeToRefs(useStoreText())
 const { setTextOptionValue, setTextColor } = useStoreText()
 
@@ -237,10 +243,10 @@ div(v-show="mode === 'pen'" :class="subToolbarStyle")
     :key="color.name" :color="color"
     :colors="lineColors" :store-color="drawColor" @toggle-picker-active="(color: string) => {setLineColor(color)}")
   div(class="pl-2")
-    StrokeWidthRange
+    StrokeWidthRange(:stroke-width="penStrokeWidth" :set-stroke-width="setPenStrokeWidth")
 //- eraser
 div(v-show="mode === 'eraser'" :class="subToolbarStyle")
-  StrokeWidthRange
+  StrokeWidthRange(:stroke-width="eraserStrokeWidth" :set-stroke-width="setEraserStrokeWidth")
 //- text
 div(v-show="mode === 'text'" :class="subToolbarStyle")
   FontSizeSelect

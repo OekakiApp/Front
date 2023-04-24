@@ -12,7 +12,8 @@ const useStoreLine = defineStore({
     lines: [] as Points[], // canvas line
     isDrawing: false,
     drawColor: '#1E1E1E', // default Color
-    strokeWidth: 1, // default stroke width
+    penStrokeWidth: 1, // default pen stroke width
+    eraserStrokeWidth: 1, // default eraser stroke width
     lineStyle: 'normal', // default line style
     dash: [10, 10],
     dashEnabled: false,
@@ -25,8 +26,12 @@ const useStoreLine = defineStore({
       this.drawColor = selectedColor
     },
 
-    setStrokeWidth(selectedStrokeWidth: string) {
-      this.strokeWidth = parseInt(selectedStrokeWidth, 10)
+    setPenStrokeWidth(selectedStrokeWidth: string) {
+      this.penStrokeWidth = parseInt(selectedStrokeWidth, 10)
+    },
+
+    setEraserStrokeWidth(selectedStrokeWidth: string) {
+      this.eraserStrokeWidth = parseInt(selectedStrokeWidth, 10)
     },
 
     setLineStyle(selectedLineStyle: LineStyle) {
@@ -66,7 +71,8 @@ const useStoreLine = defineStore({
           name: 'line',
           points: [pos.x, pos.y],
           color: this.drawColor,
-          strokeWidth: this.strokeWidth,
+          strokeWidth:
+            mode === 'pen' ? this.penStrokeWidth : this.eraserStrokeWidth,
           dash: this.dash,
           dashEnabled: this.dashEnabled,
           globalCompositeOperation: this.globalCompositeOperation,
