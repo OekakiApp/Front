@@ -84,9 +84,8 @@ const useStoreText = defineStore({
     // テキストエリアを表示、編集後テキスト追加
     createNewTextNode(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
       const { mode } = storeToRefs(useStoreMode())
-      if (mode.value !== 'text') return
-      // クリックしているのが、Textならスキップ
-      if (e.target.className === 'Text') return
+      // テキストモードではないまたは、クリックしているのがTextならスキップ
+      if (mode.value !== 'text' || e.target.className === 'Text') return
       // get Stage
       const stage = e.target.getStage()
       if (stage === null) return
