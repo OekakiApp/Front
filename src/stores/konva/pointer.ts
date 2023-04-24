@@ -1,6 +1,7 @@
 import Konva from 'konva'
-import { defineStore, storeToRefs } from 'pinia'
+import { defineStore } from 'pinia'
 import useStoreMode from '@/stores/mode'
+import eraserIcon from '@/assets/eraser.png'
 
 const useStorePointer = defineStore({
   id: 'pointer',
@@ -12,21 +13,28 @@ const useStorePointer = defineStore({
 
   actions: {
     // キャンバス上にcursorが入った時
-    handlePointerMouseEnter(
-      e: Konva.KonvaEventObject<MouseEvent | PointerEvent>,
-    ) {
+    handlePointerMouseEnter(e: Konva.KonvaEventObject<PointerEvent>) {
       // ポインター種類変更
       const stage = e.target.getStage()
       if (stage === null) return
 
-      const { mode } = storeToRefs(useStoreMode())
-      if (mode.value === 'pen' || mode.value === 'eraser') {
+      const { mode } = useStoreMode()
+      // pen pointer
+      if (mode === 'pen') {
         this.isLinePointer = true
         stage.container().style.cursor = 'none'
-      } else if (mode.value === 'text') {
+      }
+      // eraser pointer
+      else if (mode === 'eraser') {
+        stage.container().style.cursor = `url(${eraserIcon}) 24 24, auto`
+      }
+      // text pointer
+      else if (mode === 'text') {
         if (e.target.className === 'Text') return
         stage.container().style.cursor = 'pointer'
-      } else if (mode.value === 'image') {
+      }
+      // none image pointer
+      else if (mode === 'image') {
         stage.container().style.cursor = 'grab'
       }
     },
@@ -34,8 +42,8 @@ const useStorePointer = defineStore({
     // キャンバス上でcursorが動く時
     handlePointerMouseMove(e: Konva.KonvaEventObject<MouseEvent>) {
       // ポインターの位置を更新
-      const { mode } = storeToRefs(useStoreMode())
-      if (mode.value === 'pen' || mode.value === 'eraser') {
+      const { mode } = useStoreMode()
+      if (mode === 'pen') {
         const stage = e.target.getStage()
         if (stage !== null) {
           const pointerPosition = stage.getRelativePointerPosition()
@@ -50,8 +58,8 @@ const useStorePointer = defineStore({
       // ポインター元に戻す
       const stage = e.target.getStage()
       if (stage === null) return
-      const { mode } = storeToRefs(useStoreMode())
-      if (mode.value === 'pen' || mode.value === 'eraser') {
+      const { mode } = useStoreMode()
+      if (mode === 'pen') {
         this.isLinePointer = false
       }
       stage.container().style.cursor = 'default'
@@ -60,18 +68,22 @@ const useStorePointer = defineStore({
     // 要素からcursorが離れた時
     handlePointerMouseLeave(e: Konva.KonvaEventObject<MouseEvent>) {
       // ポインター元に戻す
-      // pen eraser時スキップ
-      const { mode } = storeToRefs(useStoreMode())
-      if (mode.value === 'pen' || mode.value === 'eraser') return
+      const { mode } = useStoreMode()
+      // skip when pen mode or eraser mode
+      if (mode === 'pen' || mode === 'eraser') return
 
       const stage = e.target.getStage()
       if (stage === null) return
-
-      if (mode.value === 'text') {
+      // text mode
+      if (mode === 'text') {
         stage.container().style.cursor = 'pointer'
-      } else if (mode.value === 'image') {
+      }
+      // image mode
+      else if (mode === 'image') {
         stage.container().style.cursor = 'grab'
-      } else {
+      }
+      // default
+      else {
         stage.container().style.cursor = 'default'
       }
     },
@@ -79,8 +91,8 @@ const useStorePointer = defineStore({
     // 要素にcursorを合わせた時
     handlePointerMouseOver(e: Konva.KonvaEventObject<MouseEvent>) {
       // pen eraser時スキップ
-      const { mode } = storeToRefs(useStoreMode())
-      if (mode.value === 'pen' || mode.value === 'eraser') return
+      const { mode } = useStoreMode()
+      if (mode === 'pen' || mode === 'eraser') return
 
       const stage = e.target.getStage()
       if (stage !== null) {
@@ -91,8 +103,8 @@ const useStorePointer = defineStore({
     // 要素のドラッグ時
     handlePointerMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
       // pen eraser時スキップ
-      const { mode } = storeToRefs(useStoreMode())
-      if (mode.value === 'pen' || mode.value === 'eraser') return
+      const { mode } = useStoreMode()
+      if (mode === 'pen' || mode === 'eraser') return
 
       const stage = e.target.getStage()
       if (stage !== null) {
@@ -103,8 +115,8 @@ const useStorePointer = defineStore({
     // 要素のドラッグ終了時
     handlePointerMouseUp(e: Konva.KonvaEventObject<MouseEvent>) {
       // pen eraser時スキップ
-      const { mode } = storeToRefs(useStoreMode())
-      if (mode.value === 'pen' || mode.value === 'eraser') return
+      const { mode } = useStoreMode()
+      if (mode === 'pen' || mode === 'eraser') return
 
       const stage = e.target.getStage()
       if (stage !== null) {

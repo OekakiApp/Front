@@ -62,7 +62,6 @@ const useStoreText = defineStore({
           textDecoration: this.textDecoration as TextDecoration,
           fontFamily: this.fontFamily,
           align: this.align as TextAlign,
-          draggable: true,
           width: 200,
           fill: this.fill,
           wrap: 'word',
