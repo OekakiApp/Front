@@ -25,6 +25,9 @@ const { canvases } = storeToRefs(useStoreCanvas())
 
 const canvasId = ref(useRoute().params.canvas_id as string)
 
+const ua = window.navigator.userAgent.toLowerCase()
+const isWinOS = ua.indexOf('windows nt') !== -1
+
 // キャンバスをPNGでダウンロード
 const downloadImage = async () =>
   new Promise<void>((resolve) => {
@@ -65,7 +68,7 @@ const toolArray: ToolArray[] = reactive([
     icon: 'auto_fix_normal',
     mode: 'eraser',
     tooltip: 'Eraser',
-    shortcut: 'Shift + Del',
+    shortcut: `Shift + ${isWinOS ? 'BS' : 'Del'}`,
     event: () => {
       setMode('eraser')
       setLineStyle('normal')
