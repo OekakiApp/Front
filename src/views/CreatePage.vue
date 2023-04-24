@@ -75,16 +75,26 @@ const {
 
 const { saveImageCountToFirebase } = useStoreUserImage()
 const { fitStageIntoParentContainer } = useStoreStage()
+const { handleRedo, handleUndo } = useStoreHistory()
 // useStore end
 
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
 const canvasId = ref(useRoute().params.canvas_id as string)
+// use when save canvas
 const router = useRouter()
 const saveState = ref<SaveState>('normal')
+// 3 point reader
 const isShare = ref(false)
 const pointLeaderOpen = ref(false)
+// os userArgent
+const ua = window.navigator.userAgent.toLocaleLowerCase()
+const isWinOS = ua.indexOf('windows nt') !== -1
+const isMacOS = ua.indexOf('mac os x') !== -1
+const isIPadOS =
+  ua.indexOf('ipad') !== -1 ||
+  (ua.indexOf('macintosh') !== -1 && 'ontouchend' in document)
 // const selectionRectangle = ref()
 
 const showDoneBtn = () => {
@@ -110,22 +120,39 @@ const blurInput = () => {
 }
 
 // ショートカット
-// TODO: 全てのショートカット実装
 const changeModeByShortCut = (e: KeyboardEvent) => {
   // テキスト編集中はショートカット無効
   if (isEditing.value || inputText.isEditing) return
-  if (e.key === 'p' || e.key === 'm') {
+  // pen
+  if (e.key === 'p') {
     setMode('pen')
     setGlobalCompositeOperation('source-over')
     useStoreTransformer().$reset()
-  } else if (e.shiftKey && e.key === 'Delete') {
+  }
+  // eraser
+  else if (e.shiftKey && e.key === 'Backspace') {
     setMode('eraser')
     setGlobalCompositeOperation('destination-out')
     useStoreTransformer().$reset()
-  } else if (e.key === 't') setMode('text')
+  }
+  // text
+  else if (e.key === 't') setMode('text')
+  // image
   else if (e.key === 'i') setMode('image')
   // undo
+  else if (
+    (isWinOS && e.ctrlKey && e.key === 'z') ||
+    ((isMacOS || isIPadOS) && e.metaKey && e.key === 'z')
+  ) {
+    handleUndo()
+  }
   // redo
+  else if (
+    (isWinOS && e.ctrlKey && e.key === 'y') ||
+    ((isMacOS || isIPadOS) && e.metaKey && e.shiftKey && e.key === 'z')
+  ) {
+    handleRedo()
+  }
 }
 
 // CreatePageに関わるstoreを初期化
