@@ -46,6 +46,7 @@ export interface ToolArray {
 }
 
 export interface TextAlignmentArray {
+  name: string
   icon: string
   tooltip: string
   onClick: () => void

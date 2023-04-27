@@ -209,13 +209,18 @@ const useStoreTransformer = defineStore({
           'middle-right',
         ]
 
-        const { texts, fill } = storeToRefs(useStoreText())
+        const { texts, fill, fontSize, fontFamily, align } = storeToRefs(
+          useStoreText(),
+        )
         const text = texts.value.find((t) => t.id === id)
         if (text !== undefined) {
           this.selectedShapeId = id
           this.configShapeTransformer.nodes = [e.target]
-          // 選択したテキストの色を取得
+          // 選択したテキストの要素（color fontFamily fontSize align）を取得してツールバーと同期
           fill.value = text.fill
+          fontSize.value = text.fontSize
+          fontFamily.value = text.fontFamily
+          align.value = text.align
         } else {
           this.$reset()
         }
@@ -291,6 +296,30 @@ const useStoreTransformer = defineStore({
           image.rotation = shape.rotation()
           image.scaleX = shape.scaleX()
           image.scaleY = shape.scaleY()
+        }
+      }
+      useStoreHistory().handleEventEndSaveHistory()
+    },
+
+    // save text position
+    handleDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
+      const shape = e.target
+      // text
+      if (shape.name() === 'text') {
+        const { texts } = storeToRefs(useStoreText())
+        const text = texts.value.find((t) => t.id === shape.id())
+        if (text !== undefined) {
+          text.x = shape.x()
+          text.y = shape.y()
+        }
+      }
+      // image
+      if (shape.name() === 'image') {
+        const { konvaImages } = storeToRefs(useStoreImage())
+        const image = konvaImages.value.find((t) => t.id === shape.id())
+        if (image !== undefined) {
+          image.x = shape.x()
+          image.y = shape.y()
         }
       }
       useStoreHistory().handleEventEndSaveHistory()
