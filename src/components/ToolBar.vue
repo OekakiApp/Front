@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { reactive, toRefs } from 'vue'
+import { ref, reactive, toRefs } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
 import Konva from 'konva'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreTransformer from '@/stores/konva/transformer'
+import useStoreCanvas from '@/stores/canvas'
 import type { ToolArray } from '@/types/index'
 
 interface Props {
@@ -17,6 +19,9 @@ const { stage } = toRefs(props)
 
 const { mode } = storeToRefs(useStoreMode())
 const { setMode } = useStoreMode()
+const { canvases } = storeToRefs(useStoreCanvas())
+
+const canvasId = ref(useRoute().params.canvas_id as string)
 
 const ua = window.navigator.userAgent.toLowerCase()
 const isWinOS = ua.indexOf('windows nt') !== -1
@@ -32,7 +37,8 @@ const downloadImage = async () =>
       pixelRatio: 2,
       mimeType: 'image/png',
     })
-    downloadURI(dataURL, 'stage.png')
+    const canvasName = canvases.value[canvasId.value].name
+    downloadURI(dataURL, `${canvasName}.png`)
   })
 
 const downloadURI = (uri: string, name: string) => {

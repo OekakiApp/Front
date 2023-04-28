@@ -47,12 +47,13 @@ const {
   handleLineMouseLeave,
 } = useStoreLine()
 
-const { createNewTextNode, toggleEdit, handleTextDragEnd } = useStoreText()
+const { createNewTextNode, toggleEdit } = useStoreText()
 
 const {
   handleMouseDownTransformer,
   handleTransform,
   handleTransformEnd,
+  handleDragEnd,
   handleKeyDownSelectedNodeDelete,
 } = useStoreTransformer()
 
@@ -70,7 +71,6 @@ const {
   changeKonvaImagesToFirestoreCanvasImages,
   changeFirestoreCanvasImagesToKonvaImages,
   setImagesOnCanvas,
-  handleImageDragEnd,
 } = useStoreImage()
 
 const { saveImageCountToFirebase } = useStoreUserImage()
@@ -375,7 +375,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           :key="image.id"
           :draggable="mode === 'none'"
           :config="image"
-          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => {handleImageDragEnd(e);}"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => {handleDragEnd(e);}"
           @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
           @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
@@ -388,15 +388,15 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           :key="text.id"
           :config="text"
           :draggable="mode === 'text'"
-          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => handleDragEnd(e)"
           @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
           @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
           @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
           @transform="(e: Konva.KonvaEventObject<MouseEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
-          @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
-          @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => toggleEdit(e)"
+          @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => toggleEdit(e)"
           )
         v-line(
           v-for="line in lines"
