@@ -176,6 +176,7 @@ const useStoreTransformer = defineStore({
     //   }
     // },
 
+    // 削除ボタンの位置を更新
     updateDeleteButtonPos(transformer: Konva.Transformer) {
       const transformerNode = transformer.getNode() as Konva.Transformer
       const deleteButton = transformerNode.findOne('.delete-button')
@@ -191,19 +192,12 @@ const useStoreTransformer = defineStore({
       if (e.target.attrs.name === 'background-rect') {
         // 選択されているnodesを空にする
         this.$reset()
-        // this.updateTransformer(transformer)
         return
       }
 
-      // BUG トランスフォーマーを連続で選択した時うまく選択できてない
-      // clicked on transformer - do nothing
-      // const clickedOnTransformer =
-      //   this.configShapeTransformer.nodes.length !== 0
-      // if (clickedOnTransformer) {
-      //   return
-      // }
-
       const transformerNode = transformer.getNode() as Konva.Transformer
+
+      // delete old delete button
       const oldDeleteButton = transformerNode.findOne('.delete-button')
       if (oldDeleteButton !== undefined) {
         oldDeleteButton.destroy()
@@ -211,27 +205,26 @@ const useStoreTransformer = defineStore({
 
       const promise = new Promise<void>((resolve) => {
         // find clicked shape by its id
-        const id = e.target.id()
+        const shape = e.target
+        const id = shape.id()
         const { setMode } = useStoreMode()
 
         // text
-        if (e.target.className === 'Text') {
+        if (shape.className === 'Text' && shape.name() !== 'delete-button') {
           // モードを切り替える
           setMode('text')
-
           // change text transformer anchors
           this.configShapeTransformer.enabledAnchors = [
             'middle-left',
             'middle-right',
           ]
-
           const { texts, fill, fontSize, fontFamily, align } = storeToRefs(
             useStoreText(),
           )
           const text = texts.value.find((t) => t.id === id)
           if (text !== undefined) {
             this.selectedShapeId = id
-            this.configShapeTransformer.nodes = [e.target]
+            this.configShapeTransformer.nodes = [shape]
             // 選択したテキストの要素（color fontFamily fontSize align）を取得してツールバーと同期
             fill.value = text.fill
             fontSize.value = text.fontSize
@@ -242,7 +235,7 @@ const useStoreTransformer = defineStore({
           }
         }
         // image
-        else if (e.target.className === 'Image') {
+        else if (shape.className === 'Image') {
           // モードを切り替える
           setMode('none')
           // change image transformer anchors
@@ -255,7 +248,7 @@ const useStoreTransformer = defineStore({
           const image = konvaImages.value.find((i) => i.id === id)
           if (image !== undefined) {
             this.selectedShapeId = id
-            this.configShapeTransformer.nodes = [e.target]
+            this.configShapeTransformer.nodes = [shape]
           } else {
             this.$reset()
           }
@@ -291,6 +284,7 @@ const useStoreTransformer = defineStore({
             deleteButton.scaleY(1.1)
           }
         })
+        // reset pointer and button scale
         deleteButton.on('pointerout', () => {
           const stage = deleteButton.getStage()
           if (stage !== null) {
@@ -299,57 +293,61 @@ const useStoreTransformer = defineStore({
             deleteButton.scaleY(1)
           }
         })
-        deleteButton.on('pointerdown', (evt) => {
-          evt.evt.stopPropagation()
-          console.log('clicked')
-          this.handleDeleteNode(evt)
-        })
+        // delete node when button is clicked
+        deleteButton.on('pointerdown', (evt) => this.handleDeleteNode(evt))
+        // add delete button to transformer
         deleteButton.add(deleteCircle, deleteText)
         transformerNode.add(deleteButton)
+
         this.updateDeleteButtonPos(transformer)
       })
       await promise
     },
 
     // 要素の変形
-    handleTransform(
+    async handleTransform(
       e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
       transformer: Konva.Transformer,
     ) {
       const shape = e.target
-      // text
-      if (shape.name() === 'text') {
-        shape.width(shape.width() * shape.scaleX())
-        shape.scaleX(1)
-        const { texts } = storeToRefs(useStoreText())
-        const text = texts.value.find((t) => t.id === shape.id())
-        if (text !== undefined) {
-          text.x = shape.x()
-          text.y = shape.y()
-          text.width = shape.width()
-          text.rotation = shape.rotation()
-          text.scaleX = shape.scaleX()
+      const promise = new Promise<void>((resolve) => {
+        // text
+        if (shape.name() === 'text') {
+          shape.width(shape.width() * shape.scaleX())
+          shape.scaleX(1)
+          const { texts } = storeToRefs(useStoreText())
+          const text = texts.value.find((t) => t.id === shape.id())
+          if (text !== undefined) {
+            text.x = shape.x()
+            text.y = shape.y()
+            text.width = shape.width()
+            text.rotation = shape.rotation()
+            text.scaleX = shape.scaleX()
+          }
         }
-      }
-      // image
-      else if (shape.name() === 'image') {
-        shape.width(shape.width() * shape.scaleX())
-        shape.height(shape.height() * shape.scaleY())
-        shape.scaleX(1)
-        shape.scaleY(1)
-        const { konvaImages } = storeToRefs(useStoreImage())
-        const image = konvaImages.value.find((i) => i.id === shape.id())
-        if (image !== undefined) {
-          image.x = shape.x()
-          image.y = shape.y()
-          image.width = shape.width()
-          image.height = shape.height()
-          image.rotation = shape.rotation()
-          image.scaleX = shape.scaleX()
-          image.scaleY = shape.scaleY()
+        // image
+        else if (shape.name() === 'image') {
+          shape.width(shape.width() * shape.scaleX())
+          shape.height(shape.height() * shape.scaleY())
+          shape.scaleX(1)
+          shape.scaleY(1)
+          const { konvaImages } = storeToRefs(useStoreImage())
+          const image = konvaImages.value.find((i) => i.id === shape.id())
+          if (image !== undefined) {
+            image.x = shape.x()
+            image.y = shape.y()
+            image.width = shape.width()
+            image.height = shape.height()
+            image.rotation = shape.rotation()
+            image.scaleX = shape.scaleX()
+            image.scaleY = shape.scaleY()
+          }
         }
-      }
-      this.updateDeleteButtonPos(transformer)
+        resolve()
+      }).then(() => {
+        this.updateDeleteButtonPos(transformer)
+      })
+      await promise
     },
 
     // 要素の変形終了
@@ -357,8 +355,6 @@ const useStoreTransformer = defineStore({
       e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
       transformer: Konva.Transformer,
     ) {
-      // shape is transformed, let us save new attrs back to the node
-      // find element in our state
       const shape = e.target
       // update the state
       // text
@@ -420,6 +416,7 @@ const useStoreTransformer = defineStore({
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (this.configShapeTransformer.nodes.length === 0) return
         const selectedNode = this.configShapeTransformer.nodes[0]
+        const stage = selectedNode.getStage()
         // text
         if (selectedNode.name() === 'text') {
           const { texts, isEditing } = storeToRefs(useStoreText())
@@ -437,6 +434,9 @@ const useStoreTransformer = defineStore({
           konvaImages.value = konvaImages.value.filter(
             (image) => image.id !== selectedNode.id(),
           )
+          if (stage !== null) {
+            stage.container().style.cursor = 'default'
+          }
           this.$reset()
         }
         useStoreHistory().handleEventEndSaveHistory()
@@ -445,10 +445,10 @@ const useStoreTransformer = defineStore({
 
     // delete button clickで選択中の要素を削除
     handleDeleteNode(e: Konva.KonvaEventObject<MouseEvent>) {
-      console.log(e.target.attrs.name)
       if (e.target.attrs.name === 'delete-button') {
         if (this.configShapeTransformer.nodes.length === 0) return
         const selectedNode = this.configShapeTransformer.nodes[0]
+        const stage = selectedNode.getStage()
         // text
         if (selectedNode.name() === 'text') {
           const { texts, isEditing } = storeToRefs(useStoreText())
@@ -466,6 +466,9 @@ const useStoreTransformer = defineStore({
           konvaImages.value = konvaImages.value.filter(
             (image) => image.id !== selectedNode.id(),
           )
+          if (stage !== null) {
+            stage.container().style.cursor = 'default'
+          }
           this.$reset()
         }
         useStoreHistory().handleEventEndSaveHistory()
