@@ -327,10 +327,6 @@ const useStoreTransformer = defineStore({
         }
         // image
         else if (shape.name() === 'image') {
-          shape.width(shape.width() * shape.scaleX())
-          shape.height(shape.height() * shape.scaleY())
-          shape.scaleX(1)
-          shape.scaleY(1)
           const { konvaImages } = storeToRefs(useStoreImage())
           const image = konvaImages.value.find((i) => i.id === shape.id())
           if (image !== undefined) {
@@ -422,9 +418,7 @@ const useStoreTransformer = defineStore({
           const { texts, isEditing } = storeToRefs(useStoreText())
           // テキスト編集中の場合スキップ
           if (isEditing.value) return
-          texts.value = texts.value.filter(
-            (text) => text.id !== selectedNode.id(),
-          )
+          texts.value = texts.value.filter((t) => t.id !== selectedNode.id())
           this.$reset()
         }
         // image
@@ -432,7 +426,7 @@ const useStoreTransformer = defineStore({
           const { konvaImages } = storeToRefs(useStoreImage())
           // フロント側のキャンバスを更新
           konvaImages.value = konvaImages.value.filter(
-            (image) => image.id !== selectedNode.id(),
+            (i) => i.id !== selectedNode.id(),
           )
           if (stage !== null) {
             stage.container().style.cursor = 'default'
@@ -454,9 +448,7 @@ const useStoreTransformer = defineStore({
           const { texts, isEditing } = storeToRefs(useStoreText())
           // テキスト編集中の場合スキップ
           if (isEditing.value) return
-          texts.value = texts.value.filter(
-            (text) => text.id !== selectedNode.id(),
-          )
+          texts.value = texts.value.filter((t) => t.id !== selectedNode.id())
           this.$reset()
         }
         // image
@@ -464,7 +456,7 @@ const useStoreTransformer = defineStore({
           const { konvaImages } = storeToRefs(useStoreImage())
           // フロント側のキャンバスを更新
           konvaImages.value = konvaImages.value.filter(
-            (image) => image.id !== selectedNode.id(),
+            (i) => i.id !== selectedNode.id(),
           )
           if (stage !== null) {
             stage.container().style.cursor = 'default'
