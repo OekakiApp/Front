@@ -5,6 +5,7 @@ import useStoreMode from '@/stores/mode'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStoreHistory from '@/stores/konva/history'
+import useStoreLine from './line'
 
 const useStoreTransformer = defineStore({
   id: 'transformer',
@@ -202,8 +203,29 @@ const useStoreTransformer = defineStore({
       const id = e.target.id()
       const { setMode } = useStoreMode()
 
+      // line
+      if (e.target.className === 'Line') {
+        // モードを切り替える
+        setMode('none')
+        // change image transformer anchors
+        this.configShapeTransformer.enabledAnchors = [
+          'top-left',
+          'top-right',
+          'bottom-left',
+          'bottom-right',
+        ]
+
+        const { lines } = storeToRefs(useStoreLine())
+        const line = lines.value.find((l) => l.id === id)
+        if (line !== undefined) {
+          this.selectedShapeId = id
+          this.configShapeTransformer.nodes = [e.target]
+        } else {
+          this.$reset()
+        }
+      }
       // text
-      if (e.target.className === 'Text') {
+      else if (e.target.className === 'Text') {
         // モードを切り替える
         setMode('text')
 
@@ -261,13 +283,6 @@ const useStoreTransformer = defineStore({
         shape.scaleX(1)
         shape.scaleY(1)
       }
-      // image
-      else if (shape.name() === 'image') {
-        shape.width(shape.width() * shape.scaleX())
-        shape.height(shape.height() * shape.scaleY())
-        shape.scaleX(1)
-        shape.scaleY(1)
-      }
     },
 
     // 要素の変形終了
@@ -276,8 +291,22 @@ const useStoreTransformer = defineStore({
       // find element in our state
       const shape = e.target
       // update the state
+      // line
+      if (shape.name() === 'line') {
+        const { lines } = storeToRefs(useStoreLine())
+        const line = lines.value.find((l) => l.id === shape.id())
+        if (line !== undefined) {
+          line.x = shape.x()
+          line.y = shape.y()
+          line.width = shape.width()
+          line.height = shape.height()
+          line.rotation = shape.rotation()
+          line.scaleX = shape.scaleX()
+          line.scaleY = shape.scaleY()
+        }
+      }
       // text
-      if (shape.name() === 'text') {
+      else if (shape.name() === 'text') {
         const { texts } = storeToRefs(useStoreText())
         const text = texts.value.find((t) => t.id === shape.id())
         if (text !== undefined) {
@@ -305,11 +334,20 @@ const useStoreTransformer = defineStore({
       useStoreHistory().handleEventEndSaveHistory()
     },
 
-    // save text position
+    // save position
     handleDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
       const shape = e.target
+      // line
+      if (shape.name() === 'line') {
+        const { lines } = storeToRefs(useStoreLine())
+        const line = lines.value.find((l) => l.id === shape.id())
+        if (line !== undefined) {
+          line.x = shape.x()
+          line.y = shape.y()
+        }
+      }
       // text
-      if (shape.name() === 'text') {
+      else if (shape.name() === 'text') {
         const { texts } = storeToRefs(useStoreText())
         const text = texts.value.find((t) => t.id === shape.id())
         if (text !== undefined) {
@@ -318,7 +356,7 @@ const useStoreTransformer = defineStore({
         }
       }
       // image
-      if (shape.name() === 'image') {
+      else if (shape.name() === 'image') {
         const { konvaImages } = storeToRefs(useStoreImage())
         const image = konvaImages.value.find((t) => t.id === shape.id())
         if (image !== undefined) {
@@ -335,14 +373,18 @@ const useStoreTransformer = defineStore({
         if (this.configShapeTransformer.nodes.length === 0) return
         const selectedNode = this.configShapeTransformer.nodes[0]
 
+        // line
+        if (selectedNode.name() === 'line') {
+          const { lines } = storeToRefs(useStoreLine())
+          lines.value = lines.value.filter((l) => l.id !== selectedNode.id())
+          this.$reset()
+        }
         // text
-        if (selectedNode.name() === 'text') {
+        else if (selectedNode.name() === 'text') {
           const { texts, isEditing } = storeToRefs(useStoreText())
           // テキスト編集中の場合スキップ
           if (isEditing.value) return
-          texts.value = texts.value.filter(
-            (text) => text.id !== selectedNode.id(),
-          )
+          texts.value = texts.value.filter((t) => t.id !== selectedNode.id())
           this.$reset()
         }
         // image
@@ -350,7 +392,7 @@ const useStoreTransformer = defineStore({
           const { konvaImages } = storeToRefs(useStoreImage())
           // フロント側のキャンバスを更新
           konvaImages.value = konvaImages.value.filter(
-            (image) => image.id !== selectedNode.id(),
+            (i) => i.id !== selectedNode.id(),
           )
           this.$reset()
         }

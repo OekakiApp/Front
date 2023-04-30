@@ -401,7 +401,15 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         v-line(
           v-for="line in lines"
           :key="line.id"
-          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', hitStrokeWidth: line.hitStrokeWidth, shadowForStrokeEnabled: false}"
+          :draggable="mode === 'none'"
+          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', hitStrokeWidth: line.hitStrokeWidth, shadowForStrokeEnabled: false, x: line.x, y: line.y, width: line.width, height: line.height, rotation: line.rotation, scaleX: line.scaleX, scaleY: line.scaleY}"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => {handleDragEnd(e);}"
+          @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
+          @transformend="handleTransformEnd"
           )
         //- pen cursor
         UserCursor

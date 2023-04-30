@@ -8,6 +8,13 @@ export interface Points {
   dashEnabled: boolean
   strokeWidth: number
   hitStrokeWidth: number
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation: number
+  scaleX: number
+  scaleY: number
 }
 export type LineStyle = 'normal' | 'dash'
 export type GlobalCompositeOperation = 'source-over' | 'destination-out'
