@@ -39,9 +39,9 @@ const authStore = useAuthStore()
 
 const galleries = ref(new Map<string, shareCanvases>())
 
-const likeHash: Ref<Record<string, heart>> = ref({})
+const likeMap: Ref<Record<string, heart>> = ref({})
 
-const testImage = ref('')
+const modalImage = ref('')
 
 onMounted(() => {
   setShareCanvases()
@@ -58,25 +58,41 @@ const modalStyle = reactive({
   height: `${modalHeight.value}px`,
 })
 
-const resizeModal = (image: string) => {
-  modalWidth.value =
-    window.innerWidth <= 400 ? window.innerWidth * 0.9 : window.innerWidth * 0.7
-  modalHeight.value = (modalWidth.value * 9) / 16
-  modalStyle.width = `${modalWidth.value}px`
-  modalStyle.height = `${modalHeight.value}px`
-  testImage.value = image
-}
-
-const setShareCanvases = async () => {
+// ユーザーのハートMAPを取得する
+const getHeartMap = async () => {
   await getDoc(doc(db, 'hearts', authStore.uid))
     .then((heartDocSnap) => {
       if (heartDocSnap.exists()) {
-        likeHash.value = heartDocSnap.data()
+        likeMap.value = heartDocSnap.data()
       }
     })
     .catch((error) => {
       console.log(error)
     })
+}
+
+// shareしているcanvasのユーザーを取得
+const getShareUser = async (otherUserUID: string): Promise<galleryUser> => {
+  let user: galleryUser = { name: '', icon: '' }
+  await getDoc(doc(db, 'users', otherUserUID))
+    .then(async (userDocSnap) => {
+      if (userDocSnap.exists()) {
+        user = {
+          name: userDocSnap.data().name,
+          icon: userDocSnap.data().icon === '' ? Icon : userDocSnap.data().icon,
+        }
+      } else {
+        console.log('プロフィール情報が見つかりません')
+      }
+    })
+    .catch((error) => {
+      console.log('プロフィール情報の取得に失敗しました：', error)
+    })
+  return user
+}
+
+const setShareCanvases = async () => {
+  getHeartMap()
 
   const canvasQuery = query(
     collection(db, 'canvas'),
@@ -88,25 +104,9 @@ const setShareCanvases = async () => {
       querySnapshot.forEach(async (document) => {
         const canvasID = document.id
         const otherUserUID = document.data().uid
-        let user: galleryUser = { name: '', icon: '' }
-        await getDoc(doc(db, 'users', otherUserUID))
-          .then(async (userDocSnap) => {
-            if (userDocSnap.exists()) {
-              user = {
-                name: userDocSnap.data().name,
-                icon:
-                  userDocSnap.data().icon === ''
-                    ? Icon
-                    : userDocSnap.data().icon,
-              }
-            } else {
-              console.log('プロフィール情報が見つかりません')
-            }
-          })
-          .catch((error) => {
-            console.log('プロフィール情報の取得に失敗しました：', error)
-          })
-        console.log(document.data())
+        // shareしているcanvasのユーザーを取得
+        const user: galleryUser = await getShareUser(otherUserUID)
+
         const canvas: shareCanvases = {
           title: document.data().name,
           id: canvasID,
@@ -116,8 +116,8 @@ const setShareCanvases = async () => {
           name: user.name,
           avator: user.icon,
           isLike:
-            likeHash.value[canvasID] !== undefined
-              ? likeHash.value[canvasID].isLike
+            likeMap.value[canvasID] !== undefined
+              ? likeMap.value[canvasID].isLike
               : false,
         }
         galleries.value.set(canvasID, canvas)
@@ -135,12 +135,21 @@ const clickLike = async (galleryId: string) => {
   if (gallery !== undefined) {
     gallery.isLike = !gallery?.isLike
     galleries.value.set(galleryId, gallery)
-    likeHash.value[galleryId] = {
+    likeMap.value[galleryId] = {
       isLike: gallery.isLike,
       addedAt: Timestamp.now(),
     }
-    await setDoc(doc(db, 'hearts', authStore.uid), likeHash.value)
+    await setDoc(doc(db, 'hearts', authStore.uid), likeMap.value)
   }
+}
+
+const resizeModal = (image: string) => {
+  modalWidth.value =
+    window.innerWidth <= 400 ? window.innerWidth * 0.9 : window.innerWidth * 0.7
+  modalHeight.value = (modalWidth.value * 9) / 16
+  modalStyle.width = `${modalWidth.value}px`
+  modalStyle.height = `${modalHeight.value}px`
+  modalImage.value = image
 }
 </script>
 
@@ -160,7 +169,7 @@ div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
 
 input(id="modal" type="checkbox" class="modal-toggle")
 label(for="modal" class="modal cursor-pointer")
-  img(:src="testImage" class="rounded-lg border border-gray-500 relative" :style="modalStyle")
+  img(:src="modalImage" class="rounded-lg border border-gray-500 relative" :style="modalStyle")
 
         
 </template>
