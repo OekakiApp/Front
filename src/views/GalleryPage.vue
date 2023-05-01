@@ -11,6 +11,7 @@ import {
   doc,
   Timestamp,
   setDoc,
+  orderBy
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
 
@@ -96,7 +97,7 @@ const setShareCanvases = async () => {
 
   const canvasQuery = query(
     collection(db, 'canvas'),
-    where('uid', '!=', authStore.uid),
+    orderBy('createdAt','desc'),
     where('isShare', '==', true),
   )
   await getDocs(canvasQuery)
@@ -104,6 +105,8 @@ const setShareCanvases = async () => {
       querySnapshot.forEach(async (document) => {
         const canvasID = document.id
         const otherUserUID = document.data().uid
+        // MyCanvasはreturn
+        if (otherUserUID === authStore.uid) return;
         // shareしているcanvasのユーザーを取得
         const user: galleryUser = await getShareUser(otherUserUID)
 
