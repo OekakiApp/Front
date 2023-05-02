@@ -14,27 +14,7 @@ import {
   orderBy,
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
-
-interface shareCanvases {
-  title: string
-  id: string
-  uid: string
-  image: string
-  updatedAt: Timestamp
-  name: string
-  avator: string
-  isLike: boolean
-}
-
-interface galleryUser {
-  name: string
-  icon: string
-}
-
-interface heart {
-  isLike: boolean
-  addedAt: Timestamp
-}
+import type { shareCanvases, galleryUser, heart } from '@/firebase/types/index'
 
 const authStore = useAuthStore()
 
