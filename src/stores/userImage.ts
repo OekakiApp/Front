@@ -7,6 +7,7 @@ import {
   setDoc,
   updateDoc,
   onSnapshot,
+  getDoc,
 } from 'firebase/firestore'
 import {
   ref,
@@ -16,22 +17,10 @@ import {
 } from 'firebase/storage'
 import useAuthStore from '@/stores/auth'
 import { db, storage } from '@/firebase/index'
-import { KonvaImage } from '@/stores/konva/image'
+import type { UploadedImage, UserImageStorage } from '@/firebase/types/index'
+import type { KonvaImage } from '@/types/konva'
 import sortImagesByCreatedAt from '@/utils/sort'
-
-export interface UploadedImage {
-  userUid: string // アップロードしたユーザーのid
-  id: string // 画像自身のid
-  storageURL: string // for access to storage
-  fileName: string // ex) filename.png
-  fileType: string // ex) image/jpeg
-  fileExtension: string // ex) png
-  createdAt: Timestamp // アップロードされた日
-  show: boolean // Toolbarに表示・非表示
-  countOnCanvas: number // 使用されている枚数
-}
-
-type UserImageStorage = Record<string, UploadedImage>
+import Compressor from 'compressorjs'
 
 const useStoreUserImage = defineStore({
   id: 'user-image',
@@ -49,7 +38,19 @@ const useStoreUserImage = defineStore({
       if (files === null) return
       const file = files.item(0)
       if (file === null) return
-      this.uploadImageToStorage(file)
+      // 画像圧縮
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const compressedFile = new Compressor(file, {
+        quality: 0.6,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        success(result) {
+          useStoreUserImage().uploadImageToStorage(result as File)
+        },
+        error(err) {
+          console.log(err.message)
+        },
+      })
     },
 
     // Storageに画像をアップロードする。
@@ -132,6 +133,7 @@ const useStoreUserImage = defineStore({
         createdAt: Timestamp.now(),
         show: true, // Toolbarに表示・非表示
         countOnCanvas: 0, // key: canvasId, value: 使用数 valueが0になったらkeyを削除
+        loaded: false,
       }
 
       const { userImageStorage } = this
@@ -263,25 +265,32 @@ const useStoreUserImage = defineStore({
 
     async loadUserImageStorage(uid: string) {
       const docRef = doc(db, 'userImageStorage', uid)
+      const firstDocSnap = await getDoc(docRef)
+      if (firstDocSnap.exists()) {
+        this.userImageStorage = firstDocSnap.data()
+        // loadedを全てfalseにセット
+        // eslint-disable-next-line no-restricted-syntax
+        for (const key in this.userImageStorage) {
+          if (Object.hasOwn(this.userImageStorage, key)) {
+            this.userImageStorage[key].loaded = false
+          }
+        }
+      }
 
       // リアルタイムでアップデートを取得する
-      const promise = new Promise<void>((resolve) => {
-        onSnapshot(
-          docRef,
-          (docSnap) => {
-            if (docSnap.exists()) {
-              this.userImageStorage = docSnap.data()
-            } else {
-              this.userImageStorage = {}
-            }
-            resolve()
-          },
-          (error) => {
-            console.log(error)
-          },
-        )
-      })
-      await promise
+      onSnapshot(
+        docRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            this.userImageStorage = docSnap.data()
+          } else {
+            this.userImageStorage = {}
+          }
+        },
+        (error) => {
+          console.log(error)
+        },
+      )
     },
   },
 

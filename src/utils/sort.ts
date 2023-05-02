@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-cycle
-import { UploadedImage } from '@/stores/userImage'
+import type { UploadedImage } from '@/firebase/types/index'
 
 function sortImagesByCreatedAt(uploadedImages: UploadedImage[]) {
   return uploadedImages.sort((a: UploadedImage, b: UploadedImage) => {

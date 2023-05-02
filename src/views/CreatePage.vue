@@ -12,7 +12,6 @@ import {
 import ToolBar from '@/components/ToolBar.vue'
 import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText, { fontFamilyList } from '@/stores/konva/text'
 import useAuthStore from '@/stores/auth'
@@ -21,22 +20,25 @@ import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreUserImage from '@/stores/userImage'
-import Konva from 'konva'
+import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
+import type { SaveState } from '@/types/index'
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+import Konva from 'konva'
 
 // useStore start
-const { configKonva, canvasHistory } = storeToRefs(useStoreStage())
+const { canvasHistory } = storeToRefs(useStoreHistory())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
 const { uid } = storeToRefs(useAuthStore())
 const { canvases } = storeToRefs(useStoreCanvas())
 const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
 const { configShapeTransformer } = storeToRefs(useStoreTransformer())
-const { saveImageCountToFirebase } = useStoreUserImage()
+const { configKonva } = storeToRefs(useStoreStage())
 
 const { setMode } = useStoreMode()
-const { fitStageIntoParentContainer } = useStoreStage()
 const {
   handleLineMouseDown,
   handleLineMouseMove,
@@ -45,12 +47,13 @@ const {
   setGlobalCompositeOperation,
 } = useStoreLine()
 
-const { createNewTextNode, toggleEdit, handleTextDragEnd } = useStoreText()
+const { createNewTextNode, toggleEdit } = useStoreText()
 
 const {
   handleMouseDownTransformer,
   handleTransform,
   handleTransformEnd,
+  handleDragEnd,
   handleKeyDownSelectedNodeDelete,
 } = useStoreTransformer()
 
@@ -67,21 +70,31 @@ const {
 const {
   changeKonvaImagesToFirestoreCanvasImages,
   changeFirestoreCanvasImagesToKonvaImages,
-  setImages,
-  handleImageDragEnd,
+  setImagesOnCanvas,
 } = useStoreImage()
-// useStore end
 
-// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-type KonvaEventObject<T> = Konva.KonvaEventObject<T>
-type SaveState = 'normal' | 'loading' | 'done'
+const { saveImageCountToFirebase } = useStoreUserImage()
+const { fitStageIntoParentContainer } = useStoreStage()
+const { handleRedo, handleUndo } = useStoreHistory()
+// useStore end
 
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
 const canvasId = ref(useRoute().params.canvas_id as string)
+// use when save canvas
 const router = useRouter()
 const saveState = ref<SaveState>('normal')
+// 3 point reader
+const isShare = ref(false)
+const pointLeaderOpen = ref(false)
+// os userArgent
+const ua = window.navigator.userAgent.toLocaleLowerCase()
+const isWinOS = ua.indexOf('windows nt') !== -1
+const isMacOS = ua.indexOf('mac os x') !== -1
+const isIPadOS =
+  ua.indexOf('ipad') !== -1 ||
+  (ua.indexOf('macintosh') !== -1 && 'ontouchend' in document)
 // const selectionRectangle = ref()
 
 const showDoneBtn = () => {
@@ -107,25 +120,39 @@ const blurInput = () => {
 }
 
 // ショートカット
-// TODO: 全てのショートカット実装
 const changeModeByShortCut = (e: KeyboardEvent) => {
   // テキスト編集中はショートカット無効
   if (isEditing.value || inputText.isEditing) return
-  if (e.key === 'h') setMode('hand')
-  else if (e.key === 'v') setMode('select')
-  else if (e.key === 'p' || e.key === 'm') {
+  // pen
+  if (e.key === 'p') {
     setMode('pen')
     setGlobalCompositeOperation('source-over')
     useStoreTransformer().$reset()
-  } else if (e.shiftKey && e.key === 'Delete') {
+  }
+  // eraser
+  else if (e.shiftKey && e.key === 'Backspace') {
     setMode('eraser')
     setGlobalCompositeOperation('destination-out')
     useStoreTransformer().$reset()
-  } else if (e.key === 't') setMode('text')
-  else if (e.key === 's') setMode('sticky')
+  }
+  // text
+  else if (e.key === 't') setMode('text')
+  // image
   else if (e.key === 'i') setMode('image')
   // undo
+  else if (
+    (isWinOS && e.ctrlKey && e.key === 'z') ||
+    ((isMacOS || isIPadOS) && e.metaKey && e.key === 'z')
+  ) {
+    handleUndo()
+  }
   // redo
+  else if (
+    (isWinOS && e.ctrlKey && e.key === 'y') ||
+    ((isMacOS || isIPadOS) && e.metaKey && e.shiftKey && e.key === 'z')
+  ) {
+    handleRedo()
+  }
 }
 
 // CreatePageに関わるstoreを初期化
@@ -134,14 +161,14 @@ const initializeCanvas = () => {
   useStoreLine().$reset()
   useStoreText().$reset()
   useStoreImage().$reset()
-  useStoreStage().$reset()
+  useStoreHistory().$reset()
   useStoreTransformer().$reset()
 }
 
 onMounted(() => {
   // 初期化
   initializeCanvas()
-  // stageのリサイズ
+  // Stageのリサイズ
   fitStageIntoParentContainer(stageParentDiv.value)
 
   window.addEventListener('resize', () =>
@@ -163,6 +190,7 @@ onMounted(() => {
       canvas.konvaImages,
     )
     inputText.text = canvas.name
+    isShare.value = canvas.isShare === undefined ? false : canvas.isShare
     // 履歴をセット
     canvasHistory.value = [
       {
@@ -229,11 +257,7 @@ const saveCanvas = async (): Promise<void> => {
           ? Timestamp.now()
           : canvases.value[canvasID].createdAt,
       updatedAt: Timestamp.now(),
-      // isShareの有無を判定
-      isShare:
-        canvases.value[canvasID].isShare === undefined
-          ? false
-          : canvases.value[canvasID].isShare,
+      isShare: isShare.value,
     })
   }
   // 新規の場合
@@ -246,7 +270,7 @@ const saveCanvas = async (): Promise<void> => {
       uid: uid.value,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-      isShare: false,
+      isShare: isShare.value,
     })
   }
   // 画像の使用枚数の更新
@@ -255,6 +279,18 @@ const saveCanvas = async (): Promise<void> => {
   firstKonvaImages.value = _.cloneDeep(konvaImages.value)
   // サムネイルを生成・保存
   generateAndSaveThumbnail()
+}
+
+// 共有トグルボタン切り替えで発火
+const saveIsShare = async (): Promise<void> => {
+  isShare.value = !isShare.value
+  const canvasID = canvasId.value
+  if (canvases.value[canvasID] !== undefined) {
+    await updateDoc(doc(db, 'canvas', canvasID), {
+      updatedAt: Timestamp.now(),
+      isShare: isShare.value,
+    })
+  }
 }
 
 // サムネイルを生成し、storageにアップロード
@@ -304,19 +340,35 @@ div(class="flex justify-center items-center my-4")
   button(v-show="saveState === 'done'" type="button" class="flex items-center focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-4 py-1.5")
     span(class="material-symbols-outlined") done
 
+  div(class="relative ml-8")
+    button(class="three-dot-leader hover:opacity-80" type="button" @click="pointLeaderOpen = !pointLeaderOpen")
+        span(class="dot")
+    button(v-show="pointLeaderOpen" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default" @click="pointLeaderOpen = false")
+    div(v-show="pointLeaderOpen"  class="absolute z-10 mt-2 py-2 w-max bg-white rounded-lg shadow-xl")
+      div(class="flex items-center cursor-auto px-4 py-2 text-gray-800") 
+        span(class="material-symbols-outlined mr-2" style='color:#2F90EA') open_in_new
+        div(class="mr-2 text-lg") 共有
+        label(class="relative inline-flex items-center cursor-pointer")
+          input(:checked="isShare" type="checkbox" class="sr-only peer" @click="saveIsShare()")
+          div(class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300  rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600")
+      label(htmlFor="reset-modal"  class="flex items-center cursor-pointer px-4 py-2 text-gray-800") 
+        span(class="material-symbols-outlined mr-2") restart_alt
+        div(class="mr-2 text-lg") リセット
+
+
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
-  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage, canvasId)}" @dragover="(e) => {e.preventDefault();}")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImagesOnCanvas(e, stage)}" @dragover.prevent)
     v-stage(
       ref="stage"
       :config="configKonva"
-      @mouseenter="(e: KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
-      @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
-      @mousedown="(e: KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
-      @pointerdown="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e)}"
-      @pointermove="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
-      @pointerup="(e: KonvaEventObject<PointerEvent>) => {handleLineMouseUp(e);}"
-      @dblclick="(e: KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
-      @dbltap="(e: KonvaEventObject<TouchEvent>) => {createNewTextNode(e);}"
+      @mouseenter="(e: Konva.KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
+      @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
+      @mousedown="(e: Konva.KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
+      @pointerdown="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e)}"
+      @pointermove="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
+      @pointerup="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseUp(e);}"
+      @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
+      @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => {createNewTextNode(e);}"
       )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
@@ -325,27 +377,27 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           :key="image.id"
           :draggable="true"
           :config="image"
-          @dragend="(e: KonvaEventObject<DragEvent>) => {handleImageDragEnd(e);}"
-          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
-          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
-          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
-          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => {handleDragEnd(e);}"
+          @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
         )
         v-text(
           v-for="text in texts"
           :key="text.id"
           :config="text"
-          @dragend="(e: KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
-          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
-          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
-          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
-          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => handleDragEnd(e)"
+          @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent>) => handleTransform(e)"
           @transformend="handleTransformEnd"
-          @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
-          @dbltap="(e: KonvaEventObject<TouchEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => toggleEdit(e)"
+          @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => toggleEdit(e)"
           )
       v-layer
         v-line(
@@ -361,5 +413,64 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         //- )
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
-  ToolBar(:stage="stage" :stage-parent-div="stageParentDiv" :save-canvas="saveCanvas")
+  ToolBar(:stage="stage")
+
+input(id="reset-modal" type="checkbox" className="modal-toggle")
+div(className="modal")
+  div(className="modal-box max-w-none w-auto")
+    h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
+    div(class="flex justify-end")
+      div(className="modal-action mr-3")
+        label(htmlFor="reset-modal" className="btn w-36" @click="pointLeaderOpen = !pointLeaderOpen") Cancel
+      div(className="modal-action" @click="pointLeaderOpen = false")
+        label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="useStoreCanvas().resetCanvas") OK
 </template>
+
+<style scoped>
+.three-dot-leader {
+  cursor: pointer;
+  border: none;
+  background: none;
+  display: block;
+  position: relative;
+  /* ボタン要素のサイズ */
+  width: 40px;
+  height: 40px;
+}
+
+.three-dot-leader .dot,
+.three-dot-leader .dot::before,
+.three-dot-leader .dot::after {
+  display: block;
+  position: absolute;
+  border-radius: 50%;
+  /* ドット1つのサイズ */
+  width: 6px;
+  height: 6px;
+  /* ドットの色 */
+  background-color: #333;
+}
+
+.three-dot-leader .dot {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+}
+
+.three-dot-leader .dot::before,
+.three-dot-leader .dot::after {
+  content: '';
+}
+
+.three-dot-leader .dot::before {
+  /* 上側ドットの位置 */
+  top: -12px;
+}
+
+.three-dot-leader .dot::after {
+  /* 下側ドットの位置 */
+  top: 12px;
+}
+</style>

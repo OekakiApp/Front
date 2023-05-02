@@ -4,7 +4,7 @@ import { defineStore, storeToRefs } from 'pinia'
 import useStoreMode from '@/stores/mode'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 
 const useStoreTransformer = defineStore({
   id: 'transformer',
@@ -209,13 +209,18 @@ const useStoreTransformer = defineStore({
           'middle-right',
         ]
 
-        const { texts, fill } = storeToRefs(useStoreText())
+        const { texts, fill, fontSize, fontFamily, align } = storeToRefs(
+          useStoreText(),
+        )
         const text = texts.value.find((t) => t.id === id)
         if (text !== undefined) {
           this.selectedShapeId = id
           this.configShapeTransformer.nodes = [e.target]
-          // 選択したテキストの色を取得
+          // 選択したテキストの要素（color fontFamily fontSize align）を取得してツールバーと同期
           fill.value = text.fill
+          fontSize.value = text.fontSize
+          fontFamily.value = text.fontFamily
+          align.value = text.align
         } else {
           this.$reset()
         }
@@ -293,12 +298,36 @@ const useStoreTransformer = defineStore({
           image.scaleY = shape.scaleY()
         }
       }
-      useStoreStage().handleEventEndSaveHistory()
+      useStoreHistory().handleEventEndSaveHistory()
+    },
+
+    // save text position
+    handleDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
+      const shape = e.target
+      // text
+      if (shape.name() === 'text') {
+        const { texts } = storeToRefs(useStoreText())
+        const text = texts.value.find((t) => t.id === shape.id())
+        if (text !== undefined) {
+          text.x = shape.x()
+          text.y = shape.y()
+        }
+      }
+      // image
+      if (shape.name() === 'image') {
+        const { konvaImages } = storeToRefs(useStoreImage())
+        const image = konvaImages.value.find((t) => t.id === shape.id())
+        if (image !== undefined) {
+          image.x = shape.x()
+          image.y = shape.y()
+        }
+      }
+      useStoreHistory().handleEventEndSaveHistory()
     },
 
     // keydownで選択中の要素を削除
     async handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
-      if (e.key === 'Delete') {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
         if (this.configShapeTransformer.nodes.length === 0) return
         const selectedNode = this.configShapeTransformer.nodes[0]
 
@@ -321,7 +350,7 @@ const useStoreTransformer = defineStore({
           )
           this.$reset()
         }
-        useStoreStage().handleEventEndSaveHistory()
+        useStoreHistory().handleEventEndSaveHistory()
       }
     },
   },
