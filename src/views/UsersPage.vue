@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, type Ref } from 'vue'
 import useAuthStore from '@/stores/auth'
 import useStoreCanvas from '@/stores/canvas'
 import { useRoute } from 'vue-router'
@@ -11,19 +11,52 @@ import {
   getDoc,
   where,
   collection,
+  setDoc,
+  Timestamp,
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
-import type { Canvas, User } from '@/firebase/types/index'
+import type { User } from '@/firebase/types/index'
+
+interface shareCanvases {
+  title: string
+  id: string
+  uid: string
+  image: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
+  name: string
+  avator: string
+  isLike: boolean
+}
+
+interface heart {
+  isLike: boolean
+  addedAt: Timestamp
+}
 
 const route = useRoute()
 const authStore = useAuthStore()
 const authCanvas = useStoreCanvas()
 
 const user = ref<User | null>(null)
-const canvases = ref({} as Record<string, Canvas>)
+const canvases = ref({} as Record<string, shareCanvases>)
+const likeMap: Ref<Record<string, heart>> = ref({})
 const authIsReady = ref(false)
 
+const modalImage = ref('')
+const modalWidth =
+  window.innerWidth <= 400
+    ? ref(window.innerWidth * 0.9)
+    : ref(window.innerWidth * 0.7)
+const modalHeight = ref((modalWidth.value * 9) / 16)
+
+const modalStyle = reactive({
+  width: `${modalWidth.value}px`,
+  height: `${modalHeight.value}px`,
+})
+
 onMounted(() => {
+  getHeartMap()
   setProfile()
 })
 
@@ -31,6 +64,18 @@ watch(route, () => {
   initializeProfile()
   setProfile()
 })
+
+const getHeartMap = async () => {
+  await getDoc(doc(db, 'hearts', authStore.uid))
+    .then((heartDocSnap) => {
+      if (heartDocSnap.exists()) {
+        likeMap.value = heartDocSnap.data()
+      }
+    })
+    .catch((error) => {
+      console.log(error)
+    })
+}
 
 const setProfile = () => {
   const otherUserUID = String(route.params.user_id)
@@ -45,7 +90,7 @@ const setProfile = () => {
             profile: userDocSnap.data().profile,
           }
           authIsReady.value = true
-          canvases.value = await setCanvases(otherUserUID)
+          setCanvases(otherUserUID)
         } else {
           authIsReady.value = true
           console.log('プロフィール情報が見つかりません')
@@ -61,30 +106,58 @@ const setProfile = () => {
       profile: authStore.profile,
     }
     authIsReady.value = true
-    canvases.value = authCanvas.canvases
+    canvasToShareCanvases()
   }
 }
 
+const canvasToShareCanvases = () => {
+  Object.keys(authCanvas.canvases).forEach((key) => {
+    const canvas = authCanvas.canvases[key]
+    const shareCanvas: shareCanvases = {
+      title: canvas.name,
+      id: key,
+      uid: canvas.uid,
+      image: canvas.image,
+      createdAt: canvas.createdAt,
+      updatedAt: canvas.updatedAt,
+      name: canvas.name,
+      avator: '',
+      isLike: false,
+    }
+    canvases.value[key] = shareCanvas
+  })
+}
+
 const setCanvases = async (otherUserUID: string) => {
-  const canvasHash: Record<string, Canvas> = {}
   const canvasQuery = query(
     collection(db, 'canvas'),
     where('uid', '==', otherUserUID),
     where('isShare', '==', true),
   )
-  const getCanvases = await getDocs(canvasQuery)
+  await getDocs(canvasQuery)
     .then((querySnapshot) => {
       querySnapshot.forEach((document) => {
         const canvasID = document.id
-        canvasHash[canvasID] = document.data() as Canvas
+        const canvas: shareCanvases = {
+          title: document.data().name,
+          id: canvasID,
+          uid: document.data().uid,
+          image: document.data().image,
+          createdAt: document.data().createdAt,
+          updatedAt: document.data().updatedAt,
+          name: document.data().name,
+          avator: '',
+          isLike:
+            likeMap.value[canvasID] !== undefined
+              ? likeMap.value[canvasID].isLike
+              : false,
+        }
+        canvases.value[canvasID] = canvas
       })
-      return canvasHash
     })
     .catch((error) => {
       console.log(error)
-      return canvasHash
     })
-  return getCanvases
 }
 
 const initializeProfile = () => {
@@ -98,6 +171,30 @@ const userCol = () => {
     return 'col-span-12 sm:col-span-9 sm:ml-8'
   }
   return 'sm:mx-8'
+}
+
+const likeColor = (isLike: boolean) => (isLike ? 'fill: red' : 'fill: #71767B')
+
+const clickLike = async (galleryId: string) => {
+  const gallery = canvases.value[galleryId]
+  if (gallery !== undefined) {
+    gallery.isLike = !gallery?.isLike
+    canvases.value[galleryId].isLike = gallery.isLike
+    likeMap.value[galleryId] = {
+      isLike: gallery.isLike,
+      addedAt: Timestamp.now(),
+    }
+    await setDoc(doc(db, 'hearts', authStore.uid), likeMap.value)
+  }
+}
+
+const resizeModal = (image: string) => {
+  modalWidth.value =
+    window.innerWidth <= 400 ? window.innerWidth * 0.9 : window.innerWidth * 0.7
+  modalHeight.value = (modalWidth.value * 9) / 16
+  modalStyle.width = `${modalWidth.value}px`
+  modalStyle.height = `${modalHeight.value}px`
+  modalImage.value = image
 }
 </script>
 
@@ -130,15 +227,35 @@ div(class="grid grid-cols-12 mt-4 sm:mt-8")
           button(class="focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-3 py-1") 編集
     div(v-else-if="authIsReady && user === null")
       h1(class="text-center text-xl font-bold mt-4") このアカウントは存在しません
+    
     //- bottom
     div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")      
       div(v-for="(canvas, index) of canvases" :key="index" class="picture m-auto")
-        router-link(:to="{name: 'Create', params: { canvas_id: index }}")
-          div(class="flex items-center")  
-            img(v-if='canvas.image' :src="canvas.image" class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
-            img(v-else class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
+        
+        //- MyAccount
+        div(v-if="authStore.uid === route.params.user_id")
+          router-link(:to="{name: 'Create', params: { canvas_id: index }}")
+            div(class="flex items-center")  
+              img(v-if='canvas.image' :src="canvas.image" class="bg-gray-200 rounded-lg border border-gray-500" )
+              img(v-else class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
+            div(class="flex mt-2")  
+              div(class="text-midnightBlue pl-2") {{ canvas.name }}
+        
+        //- OtherAccount
+        div(v-else)
+          div(class="flex items-center relative")
+            label(for="modal" style="width: 320px; height: 180px" @click="resizeModal(canvas.image)")
+              img(v-if='canvas.image' :src="canvas.image" class="bg-gray-200 rounded-lg border border-gray-500")
+              img(v-else class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
+            svg(class="heart absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(canvas.isLike)" style="right: 10px; bottom: 10px" @click="clickLike(canvas.id)")
+              path(d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z")
           div(class="flex mt-2")  
             div(class="text-midnightBlue pl-2") {{ canvas.name }}
+            
+input(id="modal" type="checkbox" class="modal-toggle")
+label(for="modal" class="modal cursor-pointer")
+  img(v-if='modalImage' :src="modalImage" class="rounded-lg border border-gray-500 relative" :style="modalStyle")
+  img(v-else class="bg-gray-200 rounded-lg border border-gray-500" :style="modalStyle")
 </template>
 
 <style scoped>
@@ -147,5 +264,9 @@ div(class="grid grid-cols-12 mt-4 sm:mt-8")
   width: 80px;
   height: 80px;
   border-radius: 50%;
+}
+
+.heart {
+  width: 20px;
 }
 </style>
