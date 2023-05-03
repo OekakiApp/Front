@@ -16,31 +16,15 @@ import {
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
 import type { User } from '@/firebase/types/index'
-
-interface shareCanvases {
-  title: string
-  id: string
-  uid: string
-  image: string
-  createdAt: Timestamp
-  updatedAt: Timestamp
-  name: string
-  avator: string
-  isLike: boolean
-}
-
-interface heart {
-  isLike: boolean
-  addedAt: Timestamp
-}
+import type { ShareCanvases, Heart } from '@/firebase/types/index'
 
 const route = useRoute()
 const authStore = useAuthStore()
 const authCanvas = useStoreCanvas()
 
 const user = ref<User | null>(null)
-const canvases = ref({} as Record<string, shareCanvases>)
-const likeMap: Ref<Record<string, heart>> = ref({})
+const canvases = ref({} as Record<string, ShareCanvases>)
+const likeMap: Ref<Record<string, Heart>> = ref({})
 const authIsReady = ref(false)
 
 const modalImage = ref('')
@@ -113,7 +97,7 @@ const setProfile = () => {
 const canvasToShareCanvases = () => {
   Object.keys(authCanvas.canvases).forEach((key) => {
     const canvas = authCanvas.canvases[key]
-    const shareCanvas: shareCanvases = {
+    const shareCanvas: ShareCanvases = {
       title: canvas.name,
       id: key,
       uid: canvas.uid,
@@ -138,7 +122,7 @@ const setCanvases = async (otherUserUID: string) => {
     .then((querySnapshot) => {
       querySnapshot.forEach((document) => {
         const canvasID = document.id
-        const canvas: shareCanvases = {
+        const canvas: ShareCanvases = {
           title: document.data().name,
           id: canvasID,
           uid: document.data().uid,
