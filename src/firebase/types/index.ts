@@ -42,6 +42,7 @@ export interface shareCanvases {
   id: string
   uid: string
   image: string
+  createdAt: Timestamp
   updatedAt: Timestamp
   name: string
   avator: string

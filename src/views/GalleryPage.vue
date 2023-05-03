@@ -95,6 +95,7 @@ const setShareCanvases = async () => {
           id: canvasID,
           uid: document.data().uid,
           image: document.data().image,
+          createdAt: document.data().createdAt,
           updatedAt: document.data().updatedAt,
           name: user.name,
           avator: user.icon,
