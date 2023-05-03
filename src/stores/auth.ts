@@ -41,8 +41,6 @@ const useAuthStore = defineStore('auth', {
                 icon: '',
                 uid: user.uid,
               })
-              await this.setUser(user)
-              await forceToWorksPage()
             })
             .catch((error) => {
               console.log(error.message)
@@ -54,13 +52,9 @@ const useAuthStore = defineStore('auth', {
     },
     loginEmail(email: string, password: string) {
       const auth = getAuth()
-      signInWithEmailAndPassword(auth, email, password)
-        .then(async () => {
-          await forceToWorksPage()
-        })
-        .catch((error) => {
-          this.authError(error)
-        })
+      signInWithEmailAndPassword(auth, email, password).catch((error) => {
+        this.authError(error)
+      })
     },
     logout() {
       const auth = getAuth()
@@ -84,10 +78,10 @@ const useAuthStore = defineStore('auth', {
     },
 
     async setUser(user: User) {
+      this.isLoggedIn = true
       this.uid = user.uid
       this.name = user.displayName ?? ''
       this.icon = user.photoURL ?? Icon
-      this.isLoggedIn = true
       // get profile
       const userDocRef = doc(db, 'users', this.uid)
       const userDocSnap = await getDoc(userDocRef)
