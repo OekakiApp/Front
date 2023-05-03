@@ -13,6 +13,7 @@ import {
   collection,
   setDoc,
   Timestamp,
+  orderBy,
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
 import type { User, ShareCanvases, Heart } from '@/firebase/types/index'
@@ -114,6 +115,7 @@ const canvasToShareCanvases = () => {
 const setCanvases = async (otherUserUID: string) => {
   const canvasQuery = query(
     collection(db, 'canvas'),
+    orderBy('createdAt', 'desc'),
     where('uid', '==', otherUserUID),
     where('isShare', '==', true),
   )
