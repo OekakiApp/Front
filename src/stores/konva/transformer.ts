@@ -176,6 +176,53 @@ const useStoreTransformer = defineStore({
     //   }
     // },
 
+    // 削除ボタン生成
+    createDeleteButton() {
+      // create delete button
+      const deleteText = new Konva.Text({
+        x: -5.5,
+        y: -5.5,
+        text: '✕',
+        fontSize: 14,
+        align: 'center',
+        verticalAlign: 'middle',
+        name: 'delete-button',
+      })
+      const deleteCircle = new Konva.Circle({
+        radius: 10,
+        fill: '#cbd5e1',
+        stroke: 'black',
+        strokeWidth: 1,
+        name: 'delete-button',
+      })
+      const deleteButton = new Konva.Group({
+        name: 'delete-button',
+      })
+      // change pointer and button scale
+      deleteButton.on('pointerover', () => {
+        const stage = deleteButton.getStage()
+        if (stage !== null) {
+          stage.container().style.cursor = 'pointer'
+          deleteButton.scaleX(1.1)
+          deleteButton.scaleY(1.1)
+        }
+      })
+      // reset pointer and button scale
+      deleteButton.on('pointerout', () => {
+        const stage = deleteButton.getStage()
+        if (stage !== null) {
+          stage.container().style.cursor = 'default'
+          deleteButton.scaleX(1)
+          deleteButton.scaleY(1)
+        }
+      })
+      // delete node when button is clicked
+      deleteButton.on('pointerdown', (evt) => this.handleDeleteNode(evt))
+      // add delete button to transformer
+      deleteButton.add(deleteCircle, deleteText)
+      return deleteButton
+    },
+
     // 削除ボタンの位置を更新
     updateDeleteButtonPos(transformer: Konva.Transformer) {
       const transformerNode = transformer.getNode() as Konva.Transformer
@@ -208,6 +255,9 @@ const useStoreTransformer = defineStore({
         const shape = e.target
         const id = shape.id()
         const { setMode } = useStoreMode()
+        // skip when pen mode or eraser mode
+        const { mode } = storeToRefs(useStoreMode())
+        if (mode.value === 'pen' || mode.value === 'eraser') return
 
         // text
         if (shape.className === 'Text' && shape.name() !== 'delete-button') {
@@ -256,49 +306,9 @@ const useStoreTransformer = defineStore({
         resolve()
       }).then(() => {
         // create delete button
-        const deleteText = new Konva.Text({
-          x: -5.5,
-          y: -5.5,
-          text: '✕',
-          fontSize: 14,
-          align: 'center',
-          verticalAlign: 'middle',
-          name: 'delete-button',
-        })
-        const deleteCircle = new Konva.Circle({
-          radius: 10,
-          fill: '#cbd5e1',
-          stroke: 'black',
-          strokeWidth: 1,
-          name: 'delete-button',
-        })
-        const deleteButton = new Konva.Group({
-          name: 'delete-button',
-        })
-        // change pointer and button scale
-        deleteButton.on('pointerover', () => {
-          const stage = deleteButton.getStage()
-          if (stage !== null) {
-            stage.container().style.cursor = 'pointer'
-            deleteButton.scaleX(1.1)
-            deleteButton.scaleY(1.1)
-          }
-        })
-        // reset pointer and button scale
-        deleteButton.on('pointerout', () => {
-          const stage = deleteButton.getStage()
-          if (stage !== null) {
-            stage.container().style.cursor = 'default'
-            deleteButton.scaleX(1)
-            deleteButton.scaleY(1)
-          }
-        })
-        // delete node when button is clicked
-        deleteButton.on('pointerdown', (evt) => this.handleDeleteNode(evt))
-        // add delete button to transformer
-        deleteButton.add(deleteCircle, deleteText)
+        const deleteButton = this.createDeleteButton()
         transformerNode.add(deleteButton)
-
+        // update delete button position
         this.updateDeleteButtonPos(transformer)
       })
       await promise
