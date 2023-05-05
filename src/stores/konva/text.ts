@@ -118,7 +118,6 @@ const useStoreText = defineStore({
         textDecoration: this.textDecoration as TextDecoration,
         fontFamily: this.fontFamily,
         align: this.align as TextAlign,
-        draggable: true,
         width: 200,
         fill: this.fill,
         wrap: 'word',
@@ -155,7 +154,6 @@ const useStoreText = defineStore({
                 .textDecoration as TextDecoration,
               fontFamily: newTextarea.style.fontFamily.replaceAll('"', ''),
               align: newTextarea.style.textAlign as TextAlign,
-              draggable: true,
               width: 200,
               fill: this.rgbToHex(
                 newTextarea.style.color.match(/\d+/g) as RegExpMatchArray,

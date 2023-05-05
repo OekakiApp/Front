@@ -6,7 +6,6 @@ import Konva from 'konva'
 import SubToolMenu from '@/components/SubToolMenu.vue'
 import UndoRedoButton from '@/components/ToolBar/UndoRedoButton.vue'
 import useStoreMode from '@/stores/mode'
-import useStoreLine from '@/stores/konva/line'
 import useStoreTransformer from '@/stores/konva/transformer'
 import useStoreCanvas from '@/stores/canvas'
 import type { ToolArray } from '@/types/index'
@@ -20,7 +19,6 @@ const { stage } = toRefs(props)
 
 const { mode } = storeToRefs(useStoreMode())
 const { setMode } = useStoreMode()
-const { setLineStyle, setGlobalCompositeOperation } = useStoreLine()
 const { canvases } = storeToRefs(useStoreCanvas())
 
 const canvasId = ref(useRoute().params.canvas_id as string)
@@ -60,7 +58,6 @@ const toolArray: ToolArray[] = reactive([
     shortcut: 'P',
     event: () => {
       setMode('pen')
-      setGlobalCompositeOperation('source-over')
       useStoreTransformer().$reset()
     },
   },
@@ -71,8 +68,6 @@ const toolArray: ToolArray[] = reactive([
     shortcut: `Shift + ${isWinOS ? 'BS' : 'Del'}`,
     event: () => {
       setMode('eraser')
-      setLineStyle('normal')
-      setGlobalCompositeOperation('destination-out')
       useStoreTransformer().$reset()
     },
   },
@@ -104,7 +99,7 @@ div(class="flex flex-col items-center relative")
   SubToolMenu
   div(class="flex justify-center items-centers w-full max-w-screen-xl px-4 py-3 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 z-0")
     ul.flex
-      //- pen text image
+      //- Pen Eraser Text Image
       li(v-for="(tool, index) of toolArray" :key="index" class="flex mx-2")
         button(v-show="mode !== tool.mode" type="button" :data-tip="tool.tooltip + ' : ' + tool.shortcut" class="btn tooltip bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" @click="tool.event")
           span(class="material-symbols-outlined") {{tool.icon}}

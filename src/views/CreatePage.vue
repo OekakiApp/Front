@@ -29,6 +29,7 @@ import type { SaveState } from '@/types/index'
 import Konva from 'konva'
 
 // useStore start
+const { mode } = storeToRefs(useStoreMode())
 const { canvasHistory } = storeToRefs(useStoreHistory())
 const { lines } = storeToRefs(useStoreLine())
 const { texts, isEditing } = storeToRefs(useStoreText())
@@ -44,7 +45,6 @@ const {
   handleLineMouseMove,
   handleLineMouseUp,
   handleLineMouseLeave,
-  setGlobalCompositeOperation,
 } = useStoreLine()
 
 const { createNewTextNode, toggleEdit } = useStoreText()
@@ -126,13 +126,11 @@ const changeModeByShortCut = (e: KeyboardEvent) => {
   // pen
   if (e.key === 'p') {
     setMode('pen')
-    setGlobalCompositeOperation('source-over')
     useStoreTransformer().$reset()
   }
   // eraser
   else if (e.shiftKey && e.key === 'Backspace') {
     setMode('eraser')
-    setGlobalCompositeOperation('destination-out')
     useStoreTransformer().$reset()
   }
   // text
@@ -375,7 +373,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         v-image(
           v-for="image in konvaImages"
           :key="image.id"
-          :draggable="true"
+          :draggable="mode === 'none'"
           :config="image"
           @dragend="(e: Konva.KonvaEventObject<DragEvent>) => {handleDragEnd(e);}"
           @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
@@ -389,6 +387,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           v-for="text in texts"
           :key="text.id"
           :config="text"
+          :draggable="mode === 'text'"
           @dragend="(e: Konva.KonvaEventObject<DragEvent>) => handleDragEnd(e)"
           @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
           @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
@@ -399,13 +398,12 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => toggleEdit(e)"
           @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => toggleEdit(e)"
           )
-      v-layer
         v-line(
           v-for="line in lines"
           :key="line.id"
-          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
+          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', hitStrokeWidth: line.hitStrokeWidth, shadowForStrokeEnabled: false}"
           )
-        //- pen eraser時のcursor
+        //- pen cursor
         UserCursor
         //- v-rect(
         //- ref="selectionRectangle"
