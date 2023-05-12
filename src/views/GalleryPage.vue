@@ -14,13 +14,13 @@ import {
   orderBy,
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
-import type { shareCanvases, galleryUser, heart } from '@/firebase/types/index'
+import type { ShareCanvas, GalleryUser, Like } from '@/firebase/types/index'
 
 const authStore = useAuthStore()
 
-const galleries = ref(new Map<string, shareCanvases>())
+const galleries = ref(new Map<string, ShareCanvas>())
 
-const likeMap: Ref<Record<string, heart>> = ref({})
+const likeMap: Ref<Record<string, Like>> = ref({})
 
 const modalImage = ref('')
 
@@ -40,11 +40,11 @@ const modalStyle = reactive({
 })
 
 // ユーザーのハートMAPを取得する
-const getHeartMap = async () => {
-  await getDoc(doc(db, 'hearts', authStore.uid))
-    .then((heartDocSnap) => {
-      if (heartDocSnap.exists()) {
-        likeMap.value = heartDocSnap.data()
+const setLikeMap = async () => {
+  await getDoc(doc(db, 'likes', authStore.uid))
+    .then((likeDocSnap) => {
+      if (likeDocSnap.exists()) {
+        likeMap.value = likeDocSnap.data()
       }
     })
     .catch((error) => {
@@ -53,8 +53,8 @@ const getHeartMap = async () => {
 }
 
 // shareしているcanvasのユーザーを取得
-const getShareUser = async (otherUserUID: string): Promise<galleryUser> => {
-  let user: galleryUser = { name: '', icon: '' }
+const getShareUser = async (otherUserUID: string): Promise<GalleryUser> => {
+  let user: GalleryUser = { name: '', icon: '' }
   await getDoc(doc(db, 'users', otherUserUID))
     .then(async (userDocSnap) => {
       if (userDocSnap.exists()) {
@@ -73,7 +73,7 @@ const getShareUser = async (otherUserUID: string): Promise<galleryUser> => {
 }
 
 const setShareCanvases = async () => {
-  getHeartMap()
+  setLikeMap()
 
   const canvasQuery = query(
     collection(db, 'canvas'),
@@ -88,9 +88,9 @@ const setShareCanvases = async () => {
         // MyCanvasはreturn
         if (otherUserUID === authStore.uid) return
         // shareしているcanvasのユーザーを取得
-        const user: galleryUser = await getShareUser(otherUserUID)
+        const user: GalleryUser = await getShareUser(otherUserUID)
 
-        const canvas: shareCanvases = {
+        const canvas: ShareCanvas = {
           title: document.data().name,
           id: canvasID,
           uid: document.data().uid,
@@ -123,7 +123,7 @@ const clickLike = async (galleryId: string) => {
       isLike: gallery.isLike,
       addedAt: Timestamp.now(),
     }
-    await setDoc(doc(db, 'hearts', authStore.uid), likeMap.value)
+    await setDoc(doc(db, 'likes', authStore.uid), likeMap.value)
   }
 }
 
@@ -143,7 +143,7 @@ div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
     div(class="flex items-center relative")
       label(for="modal" style="width: 320px; height: 180px" @click="resizeModal(gallery.image)")
         img(:src="gallery.image"  class="rounded-lg border border-gray-500")
-      svg(class="heart absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(gallery.isLike)" style="right: 10px; bottom: 10px" @click="clickLike(gallery.id)")
+      svg(class="like absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(gallery.isLike)" style="right: 10px; bottom: 10px" @click="clickLike(gallery.id)")
         path(d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z")
     div(class="flex flex-col mt-1 ml-2")
       div(class="text-midnightBlue") {{ gallery.title }}
@@ -166,7 +166,7 @@ label(for="modal" class="modal cursor-pointer")
   border-radius: 50%;
 }
 
-.heart {
+.like {
   width: 20px;
 }
 </style>

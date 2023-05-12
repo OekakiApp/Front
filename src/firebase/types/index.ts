@@ -37,7 +37,7 @@ export interface UploadedImage {
 }
 
 // shareCanvases
-export interface shareCanvases {
+export interface ShareCanvas {
   title: string
   id: string
   uid: string
@@ -50,13 +50,13 @@ export interface shareCanvases {
 }
 
 // galleryUser
-export interface galleryUser {
+export interface GalleryUser {
   name: string
   icon: string
 }
 
 // heart
-export interface heart {
+export interface Like {
   isLike: boolean
   addedAt: Timestamp
 }
