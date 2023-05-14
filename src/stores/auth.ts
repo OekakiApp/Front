@@ -1,6 +1,6 @@
 /* eslint-disable import/no-cycle */
-import { defineStore } from 'pinia'
-import { forceToHomePage, forceToWorksPage } from '@/router/index'
+import { defineStore, getActivePinia } from 'pinia'
+import { forceToHomePage } from '@/router/index'
 import { db } from '@/firebase/index'
 import {
   getAuth,
@@ -60,7 +60,18 @@ const useAuthStore = defineStore('auth', {
       const auth = getAuth()
       signOut(auth)
         .then(async () => {
-          this.$reset()
+          //  piniaのstoreを全て削除
+          const activePinia = getActivePinia()
+          console.log(activePinia)
+          if (activePinia) {
+            Object.entries(activePinia.state.value).forEach(
+              ([storeName, state]) => {
+                const storeDefinition = defineStore(storeName, state)
+                const store = storeDefinition(activePinia)
+                store.$reset()
+              },
+            )
+          }
           await forceToHomePage()
         })
         .catch((error) => {

@@ -36,8 +36,8 @@ export interface UploadedImage {
   loaded: boolean // 画像が読み込まれたか
 }
 
-// shareCanvases
-export interface ShareCanvases {
+// ShareCanvas
+export interface ShareCanvas {
   title: string
   id: string
   uid: string
@@ -49,8 +49,8 @@ export interface ShareCanvases {
   isLike: boolean
 }
 
-// heart
-export interface Heart {
+// Like
+export interface Like {
   isLike: boolean
   addedAt: Timestamp
 }

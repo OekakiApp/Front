@@ -16,15 +16,15 @@ import {
   orderBy,
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
-import type { User, ShareCanvases, Heart } from '@/firebase/types/index'
+import type { User, ShareCanvas, Like } from '@/firebase/types/index'
 
 const route = useRoute()
 const authStore = useAuthStore()
 const authCanvas = useStoreCanvas()
 
 const user = ref<User | null>(null)
-const canvases = ref({} as Record<string, ShareCanvases>)
-const likeMap: Ref<Record<string, Heart>> = ref({})
+const shareCanvases = ref({} as Record<string, ShareCanvas>)
+const likeMap: Ref<Record<string, Like>> = ref({})
 const authIsReady = ref(false)
 
 const modalImage = ref('')
@@ -40,7 +40,7 @@ const modalStyle = reactive({
 })
 
 onMounted(() => {
-  getHeartMap()
+  setLikeMap()
   setProfile()
 })
 
@@ -49,11 +49,11 @@ watch(route, () => {
   setProfile()
 })
 
-const getHeartMap = async () => {
-  await getDoc(doc(db, 'hearts', authStore.uid))
-    .then((heartDocSnap) => {
-      if (heartDocSnap.exists()) {
-        likeMap.value = heartDocSnap.data()
+const setLikeMap = async () => {
+  await getDoc(doc(db, 'likes', authStore.uid))
+    .then((likeDocSnap) => {
+      if (likeDocSnap.exists()) {
+        likeMap.value = likeDocSnap.data()
       }
     })
     .catch((error) => {
@@ -74,7 +74,7 @@ const setProfile = () => {
             profile: userDocSnap.data().profile,
           }
           authIsReady.value = true
-          setCanvases(otherUserUID)
+          setSharedCanvases(otherUserUID)
         } else {
           authIsReady.value = true
           console.log('プロフィール情報が見つかりません')
@@ -90,29 +90,10 @@ const setProfile = () => {
       profile: authStore.profile,
     }
     authIsReady.value = true
-    canvasToShareCanvases()
   }
 }
 
-const canvasToShareCanvases = () => {
-  Object.keys(authCanvas.canvases).forEach((key) => {
-    const canvas = authCanvas.canvases[key]
-    const shareCanvas: ShareCanvases = {
-      title: canvas.name,
-      id: key,
-      uid: canvas.uid,
-      image: canvas.image,
-      createdAt: canvas.createdAt,
-      updatedAt: canvas.updatedAt,
-      name: canvas.name,
-      avator: '',
-      isLike: false,
-    }
-    canvases.value[key] = shareCanvas
-  })
-}
-
-const setCanvases = async (otherUserUID: string) => {
+const setSharedCanvases = async (otherUserUID: string) => {
   const canvasQuery = query(
     collection(db, 'canvas'),
     orderBy('createdAt', 'desc'),
@@ -123,7 +104,7 @@ const setCanvases = async (otherUserUID: string) => {
     .then((querySnapshot) => {
       querySnapshot.forEach((document) => {
         const canvasID = document.id
-        const canvas: ShareCanvases = {
+        const canvas: ShareCanvas = {
           title: document.data().name,
           id: canvasID,
           uid: document.data().uid,
@@ -137,7 +118,7 @@ const setCanvases = async (otherUserUID: string) => {
               ? likeMap.value[canvasID].isLike
               : false,
         }
-        canvases.value[canvasID] = canvas
+        shareCanvases.value[canvasID] = canvas
       })
     })
     .catch((error) => {
@@ -147,7 +128,7 @@ const setCanvases = async (otherUserUID: string) => {
 
 const initializeProfile = () => {
   user.value = null
-  canvases.value = {}
+  shareCanvases.value = {}
   authIsReady.value = false
 }
 
@@ -160,16 +141,16 @@ const userCol = () => {
 
 const likeColor = (isLike: boolean) => (isLike ? 'fill: red' : 'fill: #71767B')
 
-const clickLike = async (galleryId: string) => {
-  const gallery = canvases.value[galleryId]
-  if (gallery !== undefined) {
-    gallery.isLike = !gallery?.isLike
-    canvases.value[galleryId].isLike = gallery.isLike
-    likeMap.value[galleryId] = {
-      isLike: gallery.isLike,
+const clickLike = async (canvasId: string) => {
+  const shareCanvas = shareCanvases.value[canvasId]
+  if (shareCanvas !== undefined) {
+    shareCanvas.isLike = !shareCanvas?.isLike
+    shareCanvases.value[canvasId].isLike = shareCanvas.isLike
+    likeMap.value[canvasId] = {
+      isLike: shareCanvas.isLike,
       addedAt: Timestamp.now(),
     }
-    await setDoc(doc(db, 'hearts', authStore.uid), likeMap.value)
+    await setDoc(doc(db, 'likes', authStore.uid), likeMap.value)
   }
 }
 
@@ -213,29 +194,28 @@ div(class="grid grid-cols-12 mt-4 sm:mt-8")
     div(v-else-if="authIsReady && user === null")
       h1(class="text-center text-xl font-bold mt-4") このアカウントは存在しません
     
-    //- bottom
-    div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")      
-      div(v-for="(canvas, index) of canvases" :key="index" class="picture m-auto")
-        
-        //- MyAccount
-        div(v-if="authStore.uid === route.params.user_id")
-          router-link(:to="{name: 'Create', params: { canvas_id: index }}")
-            div(class="flex items-center")  
-              img(v-if='canvas.image' :src="canvas.image" class="bg-gray-200 rounded-lg border border-gray-500" )
-              img(v-else class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
-            div(class="flex mt-2")  
-              div(class="text-midnightBlue pl-2") {{ canvas.name }}
-        
-        //- OtherAccount
-        div(v-else)
-          div(class="flex items-center relative")
-            label(for="modal" style="width: 320px; height: 180px" @click="resizeModal(canvas.image)")
-              img(v-if='canvas.image' :src="canvas.image" class="bg-gray-200 rounded-lg border border-gray-500")
-              img(v-else class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
-            svg(class="heart absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(canvas.isLike)" style="right: 10px; bottom: 10px" @click="clickLike(canvas.id)")
-              path(d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z")
+    //- bottom  
+    //- MyAccount
+    div(v-if="authStore.uid === route.params.user_id" class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
+      div(v-for="(canvas, index) of authCanvas.canvases" :key="index" class="picture m-auto")
+        router-link(:to="{name: 'Create', params: { canvas_id: index }}")
+          div(class="flex items-center")  
+            img(v-if='canvas.image' :src="canvas.image" class="bg-gray-200 rounded-lg border border-gray-500" )
+            img(v-else class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
           div(class="flex mt-2")  
             div(class="text-midnightBlue pl-2") {{ canvas.name }}
+    
+    //- OtherAccount
+    div(v-else class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
+      div(v-for="(canvas, index) of shareCanvases" :key="index" class="picture m-auto")
+        div(class="flex items-center relative")
+          label(for="modal" style="width: 320px; height: 180px" @click="resizeModal(canvas.image)")
+            img(v-if='canvas.image' :src="canvas.image" class="bg-gray-200 rounded-lg border border-gray-500")
+            img(v-else class="bg-gray-200 rounded-lg border border-gray-500" style="width: 320px; height: 180px")
+          svg(class="like absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(canvas.isLike)" style="right: 10px; bottom: 10px" @click="clickLike(canvas.id)")
+            path(d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z")
+        div(class="flex mt-2")  
+          div(class="text-midnightBlue pl-2") {{ canvas.name }}
             
 input(id="modal" type="checkbox" class="modal-toggle")
 label(for="modal" class="modal cursor-pointer")
@@ -251,7 +231,7 @@ label(for="modal" class="modal cursor-pointer")
   border-radius: 50%;
 }
 
-.heart {
+.like {
   width: 20px;
 }
 </style>
