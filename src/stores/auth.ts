@@ -62,8 +62,7 @@ const useAuthStore = defineStore('auth', {
         .then(async () => {
           //  piniaのstoreを全て削除
           const activePinia = getActivePinia()
-          console.log(activePinia)
-          if (activePinia) {
+          if (activePinia != null) {
             Object.entries(activePinia.state.value).forEach(
               ([storeName, state]) => {
                 const storeDefinition = defineStore(storeName, state)
