@@ -7,7 +7,7 @@ export interface Points {
   dash: number[]
   dashEnabled: boolean
   strokeWidth: number
-  globalCompositeOperation: string
+  hitStrokeWidth: number
 }
 export type LineStyle = 'normal' | 'dash'
 export type GlobalCompositeOperation = 'source-over' | 'destination-out'
@@ -32,7 +32,6 @@ export interface TextNode {
   textDecoration: TextDecoration
   fontFamily: string
   align: TextAlign
-  draggable: boolean
   width: number
   fill: string
   wrap: 'word' | 'char' | 'none'

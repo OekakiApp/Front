@@ -54,3 +54,9 @@ export interface Like {
   isLike: boolean
   addedAt: Timestamp
 }
+
+// GalleryUser
+export interface GalleryUser {
+  name: string
+  icon: string
+}

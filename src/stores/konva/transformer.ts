@@ -194,6 +194,10 @@ const useStoreTransformer = defineStore({
         return
       }
 
+      // skip when pen mode or eraser mode
+      const { mode } = storeToRefs(useStoreMode())
+      if (mode.value === 'pen' || mode.value === 'eraser') return
+
       // find clicked shape by its id
       const id = e.target.id()
       const { setMode } = useStoreMode()
