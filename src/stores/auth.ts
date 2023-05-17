@@ -1,4 +1,4 @@
-/* eslint-disable import/no-cycle */
+/* eslint-disable import/no-cycle, @typescript-eslint/consistent-type-assertions */
 import { defineStore, getActivePinia } from 'pinia'
 import { forceToHomePage } from '@/router/index'
 import { db } from '@/firebase/index'
@@ -11,8 +11,9 @@ import {
   User,
   AuthError,
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
+import type { Like, ShareCanvas } from '@/firebase/types/index'
 
 const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -23,6 +24,8 @@ const useAuthStore = defineStore('auth', {
     isLoggedIn: false,
     isAuthError: false,
     authErrorMessage: '' as string | undefined,
+    likeMap: {} as Record<string, Like>,
+    shareCanvases: {} as Record<string, ShareCanvas>,
   }),
   actions: {
     signupEmail(email: string, password: string, name: string) {
@@ -104,6 +107,31 @@ const useAuthStore = defineStore('auth', {
             icon: this.icon,
           })
         }
+      }
+    },
+
+    async setLikeMap() {
+      await getDoc(doc(db, 'likes', this.uid))
+        .then((likeDocSnap) => {
+          if (likeDocSnap.exists()) {
+            this.likeMap = likeDocSnap.data()
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+
+    async clickLike(galleryId: string) {
+      const shareCanvas = this.shareCanvases[galleryId]
+      if (shareCanvas !== undefined) {
+        shareCanvas.isLike = !shareCanvas?.isLike
+        this.shareCanvases[galleryId].isLike = shareCanvas.isLike
+        this.likeMap[galleryId] = {
+          isLike: shareCanvas.isLike,
+          addedAt: Timestamp.now(),
+        }
+        await setDoc(doc(db, 'likes', this.uid), this.likeMap)
       }
     },
   },

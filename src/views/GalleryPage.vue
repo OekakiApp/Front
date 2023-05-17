@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, type Ref } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import useAuthStore from '@/stores/auth'
 import { db } from '@/firebase/index'
 import {
@@ -9,23 +10,22 @@ import {
   getDocs,
   getDoc,
   doc,
-  Timestamp,
-  setDoc,
   orderBy,
 } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
-import type { ShareCanvas, GalleryUser, Like } from '@/firebase/types/index'
+import type { ShareCanvas, GalleryUser } from '@/firebase/types/index'
 
+const route = useRoute()
 const authStore = useAuthStore()
-
-const galleries = ref(new Map<string, ShareCanvas>())
-
-const likeMap: Ref<Record<string, Like>> = ref({})
 
 const modalImage = ref('')
 
 onMounted(() => {
   setShareCanvases()
+})
+
+watch(route, () => {
+  authStore.shareCanvases = {}
 })
 
 const modalWidth =
@@ -38,19 +38,6 @@ const modalStyle = reactive({
   width: `${modalWidth.value}px`,
   height: `${modalHeight.value}px`,
 })
-
-// ユーザーのハートMAPを取得する
-const setLikeMap = async () => {
-  await getDoc(doc(db, 'likes', authStore.uid))
-    .then((likeDocSnap) => {
-      if (likeDocSnap.exists()) {
-        likeMap.value = likeDocSnap.data()
-      }
-    })
-    .catch((error) => {
-      console.log(error)
-    })
-}
 
 // shareしているcanvasのユーザーを取得
 const getShareUser = async (otherUserUID: string): Promise<GalleryUser> => {
@@ -73,7 +60,7 @@ const getShareUser = async (otherUserUID: string): Promise<GalleryUser> => {
 }
 
 const setShareCanvases = async () => {
-  setLikeMap()
+  authStore.setLikeMap()
 
   const canvasQuery = query(
     collection(db, 'canvas'),
@@ -100,11 +87,11 @@ const setShareCanvases = async () => {
           name: user.name,
           avator: user.icon,
           isLike:
-            likeMap.value[canvasID] !== undefined
-              ? likeMap.value[canvasID].isLike
+            authStore.likeMap[canvasID] !== undefined
+              ? authStore.likeMap[canvasID].isLike
               : false,
         }
-        galleries.value.set(canvasID, canvas)
+        authStore.shareCanvases[canvasID] = canvas
       })
     })
     .catch((error) => {
@@ -113,19 +100,6 @@ const setShareCanvases = async () => {
 }
 
 const likeColor = (isLike: boolean) => (isLike ? 'fill: red' : 'fill: #71767B')
-
-const clickLike = async (galleryId: string) => {
-  const gallery = galleries.value.get(galleryId)
-  if (gallery !== undefined) {
-    gallery.isLike = !gallery?.isLike
-    galleries.value.set(galleryId, gallery)
-    likeMap.value[galleryId] = {
-      isLike: gallery.isLike,
-      addedAt: Timestamp.now(),
-    }
-    await setDoc(doc(db, 'likes', authStore.uid), likeMap.value)
-  }
-}
 
 const resizeModal = (image: string) => {
   modalWidth.value =
@@ -139,17 +113,17 @@ const resizeModal = (image: string) => {
 
 <template lang="pug">
 div(class="my-8 grid gap-4 xl:grid-cols-3 md:grid-cols-2")
-  div(v-for="[key, gallery] in Array.from(galleries)" :key="key" class="picture m-auto")
+  div(v-for="(canvas, index) of authStore.shareCanvases" :key="index" class="picture m-auto")
     div(class="flex items-center relative")
-      label(for="modal" style="width: 320px; height: 180px" @click="resizeModal(gallery.image)")
-        img(:src="gallery.image"  class="rounded-lg border border-gray-500")
-      svg(class="like absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(gallery.isLike)" style="right: 10px; bottom: 10px" @click="clickLike(gallery.id)")
+      label(for="modal" style="width: 320px; height: 180px" @click="resizeModal(canvas.image)")
+        img(:src="canvas.image"  class="rounded-lg border border-gray-500")
+      svg(class="like absolute cursor-pointer" viewBox="0 0 32 29.6" :style="likeColor(canvas.isLike)" style="right: 10px; bottom: 10px" @click="authStore.clickLike(canvas.id)")
         path(d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z")
     div(class="flex flex-col mt-1 ml-2")
-      div(class="text-midnightBlue") {{ gallery.title }}
-      router-link(:to="{name: 'Users', params: { user_id: gallery.uid }}" class="flex items-center mt-1") 
-        img(:src="gallery.avator" class="tiny-avatar ring-2 bg-gray-200 ring-gray-700 ")
-        div(class="text-midnightBlue text-sm pl-2") {{ gallery.name }}
+      div(class="text-midnightBlue") {{ canvas.title }}
+      router-link(:to="{name: 'Users', params: { user_id: canvas.uid }}" class="flex items-center mt-1") 
+        img(:src="canvas.avator" class="tiny-avatar ring-2 bg-gray-200 ring-gray-700 ")
+        div(class="text-midnightBlue text-sm pl-2") {{ canvas.name }}
 
 input(id="modal" type="checkbox" class="modal-toggle")
 label(for="modal" class="modal cursor-pointer")
