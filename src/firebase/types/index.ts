@@ -36,7 +36,7 @@ export interface UploadedImage {
   loaded: boolean // 画像が読み込まれたか
 }
 
-// shareCanvases
+// ShareCanvas
 export interface ShareCanvas {
   title: string
   id: string
@@ -49,14 +49,14 @@ export interface ShareCanvas {
   isLike: boolean
 }
 
-// galleryUser
-export interface GalleryUser {
-  name: string
-  icon: string
-}
-
-// heart
+// Like
 export interface Like {
   isLike: boolean
   addedAt: Timestamp
+}
+
+// GalleryUser
+export interface GalleryUser {
+  name: string
+  icon: string
 }
