@@ -1,6 +1,6 @@
-/* eslint-disable import/no-cycle */
-import { defineStore } from 'pinia'
-import { forceToHomePage, forceToWorksPage } from '@/router/index'
+/* eslint-disable import/no-cycle, @typescript-eslint/consistent-type-assertions */
+import { defineStore, getActivePinia } from 'pinia'
+import { forceToHomePage } from '@/router/index'
 import { db } from '@/firebase/index'
 import {
   getAuth,
@@ -11,8 +11,9 @@ import {
   User,
   AuthError,
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore'
 import Icon from '@/assets/user_icon.png'
+import type { Like, ShareCanvas } from '@/firebase/types/index'
 
 const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -23,6 +24,8 @@ const useAuthStore = defineStore('auth', {
     isLoggedIn: false,
     isAuthError: false,
     authErrorMessage: '' as string | undefined,
+    likeMap: {} as Record<string, Like>,
+    shareCanvases: {} as Record<string, ShareCanvas>,
   }),
   actions: {
     signupEmail(email: string, password: string, name: string) {
@@ -41,8 +44,6 @@ const useAuthStore = defineStore('auth', {
                 icon: '',
                 uid: user.uid,
               })
-              await this.setUser(user)
-              await forceToWorksPage()
             })
             .catch((error) => {
               console.log(error.message)
@@ -54,19 +55,25 @@ const useAuthStore = defineStore('auth', {
     },
     loginEmail(email: string, password: string) {
       const auth = getAuth()
-      signInWithEmailAndPassword(auth, email, password)
-        .then(async () => {
-          await forceToWorksPage()
-        })
-        .catch((error) => {
-          this.authError(error)
-        })
+      signInWithEmailAndPassword(auth, email, password).catch((error) => {
+        this.authError(error)
+      })
     },
     logout() {
       const auth = getAuth()
       signOut(auth)
         .then(async () => {
-          this.$reset()
+          //  piniaのstoreを全て削除
+          const activePinia = getActivePinia()
+          if (activePinia != null) {
+            Object.entries(activePinia.state.value).forEach(
+              ([storeName, state]) => {
+                const storeDefinition = defineStore(storeName, state)
+                const store = storeDefinition(activePinia)
+                store.$reset()
+              },
+            )
+          }
           await forceToHomePage()
         })
         .catch((error) => {
@@ -84,10 +91,10 @@ const useAuthStore = defineStore('auth', {
     },
 
     async setUser(user: User) {
+      this.isLoggedIn = true
       this.uid = user.uid
       this.name = user.displayName ?? ''
       this.icon = user.photoURL ?? Icon
-      this.isLoggedIn = true
       // get profile
       const userDocRef = doc(db, 'users', this.uid)
       const userDocSnap = await getDoc(userDocRef)
@@ -100,6 +107,31 @@ const useAuthStore = defineStore('auth', {
             icon: this.icon,
           })
         }
+      }
+    },
+
+    async setLikeMap() {
+      await getDoc(doc(db, 'likes', this.uid))
+        .then((likeDocSnap) => {
+          if (likeDocSnap.exists()) {
+            this.likeMap = likeDocSnap.data()
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+
+    async clickLike(galleryId: string) {
+      const shareCanvas = this.shareCanvases[galleryId]
+      if (shareCanvas !== undefined) {
+        shareCanvas.isLike = !shareCanvas?.isLike
+        this.shareCanvases[galleryId].isLike = shareCanvas.isLike
+        this.likeMap[galleryId] = {
+          isLike: shareCanvas.isLike,
+          addedAt: Timestamp.now(),
+        }
+        await setDoc(doc(db, 'likes', this.uid), this.likeMap)
       }
     },
   },

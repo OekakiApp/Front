@@ -35,3 +35,28 @@ export interface UploadedImage {
   countOnCanvas: number // 使用されている枚数
   loaded: boolean // 画像が読み込まれたか
 }
+
+// ShareCanvas
+export interface ShareCanvas {
+  title: string
+  id: string
+  uid: string
+  image: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
+  name: string
+  avator: string
+  isLike: boolean
+}
+
+// Like
+export interface Like {
+  isLike: boolean
+  addedAt: Timestamp
+}
+
+// GalleryUser
+export interface GalleryUser {
+  name: string
+  icon: string
+}
