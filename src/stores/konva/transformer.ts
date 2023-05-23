@@ -5,7 +5,7 @@ import useStoreMode from '@/stores/mode'
 import useStoreText from '@/stores/konva/text'
 import useStoreImage from '@/stores/konva/image'
 import useStoreHistory from '@/stores/konva/history'
-import useStoreLine from './line'
+import useStoreLine from '@/stores/konva/line'
 
 const useStoreTransformer = defineStore({
   id: 'transformer',
