@@ -55,6 +55,7 @@ const useStoreLine = defineStore({
         const stage = e.target.getStage()
         if (stage !== null) {
           const pos = stage.getRelativePointerPosition()
+          const absPos = stage.getAbsolutePosition()
           const points = {
             id: nanoid(),
             name: 'line',
@@ -64,6 +65,13 @@ const useStoreLine = defineStore({
             hitStrokeWidth: this.strokeWidth + 4,
             dash: this.dash,
             dashEnabled: this.dashEnabled,
+            x: absPos.x,
+            y: absPos.y,
+            width: this.strokeWidth,
+            height: this.strokeWidth,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
           }
           this.lines = [...this.lines, points]
         }
