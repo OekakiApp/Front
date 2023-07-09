@@ -1,37 +1,25 @@
 <script setup lang="ts">
+import { reactive, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
 import LineStyleSelect from '@/components/ToolBar/LineStyleSelect.vue'
 import ColorButton from '@/components/ToolBar/ColorButton.vue'
 import StrokeWidthRange from '@/components/ToolBar/StrokeWidthRange.vue'
 import FontSizeSelect from '@/components/ToolBar/FontSizeSelect.vue'
 import FontFamilySelect from '@/components/ToolBar/FontFamilySelect.vue'
 import TextAlignmentSelect from '@/components/ToolBar/TextAlignmentSelect.vue'
+import UserImageList from '@/components/ToolBar/UserImageList.vue'
 import useStoreMode from '@/stores/mode'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText from '@/stores/konva/text'
-import useStoreImage from '@/stores/konva/image'
-
-interface Color {
-  name: string
-  type: 'color-button' | 'color-picker'
-  color: string
-  style?: {
-    'background-color': string
-  }
-  onClick: () => void
-}
+import type { Color } from '@/types/index'
 
 const { mode } = storeToRefs(useStoreMode())
-const { uploadedImages } = storeToRefs(useStoreImage())
-const { setLineColor } = useStoreLine()
+const { drawColor, strokeWidth, isTouchActive } = storeToRefs(useStoreLine())
+const { setLineColor, setStrokeWidth, toggleIsTouchActive } = useStoreLine()
+const { fill } = storeToRefs(useStoreText())
 const { setTextOptionValue, setTextColor } = useStoreText()
-const { addImageList, removeImage, setDragUrl } = useStoreImage()
 
-const activeLineColorIndex = ref<number>(0)
-const activeTextColorIndex = ref<number>(0)
-
-const lineColors: Color[] = [
+const lineColors: Color[] = reactive([
   {
     name: 'Black',
     type: 'color-button',
@@ -91,13 +79,13 @@ const lineColors: Color[] = [
   {
     name: 'Custom',
     type: 'color-picker',
-    color: 'rainbow',
+    color: '#000000',
     // 便宜上何も設定しない関数を挿入する
     onClick: () => setLineColor(''),
   },
-]
+])
 
-const textColors: Color[] = [
+const textColors: Color[] = reactive([
   {
     name: 'Black',
     type: 'color-button',
@@ -181,49 +169,87 @@ const textColors: Color[] = [
   {
     name: 'Custom',
     type: 'color-picker',
-    color: 'rainbow',
+    color: '#000000',
     // 便宜上何も設定しない関数を挿入する
     onClick: () => setLineColor(''),
   },
-]
+])
+
+// default line colors
+const defaultLineColors = computed(() => {
+  const defaultList = []
+  // eslint-disable-next-line no-restricted-syntax
+  for (const color of lineColors) {
+    if (color.type === 'color-button') {
+      defaultList.push(color.color)
+    }
+  }
+  return defaultList
+})
+// default text colors
+const defaultTextColors = computed(() => {
+  const defaultList = []
+  // eslint-disable-next-line no-restricted-syntax
+  for (const color of textColors) {
+    if (color.type === 'color-button') {
+      defaultList.push(color.color)
+    }
+  }
+  return defaultList
+})
+
+// storeのline colorの変更を監視
+watch(drawColor, () => {
+  // default colorにない=color pickerによる変更
+  // color pickerのcolorプロパティを更新
+  if (!defaultLineColors.value.includes(drawColor.value)) {
+    lineColors[lineColors.length - 1].color = drawColor.value
+  }
+})
+// storeのtext colorの変更を監視
+watch(fill, () => {
+  // default colorにない=color pickerによる変更
+  // color pickerのcolorプロパティを更新
+  if (!defaultTextColors.value.includes(fill.value)) {
+    textColors[textColors.length - 1].color = fill.value
+  }
+})
+
+// pen eraser text style
+const subToolbarStyle =
+  'flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 h-16'
+
+// image style
+const imageSubToolbarStyle =
+  'flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-sm'
 </script>
 
 <template lang="pug">
 //- pen
-div(v-if="mode === 'pen'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
+div(v-show="mode === 'pen'" :class="subToolbarStyle")
   LineStyleSelect
+  //- Not use Hand
+  div(class="px-2")
+    button(type="button" data-tip="Touch disabled" class="tooltip flex justify-center items-center w-8 h-8 rounded-full" :class="{'hover:bg-slate-300': isTouchActive, 'bg-slate-300': !isTouchActive}" @click="toggleIsTouchActive")
+      span(class="material-symbols-outlined") do_not_touch
   ColorButton(
-    v-for="(color, index) in lineColors"
-    :key="color.color" :color="color" :index="index"
-    :active-index="activeLineColorIndex"
-    @toggle-button-active="(index:number) => activeLineColorIndex = index"
-    @toggle-picker-active="(index:number, color: string) => {activeLineColorIndex = index;setLineColor(color)}")
+    v-for="color in lineColors"
+    :key="color.name" :color="color"
+    :colors="lineColors" :store-color="drawColor" @toggle-picker-active="(color: string) => {setLineColor(color)}")
   div(class="pl-2")
-    StrokeWidthRange
-//- eraser
-div(
-  v-else-if="mode === 'eraser'"
-  class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
-  StrokeWidthRange
+    StrokeWidthRange(:stroke-width="strokeWidth" :set-stroke-width="setStrokeWidth")
 //- text
-div(v-else-if="mode === 'text'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-3 px-2 absolute -top-3/4 max-w-screen-md h-16")
+div(v-show="mode === 'text'" :class="subToolbarStyle")
   FontSizeSelect
   FontFamilySelect
   TextAlignmentSelect
   ColorButton(
-    v-for="(color, index) in textColors"
-    :key="color.color" :color="color"
-    :index="index" :active-index="activeTextColorIndex"
-    @toggle-button-active="(index:number) => activeTextColorIndex = index"
-    @toggle-picker-active="(index:number, color:string) =>{activeTextColorIndex = index;setTextColor(color);setTextOptionValue('textFillColor', color)}")
+    v-for="color in textColors"
+    :key="color.name" :color="color"
+    :colors="textColors"
+    :store-color="fill"
+    @toggle-picker-active="(color:string) => {setTextColor(color);setTextOptionValue('textFillColor', color)}")
 //- image
-div(v-else-if="mode === 'image'" class="flex justify-center items-center bg-gray-200 rounded-lg border border-gray-400 shadow-md pt-2 pb-6 px-2 absolute bottom-3/4 max-w-screen-md")
-  div(class="flex items-end h-full")
-    input(type="file" class="bg-white file-input file-input-bordered file-input-sm max-w-xs rounded-lg" accept=".png, .jpeg, .jpg" @change="addImageList")
-    div(v-if="uploadedImages.length !== 0" class="bg-slate-50 flex-1 grid grid-cols-3 max-h-72 overflow-y-scroll rounded-lg ml-2")
-      //- image list
-      div(v-for="image of uploadedImages" :key="image.id" class="relative")
-        button(type="button" class="flex justify-center items-center absolute top-0 right-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 m-1" @click="() => {removeImage(image.id);}")
-          span(class="font-bold") ✕
-        img(:src="image.imgSrc" class="w-full aspect-auto col-span-1 p-2 hover:cursor-grab active:cursor-grabbing" @dragstart="(e) => {setDragUrl(e);}")
+div(v-show="mode === 'image'" :class="imageSubToolbarStyle")
+  UserImageList
 </template>

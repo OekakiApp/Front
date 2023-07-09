@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
+import type { UndoRedoArray } from '@/types/index'
 
-const { handleUndo, handleRedo } = useStoreStage()
+const { handleUndo, handleRedo } = useStoreHistory()
 
-const undoRedoArray = reactive([
+const ua = window.navigator.userAgent.toLowerCase()
+const isWinOS = ua.indexOf('windows nt') !== -1
+
+const undoRedoArray: UndoRedoArray[] = reactive([
   {
     icon: 'undo',
-    tooltip: 'Undo : Ctrl + Z',
+    tooltip: `Undo : ${isWinOS ? 'Ctrl + Z' : 'Cmd + Z'}`,
     onClick: () => {
       handleUndo()
     },
   },
   {
     icon: 'redo',
-    tooltip: 'Redo : Ctrl + Y',
+    tooltip: `Redo : ${isWinOS ? 'Ctrl + Y' : 'Cmd + Shift + Z'}`,
     onClick: () => {
       handleRedo()
     },

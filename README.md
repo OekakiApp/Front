@@ -1,37 +1,51 @@
-# Graimer
+<h1 align="center">
+  Graimer <img width="30px" height="30px" src="./public/favicon.ico" />
+</h1>
+  
+<h3 align="center">A Henai-Map app, <br> built with Vue, TypeScript, Firebase</h3>
+<p align="center">https://graimer.netlify.app/</p>
+<br>
 
-偏愛マップを作成するツールです。
-ユーザー登録をしていただくと、キャンバスページに遷移します。
-ペン、画像、テキストを打ち込んで自由に偏愛マップを作成いただけます。
-作った偏愛マップは画像データとしてダウンロードしていただくことが可能です。
+<div align="center">
+  <img src="./uploads/cover.png" />
+</div>
 
-## 技術スタック
+## About
 
-### フロントエンド
+<p>
+Graimer is an app that can be used to a henai-map.
+<br>
+You can draw lines, write texts and put uploaded images on a map.
+<br>
+The map you made can be downloaded for PNG.
+</p>
+  
+## Technologies
+
+### FrontEnd
 
 - Vue3
 - TypeScript
+- Vue konva v3
 - tailwindCSS
 - diasyUI
-- konva
-- Vue konva
 
-### 各種 Linter など
+### BackEnd-Database
+
+- Firebase v9
+
+### Linters
 
 - ESLint
 - Prettier
 - Commit Lint
 - husky
 
-### バックエンド、データベース
-
-- FireBase
-
-### テストツール
+### Test Tools
 
 - Jest
 
-### ビルドツール
+### Build Tools
 
 - Vite
 
@@ -39,12 +53,6 @@
 
 - Github Actions
 
-### ホスティングサービス
+### Hosting
 
-- Github Pages
-
-## URL
-
-下記からお試しください ↓
-
-https://oekakiapp.github.io/Front/
+- Netlify

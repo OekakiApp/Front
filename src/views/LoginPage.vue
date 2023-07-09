@@ -2,16 +2,11 @@
 import { reactive } from 'vue'
 import router from '@/router/index'
 import useAuthStore from '@/stores/auth'
-// import { InputTextType } from '@/types/index'
-interface InputTextType {
-  icon: string
-  inputType: string
-  placeholder: string
-  text: string
-}
+import type { LoginInputTextType } from '@/types/index'
+
 const authStore = useAuthStore()
 
-const inputTexts: InputTextType[] = reactive([
+const inputTexts: LoginInputTextType[] = reactive([
   {
     icon: 'mail',
     inputType: 'email',

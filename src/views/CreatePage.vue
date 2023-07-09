@@ -3,57 +3,57 @@ import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, storage } from '@/firebase/index'
-import { doc, collection, addDoc, updateDoc } from 'firebase/firestore'
+import { doc, Timestamp, updateDoc, setDoc } from 'firebase/firestore'
 import {
   ref as storageRef,
-  uploadBytesResumable,
   getDownloadURL,
-  updateMetadata,
+  uploadString,
 } from 'firebase/storage'
 import ToolBar from '@/components/ToolBar.vue'
 import UserCursor from '@/components/UserCursor.vue'
 import useStoreMode from '@/stores/mode'
-import useStoreStage from '@/stores/konva/stage'
 import useStoreLine from '@/stores/konva/line'
 import useStoreText, { fontFamilyList } from '@/stores/konva/text'
 import useAuthStore from '@/stores/auth'
+import useStoreCanvas from '@/stores/canvas'
 import useStoreImage from '@/stores/konva/image'
 import useStorePointer from '@/stores/konva/pointer'
 import useStoreTransformer from '@/stores/konva/transformer'
-import Konva from 'konva'
+import useStoreUserImage from '@/stores/userImage'
+import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
 import WebFont from 'webfontloader'
 import _ from 'lodash'
-
+import type { SaveState } from '@/types/index'
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-type KonvaEventObject<T> = Konva.KonvaEventObject<T>
-const StorageReference = storageRef(storage, '')
+import Konva from 'konva'
 
+// useStore start
 const { mode } = storeToRefs(useStoreMode())
-const { configKonva, historyStep, canvasHistory } = storeToRefs(useStoreStage())
+const { canvasHistory } = storeToRefs(useStoreHistory())
 const { lines } = storeToRefs(useStoreLine())
-const { texts, isEditing, isFontLoaded } = storeToRefs(useStoreText())
-const { canvases } = storeToRefs(useAuthStore())
-const { konvaImages } = storeToRefs(useStoreImage())
-const { configShapeTransformer, selectedShapeId } = storeToRefs(
-  useStoreTransformer(),
-)
+const { texts, isEditing } = storeToRefs(useStoreText())
+const { uid } = storeToRefs(useAuthStore())
+const { canvases } = storeToRefs(useStoreCanvas())
+const { konvaImages, firstKonvaImages } = storeToRefs(useStoreImage())
+const { configShapeTransformer } = storeToRefs(useStoreTransformer())
+const { configKonva } = storeToRefs(useStoreStage())
 
 const { setMode } = useStoreMode()
-const { fitStageIntoParentContainer } = useStoreStage()
 const {
   handleLineMouseDown,
   handleLineMouseMove,
   handleLineMouseUp,
   handleLineMouseLeave,
-  setGlobalCompositeOperation,
 } = useStoreLine()
 
-const { createNewTextNode, toggleEdit, handleTextDragEnd } = useStoreText()
+const { createNewTextNode, toggleEdit } = useStoreText()
 
 const {
   handleMouseDownTransformer,
   handleTransform,
   handleTransformEnd,
+  handleDragEnd,
   handleKeyDownSelectedNodeDelete,
 } = useStoreTransformer()
 
@@ -67,21 +67,42 @@ const {
   handlePointerMouseUp,
 } = useStorePointer()
 
-const { setImages, handleImageDragEnd } = useStoreImage()
+const {
+  changeKonvaImagesToFirestoreCanvasImages,
+  changeFirestoreCanvasImagesToKonvaImages,
+  setImagesOnCanvas,
+} = useStoreImage()
 
-const { setCanvas } = useAuthStore()
+const { saveImageCountToFirebase } = useStoreUserImage()
+const { fitStageIntoParentContainer } = useStoreStage()
+const { handleRedo, handleUndo } = useStoreHistory()
+// useStore end
 
 const stageParentDiv = ref()
 const stage = ref()
 const transformer = ref()
-const usersId = localStorage.getItem('usersId')
-const canvasId = ref(useRoute().params.canvas_id)
+const canvasId = ref(useRoute().params.canvas_id as string)
+// use when save canvas
 const router = useRouter()
-
-type SaveState = 'normal' | 'loading' | 'done'
-
 const saveState = ref<SaveState>('normal')
+// 3 point reader
+const isShare = ref(false)
+const pointLeaderOpen = ref(false)
+// os userArgent
+const ua = window.navigator.userAgent.toLocaleLowerCase()
+const isWinOS = ua.indexOf('windows nt') !== -1
+const isMacOS = ua.indexOf('mac os x') !== -1
+const isIPadOS =
+  ua.indexOf('ipad') !== -1 ||
+  (ua.indexOf('macintosh') !== -1 && 'ontouchend' in document)
 // const selectionRectangle = ref()
+
+const showDoneBtn = () => {
+  saveState.value = 'done'
+  setTimeout(() => {
+    saveState.value = 'normal'
+  }, 3000)
+}
 
 const inputText = reactive({
   inputType: 'text',
@@ -102,27 +123,52 @@ const blurInput = () => {
 const changeModeByShortCut = (e: KeyboardEvent) => {
   // テキスト編集中はショートカット無効
   if (isEditing.value || inputText.isEditing) return
-  if (e.key === 'h') setMode('hand')
-  else if (e.key === 'v') setMode('select')
-  else if (e.key === 'p' || e.key === 'm') {
+  // pen
+  if (e.key === 'p') {
     setMode('pen')
-    setGlobalCompositeOperation()
-    configShapeTransformer.value.nodes = []
-    selectedShapeId.value = ''
-  } else if (e.shiftKey && e.key === 'Delete') {
+    useStoreTransformer().$reset()
+  }
+  // eraser
+  else if (e.shiftKey && e.key === 'Backspace') {
     setMode('eraser')
-    setGlobalCompositeOperation()
-    configShapeTransformer.value.nodes = []
-    selectedShapeId.value = ''
-  } else if (e.key === 't') setMode('text')
-  else if (e.key === 's') setMode('sticky')
+    useStoreTransformer().$reset()
+  }
+  // text
+  else if (e.key === 't') setMode('text')
+  // image
   else if (e.key === 'i') setMode('image')
   // undo
+  else if (
+    (isWinOS && e.ctrlKey && e.key === 'z') ||
+    ((isMacOS || isIPadOS) && e.metaKey && e.key === 'z')
+  ) {
+    handleUndo()
+  }
   // redo
+  else if (
+    (isWinOS && e.ctrlKey && e.key === 'y') ||
+    ((isMacOS || isIPadOS) && e.metaKey && e.shiftKey && e.key === 'z')
+  ) {
+    handleRedo()
+  }
+}
+
+// CreatePageに関わるstoreを初期化
+const initializeCanvas = () => {
+  useStoreMode().$reset()
+  useStoreLine().$reset()
+  useStoreText().$reset()
+  useStoreImage().$reset()
+  useStoreHistory().$reset()
+  useStoreTransformer().$reset()
 }
 
 onMounted(() => {
+  // 初期化
+  initializeCanvas()
+  // Stageのリサイズ
   fitStageIntoParentContainer(stageParentDiv.value)
+
   window.addEventListener('resize', () =>
     fitStageIntoParentContainer(stageParentDiv.value),
   )
@@ -131,53 +177,43 @@ onMounted(() => {
     handleKeyDownSelectedNodeDelete(e)
   })
 
-  // 初期化
-  mode.value = 'none'
-  lines.value = []
-  texts.value = []
-  konvaImages.value = []
-  // 履歴初期化
-  canvasHistory.value = [{ lines: [], texts: [], images: [] }]
-  historyStep.value = 0
-
-  const canvasVal = canvasId.value
-  // 途中からの場合
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
-    const canvas = canvases.value[canvasVal]
+  // キャンバスが既にある場合
+  const canvasID = canvasId.value
+  if (canvases.value[canvasID] !== undefined) {
+    const canvas = canvases.value[canvasID]
+    // キャンバスの各プロパティをセット
     lines.value = _.cloneDeep(canvas.lines)
     texts.value = _.cloneDeep(canvas.texts)
-    konvaImages.value = _.cloneDeep(canvas.konvaImages ?? [])
+    konvaImages.value = changeFirestoreCanvasImagesToKonvaImages(
+      canvas.konvaImages,
+    )
     inputText.text = canvas.name
+    isShare.value = canvas.isShare === undefined ? false : canvas.isShare
     // 履歴をセット
     canvasHistory.value = [
       {
         lines: _.cloneDeep(canvas.lines),
         texts: _.cloneDeep(canvas.texts),
-        images: _.cloneDeep(canvas.konvaImages ?? []),
+        images: _.cloneDeep(konvaImages.value),
       },
     ]
-    historyStep.value = 0
+    // 編集開始時のkonvaImagesをセット(画像の使用状況追跡のため)
+    firstKonvaImages.value = _.cloneDeep(konvaImages.value)
   }
 
-  // Font読み込み
-  if (!isFontLoaded.value) {
-    WebFont.load({
-      google: {
-        families: fontFamilyList,
-      },
-      loading: () => {
-        console.log('font is loading')
-      },
-      // 全てWebフォントの読み込みが完了したときに発火
-      active: () => {
-        isFontLoaded.value = true
-        console.log('fonts is loaded!')
-      },
-    })
-  }
+  // Font読み込み(キャンバスのセット後に読み込む必要あり)
+  WebFont.load({
+    google: {
+      families: fontFamilyList,
+    },
+    loading: () => {
+      console.log('font is loading')
+    },
+    // 全てWebフォントの読み込みが完了したときに発火
+    active: () => {
+      console.log('fonts is loaded!')
+    },
+  })
 })
 
 onUnmounted(() => {
@@ -188,11 +224,9 @@ onUnmounted(() => {
     changeModeByShortCut(e)
     handleKeyDownSelectedNodeDelete(e)
   })
-  // 選択を解除
-  selectedShapeId.value = ''
-  configShapeTransformer.value.nodes = []
 })
 
+// セーブ中は他のページに遷移できない
 router.beforeEach(() => {
   if (saveState.value === 'loading') {
     return false
@@ -200,119 +234,93 @@ router.beforeEach(() => {
   return true
 })
 
-async function saveCanvas(): Promise<void> {
+// キャンバスの保存
+const saveCanvas = async (): Promise<void> => {
   // 選択を解除
-  selectedShapeId.value = ''
-  configShapeTransformer.value.nodes = []
-
+  useStoreTransformer().$reset()
   // btn loadingに変更
   saveState.value = 'loading'
 
   // 途中からの場合
-  const canvasVal = canvasId.value
-  if (
-    typeof canvasVal === 'string' &&
-    canvases.value[canvasVal] !== undefined
-  ) {
-    await updateDoc(doc(db, 'canvas', canvasVal), {
+  const canvasID = canvasId.value
+  if (canvases.value[canvasID] !== undefined) {
+    await updateDoc(doc(db, 'canvas', canvasID), {
       name: inputText.text === '' ? 'タイトル' : inputText.text,
       lines: lines.value,
       texts: texts.value,
-      // konvaImages: konvaImages.value,
+      konvaImages: changeKonvaImagesToFirestoreCanvasImages(konvaImages.value),
+      // createdAtの有無を判定
+      createdAt:
+        canvases.value[canvasID].createdAt === undefined
+          ? Timestamp.now()
+          : canvases.value[canvasID].createdAt,
+      updatedAt: Timestamp.now(),
+      isShare: isShare.value,
     })
   }
   // 新規の場合
   else {
-    const canvasRef = await addDoc(collection(db, 'canvas'), {
+    await setDoc(doc(db, 'canvas', canvasID), {
       name: inputText.text === '' ? 'タイトル' : inputText.text,
       lines: lines.value,
       texts: texts.value,
-      // konvaImages: konvaImages.value,
-      uid: usersId,
+      konvaImages: changeKonvaImagesToFirestoreCanvasImages(konvaImages.value),
+      uid: uid.value,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      isShare: isShare.value,
     })
-    canvasId.value = canvasRef.id
   }
-
-  saveImage()
+  // 画像の使用枚数の更新
+  saveImageCountToFirebase(firstKonvaImages.value, konvaImages.value)
+  // 保存時点でのkonvaImagesをセット(画像の使用状況追跡のため)
+  firstKonvaImages.value = _.cloneDeep(konvaImages.value)
+  // サムネイルを生成・保存
+  generateAndSaveThumbnail()
 }
 
-const saveImage = () => {
-  const canvasVal = canvasId.value
-  const file = stage.value.getStage().toDataURL({
+// 共有トグルボタン切り替えで発火
+const saveIsShare = async (): Promise<void> => {
+  isShare.value = !isShare.value
+  const canvasID = canvasId.value
+  if (canvases.value[canvasID] !== undefined) {
+    await updateDoc(doc(db, 'canvas', canvasID), {
+      updatedAt: Timestamp.now(),
+      isShare: isShare.value,
+    })
+  }
+}
+
+// サムネイルを生成し、storageにアップロード
+// キャンバスのサムネイルとしてfiresotreに保存
+const generateAndSaveThumbnail = () => {
+  // キャンバスからData URL stringを取得
+  const dataURLString: string = stage.value.getStage().toDataURL({
     quality: 1,
     pixelRatio: 2,
     mimeType: 'image/png',
   })
-
-  uploadURI(file, `${canvasVal}.png`)
-}
-
-const uploadURI = async (uri: string, name: string) => {
-  const blob = await (await fetch(uri)).blob()
-  const file = new File([blob], name)
-
-  const fileRef = storageRef(storage, `canvas-image/${name}`)
-  const uploadTask = uploadBytesResumable(fileRef, file)
-
-  uploadTask.on(
-    'state_changed',
+  const thumbnailName = `${canvasId.value}.png`
+  // 保存先の参照を生成(firebase storage)
+  const fileRef = storageRef(storage, `canvas-image/${thumbnailName}`)
+  const metadata = {
+    contentType: 'image/png',
+  }
+  // 文字列(Data URL string)から画像をアップロード
+  uploadString(fileRef, dataURLString, 'data_url', metadata).then(
     (snapshot) => {
-      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-      console.log(`Upload is ${progress}% done`)
-      switch (snapshot.state) {
-        case 'paused':
-          console.log('Upload is paused')
-          break
-        case 'running':
-          console.log('Upload is running')
-          break
-        // no default
-      }
-    },
-    (error) => {
-      console.log(error)
-    },
-    () => {
-      const canvasVal = canvasId.value
-      getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-        if (typeof canvasVal === 'string') {
-          await updateDoc(doc(db, 'canvas', canvasVal), {
-            image: downloadURL,
-          })
-          await updateImageMetadata(fileRef)
-
-          // store 更新
-          if (typeof canvasVal === 'string') {
-            await setCanvas(canvasVal)
-          }
-
-          // firebase,storeの更新終了
-          showDoneBtn()
-        }
+      console.log('Uploaded a data_url string!')
+      // storageの画像URLをダウンロード
+      getDownloadURL(snapshot.ref).then(async (downloadURL) => {
+        await updateDoc(doc(db, 'canvas', canvasId.value), {
+          image: downloadURL,
+        })
+        // firebase,storageの更新終了
+        // btn done -> normal
+        showDoneBtn()
       })
     },
   )
-}
-
-const showDoneBtn = () => {
-  saveState.value = 'done'
-  setTimeout(() => {
-    saveState.value = 'normal'
-  }, 3000)
-}
-
-const updateImageMetadata = async (fileRef: typeof StorageReference) => {
-  const newMetadata = {
-    contentType: 'image/png',
-  }
-
-  await updateMetadata(fileRef, newMetadata)
-    .then((metadata) => {
-      console.log(metadata)
-    })
-    .catch((error) => {
-      console.log(error)
-    })
 }
 </script>
 
@@ -330,60 +338,80 @@ div(class="flex justify-center items-center my-4")
   button(v-show="saveState === 'done'" type="button" class="flex items-center focus:outline-none text-white bg-seaPink hover:bg-red-400 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-4 py-1.5")
     span(class="material-symbols-outlined") done
 
+  div(class="relative ml-8")
+    button(class="three-dot-leader hover:opacity-80" type="button" @click="pointLeaderOpen = !pointLeaderOpen")
+        span(class="dot")
+    button(v-show="pointLeaderOpen" tabindex="-1" class="z-10 fixed inset-0 h-full w-full cursor-default" @click="pointLeaderOpen = false")
+    div(v-show="pointLeaderOpen"  class="absolute z-10 mt-2 py-2 w-max bg-white rounded-lg shadow-xl")
+      div(class="flex items-center cursor-auto px-4 py-2 text-gray-800") 
+        span(class="material-symbols-outlined mr-2" style='color:#2F90EA') open_in_new
+        div(class="mr-2 text-lg") 共有
+        label(class="relative inline-flex items-center cursor-pointer")
+          input(:checked="isShare" type="checkbox" class="sr-only peer" @click="saveIsShare()")
+          div(class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300  rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600")
+      label(htmlFor="reset-modal"  class="flex items-center cursor-pointer px-4 py-2 text-gray-800") 
+        span(class="material-symbols-outlined mr-2") restart_alt
+        div(class="mr-2 text-lg") リセット
+
 
 div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
-  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImages(e, stage)}" @dragover="(e) => {e.preventDefault();}")
+  div(ref="stageParentDiv" class="bg-white w-full" @drop="(e) => {setImagesOnCanvas(e, stage)}" @dragover.prevent)
     v-stage(
       ref="stage"
-      :draggable="mode === 'hand'"
       :config="configKonva"
-      @mouseenter="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseEnter(e);}"
-      @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
-      @mousedown="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);handlePointerMouseEnter(e);}"
-      @touchstart="(e: KonvaEventObject<TouchEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e);}"
-      @mousemove="(e: KonvaEventObject<MouseEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
-      @touchmove="(e: KonvaEventObject<TouchEvent>) => {handleLineMouseMove(e);}"
-      @mouseup="() => {handleLineMouseUp();}"
-      @touchend="() => {handleLineMouseUp();}"
-      @dblclick="(e: KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
-      @dbltap="(e: KonvaEventObject<TouchEvent>) => {createNewTextNode(e);}"
+      @mouseenter="(e: Konva.KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
+      @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
+      @mousedown="(e: Konva.KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
+      @pointerdown="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e, transformer);}"
+      @pointermove="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
+      @pointerup="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseUp(e);}"
+      @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
+      @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => {createNewTextNode(e);}"
       )
       v-layer
         v-rect(:config="{name: 'background-rect', x: 0, y: 0, width: configKonva.size.width / configKonva.scale.x, height: configKonva.size.height / configKonva.scale.y, fill: '#FFFFFF'}")
         v-image(
           v-for="image in konvaImages"
           :key="image.id"
-          :draggable="true"
+          :draggable="mode === 'none'"
           :config="image"
-          @dragend="(e: KonvaEventObject<DragEvent>) => {handleImageDragEnd(e);}"
-          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
-          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
-          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
-          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
-          @transformend="handleTransformEnd"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => {handleDragEnd(e);}"
+          @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e, transformer)"
+          @transformend="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransformEnd(e, transformer)"
         )
         v-text(
           v-for="text in texts"
           :key="text.id"
           :config="text"
-          @dragend="(e: KonvaEventObject<DragEvent>) => handleTextDragEnd(e)"
-          @mouseover="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
-          @mousedown="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
-          @mouseup="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
-          @mouseleave="(e: KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: KonvaEventObject<MouseEvent>) => handleTransform(e)"
-          @transformend="handleTransformEnd"
-          @dblclick="(e: KonvaEventObject<MouseEvent>) => toggleEdit(e, transformer, stageParentDiv)"
-          @dbltap="(e: KonvaEventObject<TouchEvent>) => toggleEdit(e, transformer, stageParentDiv)"
+          :draggable="mode === 'text'"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => handleDragEnd(e)"
+          @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent>) => handleTransform(e, transformer)"
+          @transformend="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransformEnd(e, transformer)"
+          @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => toggleEdit(e)"
+          @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => toggleEdit(e)"
           )
-      v-layer
         v-line(
           v-for="line in lines"
           :key="line.id"
-          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', globalCompositeOperation: line.globalCompositeOperation}"
+          :draggable="mode === 'none'"
+          :config="{id: line.id, name: line.name, stroke:line.color, points:line.points, strokeWidth:line.strokeWidth, dash: line.dash, dashEnabled: line.dashEnabled, tension:0.1, lineCap:'round', lineJoin:'round', hitStrokeWidth: line.hitStrokeWidth, shadowForStrokeEnabled: false, x: line.x, y: line.y, width: line.width, height: line.height, rotation: line.rotation, scaleX: line.scaleX, scaleY: line.scaleY}"
+          @dragend="(e: Konva.KonvaEventObject<DragEvent>) => {handleDragEnd(e);}"
+          @mouseover="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseOver(e);}"
+          @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
+          @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
+          @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e, transformer)"
+          @transformend="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransformEnd(e, transformer)"
           )
-        //- pen eraser時のcursor
+        //- pen cursor
         UserCursor
         //- v-rect(
         //- ref="selectionRectangle"
@@ -392,4 +420,63 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
         v-transformer(ref="transformer" :config="configShapeTransformer")
 div(class="container")
   ToolBar(:stage="stage")
+
+input(id="reset-modal" type="checkbox" className="modal-toggle")
+div(className="modal")
+  div(className="modal-box max-w-none w-auto")
+    h3(className="font-bold text-2xl") キャンバスをリセットしてよろしいですか？
+    div(class="flex justify-end")
+      div(className="modal-action mr-3")
+        label(htmlFor="reset-modal" className="btn w-36" @click="pointLeaderOpen = !pointLeaderOpen") Cancel
+      div(className="modal-action" @click="pointLeaderOpen = false")
+        label(htmlFor="reset-modal" className="btn w-36 bg-red-500 border-none hover:bg-red-600" @click="useStoreCanvas().resetCanvas") OK
 </template>
+
+<style scoped>
+.three-dot-leader {
+  cursor: pointer;
+  border: none;
+  background: none;
+  display: block;
+  position: relative;
+  /* ボタン要素のサイズ */
+  width: 40px;
+  height: 40px;
+}
+
+.three-dot-leader .dot,
+.three-dot-leader .dot::before,
+.three-dot-leader .dot::after {
+  display: block;
+  position: absolute;
+  border-radius: 50%;
+  /* ドット1つのサイズ */
+  width: 6px;
+  height: 6px;
+  /* ドットの色 */
+  background-color: #333;
+}
+
+.three-dot-leader .dot {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+}
+
+.three-dot-leader .dot::before,
+.three-dot-leader .dot::after {
+  content: '';
+}
+
+.three-dot-leader .dot::before {
+  /* 上側ドットの位置 */
+  top: -12px;
+}
+
+.three-dot-leader .dot::after {
+  /* 下側ドットの位置 */
+  top: 12px;
+}
+</style>

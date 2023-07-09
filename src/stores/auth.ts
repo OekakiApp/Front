@@ -1,7 +1,6 @@
-/* eslint-disable */
-// import/no-cycle
-import { defineStore } from 'pinia'
-import router from '@/router/index'
+/* eslint-disable import/no-cycle, @typescript-eslint/consistent-type-assertions */
+import { defineStore, getActivePinia } from 'pinia'
+import { forceToHomePage } from '@/router/index'
 import { db } from '@/firebase/index'
 import {
   getAuth,
@@ -12,18 +11,9 @@ import {
   User,
   AuthError,
 } from 'firebase/auth'
-import {
-  query,
-  getDocs,
-  where,
-  collection,
-  DocumentData,
-  doc,
-  getDoc,
-  setDoc,
-} from 'firebase/firestore'
-import Icon from '../assets/user_icon.png'
-/* eslint-enable */
+import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore'
+import Icon from '@/assets/user_icon.png'
+import type { Like, ShareCanvas } from '@/firebase/types/index'
 
 const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -32,10 +22,10 @@ const useAuthStore = defineStore('auth', {
     icon: Icon,
     profile: '',
     isLoggedIn: false,
-    canvases: {} as DocumentData, // eslint-disable-line
-    //  @typescript-eslint/consistent-type-assertions
     isAuthError: false,
     authErrorMessage: '' as string | undefined,
+    likeMap: {} as Record<string, Like>,
+    shareCanvases: {} as Record<string, ShareCanvas>,
   }),
   actions: {
     signupEmail(email: string, password: string, name: string) {
@@ -50,10 +40,10 @@ const useAuthStore = defineStore('auth', {
               // database usersを作成
               await setDoc(doc(db, 'users', user.uid), {
                 profile: 'よろしくお願いします。',
+                name,
+                icon: '',
                 uid: user.uid,
               })
-              await this.setUser(user)
-              await forceToWorkPage()
             })
             .catch((error) => {
               console.log(error.message)
@@ -65,19 +55,25 @@ const useAuthStore = defineStore('auth', {
     },
     loginEmail(email: string, password: string) {
       const auth = getAuth()
-      signInWithEmailAndPassword(auth, email, password)
-        .then(async () => {
-          await forceToWorkPage()
-        })
-        .catch((error) => {
-          this.authError(error)
-        })
+      signInWithEmailAndPassword(auth, email, password).catch((error) => {
+        this.authError(error)
+      })
     },
     logout() {
       const auth = getAuth()
       signOut(auth)
         .then(async () => {
-          this.$reset()
+          //  piniaのstoreを全て削除
+          const activePinia = getActivePinia()
+          if (activePinia != null) {
+            Object.entries(activePinia.state.value).forEach(
+              ([storeName, state]) => {
+                const storeDefinition = defineStore(storeName, state)
+                const store = storeDefinition(activePinia)
+                store.$reset()
+              },
+            )
+          }
           await forceToHomePage()
         })
         .catch((error) => {
@@ -95,57 +91,51 @@ const useAuthStore = defineStore('auth', {
     },
 
     async setUser(user: User) {
+      this.isLoggedIn = true
       this.uid = user.uid
       this.name = user.displayName ?? ''
       this.icon = user.photoURL ?? Icon
-      this.isLoggedIn = true
-      localStorage.setItem('usersId', user.uid)
       // get profile
       const userDocRef = doc(db, 'users', this.uid)
       const userDocSnap = await getDoc(userDocRef)
       if (userDocSnap.exists()) {
         this.profile = userDocSnap.data().profile
+        // usersDB追加更新
+        if (userDocSnap.data().name === undefined) {
+          await updateDoc(userDocRef, {
+            name: this.name,
+            icon: this.icon,
+          })
+        }
       }
     },
 
-    async getCanvases() {
-      const canvasQuery = query(
-        collection(db, 'canvas'),
-        where('uid', '==', this.uid),
-      )
-
-      await getDocs(canvasQuery)
-        .then((querySnapshot) => {
-          querySnapshot.forEach((document) => {
-            const canvasID = document.id
-            this.canvases[canvasID] = document.data()
-          })
+    async setLikeMap() {
+      await getDoc(doc(db, 'likes', this.uid))
+        .then((likeDocSnap) => {
+          if (likeDocSnap.exists()) {
+            this.likeMap = likeDocSnap.data()
+          }
         })
         .catch((error) => {
           console.log(error)
         })
     },
-    // auth canvas update
-    async setCanvas(canvasID: string) {
-      const docRef = doc(db, 'canvas', canvasID)
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        this.canvases[canvasID] = docSnap.data()
+
+    async clickLike(galleryId: string) {
+      const shareCanvas = this.shareCanvases[galleryId]
+      if (shareCanvas !== undefined) {
+        shareCanvas.isLike = !shareCanvas?.isLike
+        this.shareCanvases[galleryId].isLike = shareCanvas.isLike
+        this.likeMap[galleryId] = {
+          isLike: shareCanvas.isLike,
+          addedAt: Timestamp.now(),
+        }
+        await setDoc(doc(db, 'likes', this.uid), this.likeMap)
       }
     },
   },
 })
-
-async function forceToWorkPage() {
-  await router.replace({
-    name: 'Works',
-  })
-}
-async function forceToHomePage() {
-  await router.replace({
-    name: 'Home',
-  })
-}
 
 const errorMap = new Map([
   // 新規登録

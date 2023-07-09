@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import useStoreText from '@/stores/konva/text'
 import { reactive } from 'vue'
+import { storeToRefs } from 'pinia'
+import useStoreText from '@/stores/konva/text'
+import type { TextAlignmentArray } from '@/types/index'
 
+const { align } = storeToRefs(useStoreText())
 const { setTextOptionValue, setTextAlign } = useStoreText()
 
-const textAlignmentArray: {
-  icon: string
-  tooltip: string
-  onClick: () => void
-}[] = reactive([
+const textAlignmentArray: TextAlignmentArray[] = reactive([
   {
+    name: 'left',
     icon: 'format_align_left',
     tooltip: 'Left',
     onClick: () => {
@@ -18,6 +18,7 @@ const textAlignmentArray: {
     },
   },
   {
+    name: 'center',
     icon: 'format_align_center',
     tooltip: 'Center',
     onClick: () => {
@@ -26,6 +27,7 @@ const textAlignmentArray: {
     },
   },
   {
+    name: 'right',
     icon: 'format_align_right',
     tooltip: 'Right',
     onClick: () => {
@@ -38,6 +40,6 @@ const textAlignmentArray: {
 
 <template lang="pug">
 div(class="flex justify-center items-center mx-1")
-  button(v-for="align of textAlignmentArray" :key="align.icon" :data-tip="align.tooltip" class="tooltip flex items-center hover:bg-slate-300" @click="align.onClick")
-    span(class="material-symbols-outlined") {{align.icon}}
+  button(v-for="textAlign of textAlignmentArray" :key="textAlign.icon" :data-tip="textAlign.tooltip" class="tooltip flex items-center" :class="{'bg-gray-400': textAlign.name === align}" @click="textAlign.onClick")
+    span(class="material-symbols-outlined") {{textAlign.icon}}
 </template>

@@ -1,12 +1,11 @@
+/* eslint-disable import/no-cycle */
 import Konva from 'konva'
 import { defineStore, storeToRefs } from 'pinia'
 import useStoreMode from '@/stores/mode'
-// eslint-disable-next-line import/no-cycle
 import useStoreText from '@/stores/konva/text'
-// eslint-disable-next-line import/no-cycle
 import useStoreImage from '@/stores/konva/image'
-// eslint-disable-next-line import/no-cycle
-import useStoreStage from '@/stores/konva/stage'
+import useStoreHistory from '@/stores/konva/history'
+import useStoreLine from '@/stores/konva/line'
 
 const useStoreTransformer = defineStore({
   id: 'transformer',
@@ -178,122 +177,233 @@ const useStoreTransformer = defineStore({
     //   }
     // },
 
+    // 削除ボタン生成
+    createDeleteButton() {
+      // create delete button
+      const deleteText = new Konva.Text({
+        x: -5.5,
+        y: -5.5,
+        text: '✕',
+        fontSize: 14,
+        align: 'center',
+        verticalAlign: 'middle',
+        name: 'delete-button',
+      })
+      const deleteCircle = new Konva.Circle({
+        radius: 10,
+        fill: '#cbd5e1',
+        stroke: 'black',
+        strokeWidth: 1,
+        name: 'delete-button',
+      })
+      const deleteButton = new Konva.Group({
+        name: 'delete-button',
+      })
+      // change pointer and button scale
+      deleteButton.on('pointerover', () => {
+        const stage = deleteButton.getStage()
+        if (stage !== null) {
+          stage.container().style.cursor = 'pointer'
+          deleteButton.scaleX(1.1)
+          deleteButton.scaleY(1.1)
+        }
+      })
+      // reset pointer and button scale
+      deleteButton.on('pointerout', () => {
+        const stage = deleteButton.getStage()
+        if (stage !== null) {
+          stage.container().style.cursor = 'default'
+          deleteButton.scaleX(1)
+          deleteButton.scaleY(1)
+        }
+      })
+      // delete node when button is clicked
+      deleteButton.on('pointerdown', (evt) => this.handleDeleteNode(evt))
+      // add delete button to transformer
+      deleteButton.add(deleteCircle, deleteText)
+      return deleteButton
+    },
+
+    // 削除ボタンの位置を更新
+    updateDeleteButtonPos(transformer: Konva.Transformer) {
+      const transformerNode = transformer.getNode() as Konva.Transformer
+      const deleteButton = transformerNode.findOne('.delete-button')
+      deleteButton.position(transformerNode.findOne('.top-right').position())
+    },
+
     // 要素の取得
-    handleMouseDownTransformer(
+    async handleMouseDownTransformer(
       e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+      transformer: Konva.Transformer,
     ) {
       // clicked on stage - clear selection
       if (e.target.attrs.name === 'background-rect') {
-        this.selectedShapeId = ''
         // 選択されているnodesを空にする
-        this.configShapeTransformer.nodes = []
+        this.$reset()
         return
       }
 
-      // clicked on transformer - do nothing
-      const clickedOnTransformer =
-        e.target.getParent().className === 'Transformer'
-      if (clickedOnTransformer) {
-        return
+      const transformerNode = transformer.getNode() as Konva.Transformer
+
+      // delete old delete button
+      const oldDeleteButton = transformerNode.findOne('.delete-button')
+      if (oldDeleteButton !== undefined) {
+        oldDeleteButton.destroy()
       }
 
-      // find clicked shape by its id
-      const id = e.target.id()
-      const { setMode } = useStoreMode()
+      const promise = new Promise<void>((resolve) => {
+        // find clicked shape by its id
+        const shape = e.target
+        const id = shape.id()
+        const { setMode } = useStoreMode()
+        // skip when pen mode or eraser mode
+        const { mode } = storeToRefs(useStoreMode())
+        if (mode.value === 'pen' || mode.value === 'eraser') return
 
-      // text
-      if (e.target.className === 'Text') {
-        // モードを切り替える
-        setMode('text')
-
-        // change text transformer anchors
-        this.configShapeTransformer.enabledAnchors = [
-          'middle-left',
-          'middle-right',
-        ]
-
-        const { texts } = storeToRefs(useStoreText())
-        const text = texts.value.find((t) => t.id === id)
-        if (text !== undefined) {
-          this.selectedShapeId = id
-          this.configShapeTransformer.nodes = [e.target]
-        } else {
-          this.selectedShapeId = ''
-          this.configShapeTransformer.nodes = []
-          // reset transformer anchors
+        // line
+        if (e.target.className === 'Line') {
+          // モードを切り替える
+          setMode('none')
+          // change image transformer anchors
           this.configShapeTransformer.enabledAnchors = [
             'top-left',
-            'top-center',
             'top-right',
-            'middle-right',
-            'middle-left',
             'bottom-left',
-            'bottom-center',
             'bottom-right',
           ]
-        }
-      }
-      // image
-      else if (e.target.className === 'Image') {
-        // モードを切り替える
-        setMode('none')
-        // change image transformer anchors
-        this.configShapeTransformer.enabledAnchors = [
-          'top-left',
-          'top-right',
-          'bottom-left',
-          'bottom-right',
-        ]
 
-        const { konvaImages } = storeToRefs(useStoreImage())
-        const image = konvaImages.value.find((i) => i.id === id)
-        if (image !== undefined) {
-          this.selectedShapeId = id
-          this.configShapeTransformer.nodes = [e.target]
-        } else {
-          this.selectedShapeId = ''
-          this.configShapeTransformer.nodes = []
-          // reset transformer anchors
+          const { lines } = storeToRefs(useStoreLine())
+          const line = lines.value.find((l) => l.id === id)
+          if (line !== undefined) {
+            this.selectedShapeId = id
+            this.configShapeTransformer.nodes = [e.target]
+          } else {
+            this.$reset()
+          }
+        }
+        // text
+        else if (e.target.className === 'Text') {
+          // モードを切り替える
+          setMode('text')
+
+          // change text transformer anchors
+          this.configShapeTransformer.enabledAnchors = [
+            'middle-left',
+            'middle-right',
+          ]
+
+          const { texts, fill, fontSize, fontFamily, align } = storeToRefs(
+            useStoreText(),
+          )
+          const text = texts.value.find((t) => t.id === id)
+          if (text !== undefined) {
+            this.selectedShapeId = id
+            this.configShapeTransformer.nodes = [e.target]
+            // 選択したテキストの要素（color fontFamily fontSize align）を取得してツールバーと同期
+            fill.value = text.fill
+            fontSize.value = text.fontSize
+            fontFamily.value = text.fontFamily
+            align.value = text.align
+          } else {
+            this.$reset()
+          }
+        }
+        // image
+        else if (shape.className === 'Image') {
+          // モードを切り替える
+          setMode('none')
+          // change image transformer anchors
           this.configShapeTransformer.enabledAnchors = [
             'top-left',
-            'top-center',
-            'top-right',
-            'middle-right',
-            'middle-left',
             'bottom-left',
-            'bottom-center',
             'bottom-right',
           ]
+          const { konvaImages } = storeToRefs(useStoreImage())
+          const image = konvaImages.value.find((i) => i.id === id)
+          if (image !== undefined) {
+            this.selectedShapeId = id
+            this.configShapeTransformer.nodes = [shape]
+          } else {
+            this.$reset()
+          }
         }
-      }
+        resolve()
+      }).then(() => {
+        // create delete button
+        const deleteButton = this.createDeleteButton()
+        transformerNode.add(deleteButton)
+        // update delete button position
+        this.updateDeleteButtonPos(transformer)
+      })
+      await promise
     },
 
     // 要素の変形
-    handleTransform(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
+    async handleTransform(
+      e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+      transformer: Konva.Transformer,
+    ) {
       const shape = e.target
-      // text
-      if (shape.name() === 'text') {
-        shape.width(shape.width() * shape.scaleX())
-        shape.scaleX(1)
-        shape.scaleY(1)
-      }
-      // image
-      else if (shape.name() === 'image') {
-        shape.width(shape.width() * shape.scaleX())
-        shape.height(shape.height() * shape.scaleY())
-        shape.scaleX(1)
-        shape.scaleY(1)
-      }
+
+      const promise = new Promise<void>((resolve) => {
+        // text
+        if (shape.name() === 'text') {
+          shape.width(shape.width() * shape.scaleX())
+          shape.scaleX(1)
+          const { texts } = storeToRefs(useStoreText())
+          const text = texts.value.find((t) => t.id === shape.id())
+          if (text !== undefined) {
+            text.x = shape.x()
+            text.y = shape.y()
+            text.width = shape.width()
+            text.rotation = shape.rotation()
+            text.scaleX = shape.scaleX()
+          }
+        }
+        // image
+        else if (shape.name() === 'image') {
+          const { konvaImages } = storeToRefs(useStoreImage())
+          const image = konvaImages.value.find((i) => i.id === shape.id())
+          if (image !== undefined) {
+            image.x = shape.x()
+            image.y = shape.y()
+            image.width = shape.width()
+            image.height = shape.height()
+            image.rotation = shape.rotation()
+            image.scaleX = shape.scaleX()
+            image.scaleY = shape.scaleY()
+          }
+        }
+        resolve()
+      }).then(() => {
+        this.updateDeleteButtonPos(transformer)
+      })
+      await promise
     },
 
     // 要素の変形終了
-    handleTransformEnd(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
-      // shape is transformed, let us save new attrs back to the node
-      // find element in our state
+    handleTransformEnd(
+      e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+      transformer: Konva.Transformer,
+    ) {
       const shape = e.target
       // update the state
+      // line
+      if (shape.name() === 'line') {
+        const { lines } = storeToRefs(useStoreLine())
+        const line = lines.value.find((l) => l.id === shape.id())
+        if (line !== undefined) {
+          line.x = shape.x()
+          line.y = shape.y()
+          line.width = shape.width()
+          line.height = shape.height()
+          line.rotation = shape.rotation()
+          line.scaleX = shape.scaleX()
+          line.scaleY = shape.scaleY()
+        }
+      }
       // text
-      if (shape.name() === 'text') {
+      else if (shape.name() === 'text') {
         const { texts } = storeToRefs(useStoreText())
         const text = texts.value.find((t) => t.id === shape.id())
         if (text !== undefined) {
@@ -318,37 +428,115 @@ const useStoreTransformer = defineStore({
           image.scaleY = shape.scaleY()
         }
       }
-      useStoreStage().handleEventEndSaveHistory()
+      this.updateDeleteButtonPos(transformer)
+      useStoreHistory().handleEventEndSaveHistory()
+    },
+
+    // save position
+    handleDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
+      const shape = e.target
+      // line
+      if (shape.name() === 'line') {
+        const { lines } = storeToRefs(useStoreLine())
+        const line = lines.value.find((l) => l.id === shape.id())
+        if (line !== undefined) {
+          line.x = shape.x()
+          line.y = shape.y()
+        }
+      }
+      // text
+      else if (shape.name() === 'text') {
+        const { texts } = storeToRefs(useStoreText())
+        const text = texts.value.find((t) => t.id === shape.id())
+        if (text !== undefined) {
+          text.x = shape.x()
+          text.y = shape.y()
+        }
+      }
+      // image
+      else if (shape.name() === 'image') {
+        const { konvaImages } = storeToRefs(useStoreImage())
+        const image = konvaImages.value.find((t) => t.id === shape.id())
+        if (image !== undefined) {
+          image.x = shape.x()
+          image.y = shape.y()
+        }
+      }
+      useStoreHistory().handleEventEndSaveHistory()
     },
 
     // keydownで選択中の要素を削除
     handleKeyDownSelectedNodeDelete(e: KeyboardEvent) {
-      if (e.key === 'Delete') {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
         if (this.configShapeTransformer.nodes.length === 0) return
         const selectedNode = this.configShapeTransformer.nodes[0]
 
+        // line
+        if (selectedNode.name() === 'line') {
+          const { lines } = storeToRefs(useStoreLine())
+          lines.value = lines.value.filter((l) => l.id !== selectedNode.id())
+          this.$reset()
+        }
+        // text
+        else if (selectedNode.name() === 'text') {
+          const { texts, isEditing } = storeToRefs(useStoreText())
+          // テキスト編集中の場合スキップ
+          if (isEditing.value) return
+          texts.value = texts.value.filter((t) => t.id !== selectedNode.id())
+          this.$reset()
+        }
+        // image
+        else if (selectedNode.name() === 'image') {
+          const { konvaImages } = storeToRefs(useStoreImage())
+          // フロント側のキャンバスを更新
+          konvaImages.value = konvaImages.value.filter(
+            (i) => i.id !== selectedNode.id(),
+          )
+          const stage = selectedNode.getStage()
+          if (stage !== null) {
+            stage.container().style.cursor = 'default'
+          }
+          this.$reset()
+        }
+        useStoreHistory().handleEventEndSaveHistory()
+      }
+    },
+
+    // delete button clickで選択中の要素を削除
+    handleDeleteNode(e: Konva.KonvaEventObject<MouseEvent>) {
+      if (e.target.attrs.name === 'delete-button') {
+        if (this.configShapeTransformer.nodes.length === 0) return
+        const selectedNode = this.configShapeTransformer.nodes[0]
+        const stage = selectedNode.getStage()
+
+        // line
+        if (selectedNode.name() === 'line') {
+          const { lines } = storeToRefs(useStoreLine())
+          lines.value = lines.value.filter((l) => l.id !== selectedNode.id())
+          this.$reset()
+        }
         // text
         if (selectedNode.name() === 'text') {
           const { texts, isEditing } = storeToRefs(useStoreText())
           // テキスト編集中の場合スキップ
           if (isEditing.value) return
-          texts.value = texts.value.filter(
-            (text) => text.id !== selectedNode.id(),
-          )
-          this.configShapeTransformer.nodes = []
-          this.selectedShapeId = ''
+          texts.value = texts.value.filter((t) => t.id !== selectedNode.id())
+          this.$reset()
         }
         // image
         else if (selectedNode.name() === 'image') {
           const { konvaImages } = storeToRefs(useStoreImage())
+          // フロント側のキャンバスを更新
           konvaImages.value = konvaImages.value.filter(
-            (image) => image.id !== selectedNode.id(),
+            (i) => i.id !== selectedNode.id(),
           )
-          this.configShapeTransformer.nodes = []
-          this.selectedShapeId = ''
+          if (stage !== null) {
+            stage.container().style.cursor = 'default'
+          }
+          this.$reset()
         }
+        useStoreHistory().handleEventEndSaveHistory()
       }
-      useStoreStage().handleEventEndSaveHistory()
     },
   },
 })

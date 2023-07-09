@@ -1,132 +1,143 @@
+/* eslint-disable import/no-cycle */
 import Konva from 'konva'
 import { nanoid } from 'nanoid'
 import { defineStore } from 'pinia'
 import useStoreMode from '@/stores/mode'
-// eslint-disable-next-line import/no-cycle
-import useStoreStage from '@/stores/konva/stage'
-
-interface UploadedImage {
-  id: string
-  imgSrc: string
-}
-
-export interface KonvaImage {
-  id: string
-  name: string
-  image: HTMLImageElement
-  x: number
-  y: number
-  width: number
-  height: number
-  rotation: number
-  scaleX: number
-  scaleY: number
-}
+import useStoreHistory from '@/stores/konva/history'
+import type { KonvaImage, FirestoreCanvasImage } from '@/types/konva'
 
 const useStoreImage = defineStore({
   id: 'image',
   state: () => ({
     dragUrl: '',
-    uploadedImages: [] as UploadedImage[],
-    konvaImages: [] as KonvaImage[],
+    dragUploadedImageId: '',
+    konvaImages: [] as KonvaImage[], // canvasの画像の状態（リアルタイム）
+    firstKonvaImages: [] as KonvaImage[], // canvas保存前の画像の状態
   }),
 
   actions: {
-    addImageList(e: Event) {
-      const inputElement = e.target as HTMLInputElement
-      if (inputElement === null) return
-      const { files } = inputElement
-      if (files === null) return
-      const file = files.item(0)
-      if (file === null) return
-      this.loadImage(file)
-      inputElement.value = ''
-    },
-
-    loadImage(file: File) {
-      // FileRenderオブジェクト
-      const reader = new FileReader()
-      // URLとして読み込まれたときに実行する処理
-      reader.onload = (e) => {
-        const fileReader = e.target
-        if (fileReader === null) return
-        const imgURL = fileReader.result as string
-        const id = nanoid()
-        // imageをstoreにupload
-        this.uploadedImages = [...this.uploadedImages, { id, imgSrc: imgURL }]
-      }
-      // ファイルをURLとして読み込む
-      reader.readAsDataURL(file)
-    },
-
-    // image listから削除
-    removeImage(imageId: string) {
-      this.uploadedImages = this.uploadedImages.filter(
-        (img) => img.id !== imageId,
+    // FirestoreCanvasImageをKonvaImageに変換
+    changeFirestoreCanvasImagesToKonvaImages(
+      firestoreCanvasImages: FirestoreCanvasImage[],
+    ) {
+      const konvaImageArray = [] as KonvaImage[]
+      firestoreCanvasImages?.forEach(
+        (firestoreCanvasImage: FirestoreCanvasImage) => {
+          konvaImageArray.push({
+            id: firestoreCanvasImage.id,
+            imageId: firestoreCanvasImage.imageId,
+            name: firestoreCanvasImage.name,
+            image: this.changeURLToImageElement(
+              firestoreCanvasImage.image,
+              firestoreCanvasImage.imageId,
+            ),
+            x: firestoreCanvasImage.x,
+            y: firestoreCanvasImage.y,
+            width: firestoreCanvasImage.width,
+            height: firestoreCanvasImage.height,
+            rotation: firestoreCanvasImage.rotation,
+            scaleX: firestoreCanvasImage.scaleX,
+            scaleY: firestoreCanvasImage.scaleY,
+          })
+        },
       )
+      return konvaImageArray
+    },
+
+    // KonvaImageをFirestoreCanvasImageに変換
+    changeKonvaImagesToFirestoreCanvasImages(konvaImages: KonvaImage[]) {
+      const firestoreCanvasImagesArray = [] as FirestoreCanvasImage[]
+      konvaImages?.forEach((konvaImage: KonvaImage) => {
+        firestoreCanvasImagesArray.push({
+          id: konvaImage.id,
+          imageId: konvaImage.imageId,
+          name: konvaImage.name,
+          image: konvaImage.image.src,
+          x: konvaImage.x,
+          y: konvaImage.y,
+          width: konvaImage.width,
+          height: konvaImage.height,
+          rotation: konvaImage.rotation,
+          scaleX: konvaImage.scaleX,
+          scaleY: konvaImage.scaleY,
+        })
+      })
+      return firestoreCanvasImagesArray
+    },
+
+    // image urlをimage elementに変換する
+    changeURLToImageElement(url: string, imageId: string): HTMLImageElement {
+      const imageObj = new Image()
+      imageObj.id = imageId
+      imageObj.src = url
+      imageObj.crossOrigin = 'anonymous'
+      return imageObj
     },
 
     // image drag
-    setDragUrl(e: DragEvent) {
+    setDragImageUrlAndId(e: DragEvent) {
       const img = e.target as HTMLImageElement
       this.dragUrl = img.src
+      this.dragUploadedImageId = img.id
     },
 
     // image drop
-    setImages(e: DragEvent, stageRef: Konva.Stage) {
+    setImagesOnCanvas(e: DragEvent, stageRef: Konva.Stage) {
       e.preventDefault()
-      // register event position
+
+      // register event position(dropした位置を取得)
       const stage = stageRef.getStage()
       stage.setPointersPositions(e)
-      // add image
-      const newImg = new Image()
-      newImg.src = this.dragUrl
-
-      // リサイズ
-      const originalWidth = newImg.width
-      // widthは200pxに縮小するかそのまま
-      newImg.width = Math.min(originalWidth, 100)
-      // 200pxに縮小したらheightも変更する
-      if (newImg.width === 100) {
-        newImg.height *= 100 / originalWidth
-      }
-      const id = nanoid()
       const relativePointerPosition = stage.getRelativePointerPosition()
-      this.konvaImages = this.konvaImages.concat([
-        {
-          id,
-          name: 'image',
-          image: newImg,
-          x: relativePointerPosition.x - newImg.width / 2,
-          y: relativePointerPosition.y - newImg.height / 2,
-          width: newImg.width,
-          height: newImg.height,
-          rotation: 0,
-          scaleX: 1,
-          scaleY: 1,
-        },
-      ])
 
-      useStoreStage().handleEventEndSaveHistory()
+      const imageObj = new Image()
+      imageObj.id = this.dragUploadedImageId
+      imageObj.src = this.dragUrl
+      imageObj.crossOrigin = 'anonymous'
+      imageObj.onload = () => {
+        // maxCanvasRatio:キャンバスに対して設定した倍率の大きさの画像を描画できる。
+        const maxCanvasRatio = 0.9
+        // stage
+        const maxImageWidth = (stage.width() / stage.scaleX()) * maxCanvasRatio
+        const maxImageHeight =
+          (stage.height() / stage.scaleY()) * maxCanvasRatio
+        // image
+        let imageWidth = imageObj.width
+        let imageHeight = imageObj.height
+
+        if (imageWidth > maxImageWidth || imageHeight > maxImageHeight) {
+          const ratio = Math.min(
+            maxImageWidth / imageWidth,
+            maxImageHeight / imageHeight,
+          )
+          imageWidth *= ratio
+          imageHeight *= ratio
+        }
+
+        this.konvaImages = this.konvaImages.concat([
+          {
+            id: nanoid(),
+            imageId: imageObj.id,
+            name: 'image',
+            image: imageObj,
+            x: relativePointerPosition.x - imageWidth / 2,
+            y: relativePointerPosition.y - imageHeight / 2,
+            width: imageWidth,
+            height: imageHeight,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+          },
+        ])
+        useStoreHistory().handleEventEndSaveHistory()
+      }
 
       // モード終了し、サブメニューを閉じる
-      const { setMode } = useStoreMode()
-      setMode('none')
+      useStoreMode().$reset()
     },
 
     deleteImages() {
       this.konvaImages = []
-    },
-
-    // save text position
-    handleImageDragEnd(e: Konva.KonvaEventObject<DragEvent>) {
-      const shape = e.target
-      const text = this.konvaImages.find((i) => i.id === shape.id())
-      if (text !== undefined) {
-        text.x = shape.x()
-        text.y = shape.y()
-      }
-      useStoreStage().handleEventEndSaveHistory()
     },
   },
 })
