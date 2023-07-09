@@ -362,7 +362,7 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
       @mouseenter="(e: Konva.KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
       @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handleLineMouseLeave();handlePointerStageMouseLeave(e);}"
       @mousedown="(e: Konva.KonvaEventObject<PointerEvent>) => {handlePointerMouseEnter(e);}"
-      @pointerdown="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e)}"
+      @pointerdown="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseDown(e);handleMouseDownTransformer(e, transformer);}"
       @pointermove="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseMove(e);handlePointerMouseMove(e);}"
       @pointerup="(e: Konva.KonvaEventObject<PointerEvent>) => {handleLineMouseUp(e);}"
       @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => {createNewTextNode(e);}"
@@ -380,8 +380,8 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
           @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
-          @transformend="handleTransformEnd"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e, transformer)"
+          @transformend="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransformEnd(e, transformer)"
         )
         v-text(
           v-for="text in texts"
@@ -393,8 +393,8 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
           @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: Konva.KonvaEventObject<MouseEvent>) => handleTransform(e)"
-          @transformend="handleTransformEnd"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent>) => handleTransform(e, transformer)"
+          @transformend="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransformEnd(e, transformer)"
           @dblclick="(e: Konva.KonvaEventObject<MouseEvent>) => toggleEdit(e)"
           @dbltap="(e: Konva.KonvaEventObject<TouchEvent>) => toggleEdit(e)"
           )
@@ -408,8 +408,8 @@ div(class="m-auto border-4 border-orange-100 max-w-screen-xl my-4")
           @mousedown="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseDown(e);}"
           @mouseup="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseUp(e)}"
           @mouseleave="(e: Konva.KonvaEventObject<MouseEvent>) => {handlePointerMouseLeave(e);}"
-          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e)"
-          @transformend="handleTransformEnd"
+          @transform="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransform(e, transformer)"
+          @transformend="(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => handleTransformEnd(e, transformer)"
           )
         //- pen cursor
         UserCursor
